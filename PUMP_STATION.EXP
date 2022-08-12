@@ -1,0 +1,8997 @@
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ Function_project' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION alarm_invertor : BOOL
+VAR_INPUT
+	ready_invertor: BOOL;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+IF ready_invertor = TRUE THEN
+	alarm_invertor := FALSE;
+ELSE
+	alarm_invertor := TRUE;
+END_IF;
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ Function_project' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION run_mode : BOOL
+VAR_INPUT
+	status_alarm: BOOL;
+END_VAR
+VAR
+	run_enable: BOOL;
+END_VAR
+(* @END_DECLARATION := '0' *)
+IF status_alarm = TRUE
+	THEN run_enable := FALSE;
+ELSE
+	run_enable := TRUE;
+END_IF
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/AnalogInputsModule\/AnalogInputChannel\/SetAnalogInputChannel' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION init_set_analog_input_channel : classParamsValueScaling (* переделать на сетпарамс аналог инпут класс *)
+VAR_INPUT
+	(* Конфигурационные параметры канала модуля. см. инструкцию прибора: приложение. таблица В.2 *)
+	(* Границы АЦП и значения по умолчанию: для датчика 4-20mA  *)
+	ain_l: REAL := 0;  (* Параметр Ain.L *)
+	ain_h: REAL := 1000;  (* Параметр Ain.H *)
+	analog_min_value: REAL := 4;  (* Диапазон нижней границы датчика давления *)
+	analog_max_value: REAL := 20;  (* Диапазон верхней границы датчика давления *)
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+init_set_analog_input_channel.in_min := ain_l;
+init_set_analog_input_channel.in_max := ain_h;
+init_set_analog_input_channel.out_min := analog_min_value;
+init_set_analog_input_channel.out_max := analog_max_value;
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/AnalogInputsModule\/AnalogInputChannel' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION get_error_code: STRING(79)
+(* Функция преобразования кода ошибки регистра аналогового модуля входов *)
+VAR_INPUT
+	code_error: WORD;
+END_VAR
+VAR
+	error_message: STRING(79);
+END_VAR
+(* @END_DECLARATION := '0' *)
+IF code_error = 0
+	THEN error_message := 'Измерение успешно';
+ELSIF code_error = 61440
+	THEN error_message := 'Значение заведомо неверно';
+ELSIF code_error = 61446
+	THEN error_message := 'Данные не готовы. Ждите результатов первого измерения.';
+ELSIF code_error = 61447
+	THEN error_message := 'Датчик отключен.';
+ELSIF code_error = 61448
+	THEN error_message := 'Велика температура свободныз концов ТП.';
+ELSIF code_error = 61449
+	THEN error_message := 'Мала температура свободных концов ТП.';
+ELSIF code_error = 61450
+	THEN error_message := 'Измеренное значение слишком велико.';
+ELSIF code_error = 61451
+	THEN error_message := 'Измеренное значение слишком мало.';
+ELSIF code_error = 61452
+	THEN error_message := 'Короткое замыкание датчика.';
+ELSIF code_error = 61453
+	THEN error_message := 'Обрыв датчика.';
+ELSIF code_error = 61454
+	THEN error_message := 'Отсутствие связи с АЦП.';
+ELSIF code_error = 61455
+	THEN error_message := 'Некорректный калибровочный коэффициент.';
+ELSE
+	error_message := 'Error not Found';
+END_IF
+
+get_error_code := error_message;
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/AnalogInputsModule\/AnalogInputChannel' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION get_infos_analog_input_channel : classInfoAnalogInputChannel
+VAR_INPUT
+	sensor:classSetPressureSensor4_20;
+	channel:classAnalogInputChannel;
+END_VAR
+VAR
+
+END_VAR
+(* @END_DECLARATION := '0' *)
+get_infos_analog_input_channel.error_message := get_error_code(channel.error_code);
+IF channel.error_code = 0 THEN
+
+	get_infos_analog_input_channel.current_value := value_scaling(channel.value, channel.set_channel);
+	(*get_infos_analog_input_channel.measure := value_scaling(get_infos_analog_input_channel.current_value, get_params_value_scaling(sensor.min_current_range, sensor.max_current_range, sensor.min_measure_range, sensor.max_measure_range));*)
+ELSE
+	(* если модуль вернул ошибку покажем писюны *)
+	get_infos_analog_input_channel.current_value := -8;
+	(* get_infos_analog_input_channel.measure := -8;*)
+END_IF;
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/AnalogInputsModule\/AnalogInputChannel' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION init_analog_input_channel : classAnalogInputChannel
+VAR_INPUT
+	set_channel:classParamsValueScaling;
+	value:REAL;
+	error_code:WORD;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+init_analog_input_channel.set_channel := set_channel;
+init_analog_input_channel.value := value;
+init_analog_input_channel.error_code := error_code;
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/AnalogInputsModule' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION get_infos_analog_inputs_module : classInfoAnalogInputModule
+VAR_INPUT
+	analog_inputs_module:classAnalogInputModule;
+END_VAR
+VAR
+
+	sensor:classSetPressureSensor4_20 := (min_measure_range:=0, max_measure_range:=16, min_current_range:=4, max_current_range:= 20);
+END_VAR
+
+(* предоставить в будущем настройки для каждого канала *)
+(* @END_DECLARATION := '0' *)
+get_infos_analog_inputs_module.channel1 := get_infos_analog_input_channel(sensor, analog_inputs_module.channel1);
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/AnalogInputsModule' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION init_analog_inputs_module : classAnalogInputModule
+VAR_INPUT
+	channel_1:classAnalogInputChannel;
+	channel_2:classAnalogInputChannel;
+	channel_3:classAnalogInputChannel;
+	channel_4:classAnalogInputChannel;
+	channel_5:classAnalogInputChannel;
+	channel_6:classAnalogInputChannel;
+	channel_7:classAnalogInputChannel;
+	channel_8:classAnalogInputChannel;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+init_analog_inputs_module.channel1 := channel_1;
+init_analog_inputs_module.channel2 := channel_2;
+init_analog_inputs_module.channel3 := channel_3;
+init_analog_inputs_module.channel4 := channel_4;
+init_analog_inputs_module.channel5 := channel_5;
+init_analog_inputs_module.channel6 := channel_6;
+init_analog_inputs_module.channel7 := channel_7;
+init_analog_inputs_module.channel8 := channel_8;
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/InvertorDrive\/init' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION init_invertor_drive_analog_inputs : classInvertorDriveAnalogInputs
+VAR_INPUT
+	value:REAL;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+init_invertor_drive_analog_inputs.set_frequency:=value;
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/InvertorDrive\/init' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION init_invertor_drive_analog_outputs : classInvertorDriveAnalogOutputs
+VAR_INPUT
+	value:REAL;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+init_invertor_drive_analog_outputs.out_frequency:=value;
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/InvertorDrive\/init' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION init_invertor_drive_discrete_inputs : classInvertorDriveDiscreteInputs
+VAR_INPUT
+	start:BOOL;
+	reset_fault:BOOL;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+init_invertor_drive_discrete_inputs.start:=start;
+init_invertor_drive_discrete_inputs.reset_fault:=reset_fault;
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/InvertorDrive\/init' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION init_invertor_drive_discrete_outputs : classInvertorDriveDiscreteOutputs
+VAR_INPUT
+	status_run:BOOL;
+	status_alarm:BOOL;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+init_invertor_drive_discrete_outputs.status_run:=status_run;
+init_invertor_drive_discrete_outputs.status_alarm:=status_alarm;
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/InvertorDrive' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION init_set_limit_frequency : classSetLimitFrequency
+VAR_INPUT
+	min_range:REAL;
+	max_range:REAL;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+init_set_limit_frequency.min_range:=min_range;
+init_set_limit_frequency.max_range:=max_range;
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/PressureSensors\/CurrentSensors\/Current_4_20mA' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION init_current_pressure_sensor_4_20 : classSetPressureSensor4_20
+VAR_INPUT
+	min_measure_range:REAL;
+	max_measure_range:REAL;
+	min_current_range:REAL:=4;
+	max_current_range:REAL:=20;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+init_current_pressure_sensor_4_20.min_measure_range := min_measure_range;
+init_current_pressure_sensor_4_20.max_measure_range := max_measure_range;
+init_current_pressure_sensor_4_20.min_current_range:= min_current_range;
+init_current_pressure_sensor_4_20.max_current_range:= max_current_range;
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/FunctionCannel\/methods_array' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION element_in_int_array : BOOL
+VAR_INPUT
+	element:INT;
+	list: ARRAY [1..8] OF INT;
+END_VAR
+VAR
+	size: INT:=8;
+	i: INT;
+	is_true:BOOL:=FALSE;
+END_VAR
+(* @END_DECLARATION := '0' *)
+FOR i:=1 TO size DO
+	IF list[i] = element THEN
+		is_true:=TRUE;
+	END_IF;
+END_FOR;
+
+element_in_int_array:=is_true;
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/FunctionCannel\/methods_array' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION index_bool_array : ARRAY [1..8] OF INT
+VAR_INPUT
+	list:ARRAY [1..8] OF  BOOL;
+END_VAR
+VAR
+	size:INT:=8;
+	i: INT;
+	cnt:INT:=1;
+	index:ARRAY [1..8] OF INT:= 8(0);
+END_VAR
+(* @END_DECLARATION := '0' *)
+FOR i:=1 TO size DO
+	IF list[i] THEN
+		index[cnt]:=i;
+		cnt:=cnt + 1;
+	END_IF;
+END_FOR;
+
+index_bool_array:=index;
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/FunctionCannel\/methods_array' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION index_element_in_int_array : INT
+VAR_INPUT
+	element:INT;
+	list:ARRAY [1..8] OF  INT;
+END_VAR
+VAR
+	size: INT:=8;
+	i: INT;
+	index: INT:=1;
+END_VAR
+(* @END_DECLARATION := '0' *)
+IF element_in_int_array(element, list) THEN
+	FOR i:=1 TO size DO
+		IF list[i]=element THEN
+			index:=i;
+			i:=8;
+		END_IF;
+	END_FOR;
+	index_element_in_int_array:=index;
+ELSE
+	index_element_in_int_array:=0;
+END_IF;
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/FunctionCannel\/methods_array' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION len_bool_array : INT
+VAR_INPUT
+	list: ARRAY [1..8] OF BOOL;
+END_VAR
+VAR
+	size: INT:=8;
+	cnt:INT:=0;
+	i: INT;
+END_VAR
+(* @END_DECLARATION := '0' *)
+FOR i:=1 TO size DO
+	IF list[i] THEN
+		cnt:=cnt + 1;
+	END_IF;
+END_FOR;
+
+IF i > 8 THEN
+	i:=1;
+END_IF;
+
+len_bool_array:=cnt;
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/FunctionCannel\/methods_array' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION len_int_array : INT
+VAR_INPUT
+	list: ARRAY [1..8] OF INT;
+END_VAR
+VAR
+	size: INT:=8;
+	cnt:INT:=0;
+	i: INT;
+END_VAR
+(* @END_DECLARATION := '0' *)
+FOR i:=1 TO size DO
+	IF INT_TO_BOOL(list[i]) THEN
+		cnt:=cnt + 1;
+	END_IF;
+END_FOR;
+
+IF i > 8 THEN
+	i:=1;
+END_IF;
+
+len_int_array:=cnt;
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/FunctionCannel\/ValueScaling' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION get_params_value_scaling : classParamsValueScaling
+VAR_INPUT
+	in_min: REAL;
+	in_max: REAL;
+	out_min: REAL;
+	out_max: REAL;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+get_params_value_scaling.in_min:=in_min;
+get_params_value_scaling.in_max:=in_max;
+get_params_value_scaling.out_min:=out_min;
+get_params_value_scaling.out_max:=out_max;
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/FunctionCannel\/ValueScaling' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION value_scaling : REAL
+(* Функция масштабирования шкалы *)
+VAR_INPUT
+	input_value: REAL;
+	params_scales:classParamsValueScaling;
+END_VAR
+VAR
+	A: REAL;
+	B: REAL;
+END_VAR
+(* @END_DECLARATION := '0' *)
+A := (params_scales.out_max - params_scales.out_min) / (params_scales.in_max - params_scales.in_min);
+B := ((params_scales.out_min * params_scales.in_max) - (params_scales.out_max * params_scales.in_min)) / (params_scales.in_max - params_scales.in_min);
+
+value_scaling := A * input_value + B;
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/FunctionClasses\/Cascade\/Methods' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION get_auto_in_cascade : BOOL
+VAR_INPUT
+	info:classInfoCascade;
+	number_pump:SINT;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+IF info.pivot=number_pump THEN
+	get_auto_in_cascade:=TRUE;
+ELSE
+	get_auto_in_cascade:=FALSE;
+END_IF;
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/FunctionClasses\/Cascade\/Methods' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION get_pump_in_cascade : BOOL
+VAR_INPUT
+	info:classInfoCascade;
+	number_pump:SINT;
+END_VAR
+VAR
+	pumps:ARRAY[1..8] OF classInfoCascadePump;
+END_VAR
+(* @END_DECLARATION := '0' *)
+IF info.pivot = number_pump THEN
+	get_pump_in_cascade:=TRUE;
+ELSE
+	pumps[1]:=info.cascade_pump1;
+	pumps[2]:=info.cascade_pump2;
+	pumps[3]:=info.cascade_pump3;
+	pumps[4]:=info.cascade_pump4;
+	pumps[5]:=info.cascade_pump5;
+	pumps[6]:=info.cascade_pump6;
+	pumps[7]:=info.cascade_pump7;
+	pumps[8]:=info.cascade_pump8;
+
+	get_pump_in_cascade:=pumps[number_pump].cascade_pump;
+END_IF;
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/FunctionClasses\/Cascade' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION_BLOCK cascade
+(*Функция каскадного режима.*)
+VAR_INPUT
+	enable:BOOL;  (*Включение каскадного режима*)
+	set_pressure:REAL;  (*Уставка по давлению*)
+	in_pressure: REAL;  (*Входное давление*)
+	pivot_pump: SINT;  (*Номер ведущего насоса в работе*)
+	delay_on:TIME:=t#30s;
+	delay_off:TIME:=t#30s;
+
+       (*Активные насосы*)
+	pump1:BOOL:=FALSE;
+	pump2:BOOL:=FALSE;
+	pump3:BOOL:=FALSE;
+	pump4:BOOL:=FALSE;
+	pump5:BOOL:=FALSE;
+	pump6:BOOL:=FALSE;
+	pump7:BOOL:=FALSE;
+	pump8:BOOL:=FALSE;
+END_VAR
+VAR_OUTPUT
+	info_cascade:classInfoCascade;
+END_VAR
+VAR
+	pumps: ARRAY [1..8] OF BOOL;
+	cascade_pumps: ARRAY [1..8] OF classInfoCascadePump;
+	pivot: SINT;
+	i: INT:=1;
+	start_delay:TON;
+	error_message: STRING(79);
+	Q: BOOL;
+	start_time: TIME:=t#0s;
+	work_time: TIME;
+	j:INT:=1;
+	len_pumps: INT;
+	index_active_pumps:ARRAY [1..8] OF INT;
+	len_active_pumps: INT;
+	index_pivot: INT;
+END_VAR
+(* @END_DECLARATION := '0' *)
+pivot:=pivot_pump;
+
+pumps[1]:=pump1;
+pumps[2]:=pump2;
+pumps[3]:=pump3;
+pumps[4]:=pump4;
+pumps[5]:=pump5;
+pumps[6]:=pump6;
+pumps[7]:=pump7;
+pumps[8]:=pump8;
+
+error_message:='Ошибок нет!';
+
+len_pumps:=len_bool_array(pumps);  (*Длинна входящего массива.*)
+index_active_pumps:=index_bool_array(pumps);  (*Индексы активных насосов.*)
+len_active_pumps:=len_int_array(index_active_pumps);  (*Длинна массива активных насосов.*)
+
+index_pivot:=index_element_in_int_array(pivot, index_active_pumps); (*Индекс опорного насоса в списке активных насосов.*)
+
+(*Если pivot приходится на границы массива, то сдвигаем границы.*)
+IF len_active_pumps = 1 THEN
+	i:=index_pivot;
+	error_message:='Для каскадного режима необходимо минимум 2 насоса';
+ELSIF i = 1 AND i = index_pivot THEN
+	i:=pivot + 1;
+ELSIF i = len_active_pumps AND  i = index_pivot THEN
+	i:=len_active_pumps - 1;
+END_IF;
+
+(*Если опорный насос активен, то он запускается.*)
+IF INT_TO_BOOL(index_pivot) THEN
+	cascade_pumps[pivot].cascade_pump:=TRUE;
+END_IF;
+
+(*Если время старта 0, то запоминаем текущее системное время.*)
+IF start_time = t#0s THEN
+	start_time:=TIME();
+END_IF;
+
+IF in_pressure < set_pressure THEN
+	work_time:=TIME() - start_time;
+	IF work_time >= delay_on THEN
+		IF i = index_pivot AND index_pivot < len_active_pumps THEN
+			i:=i + 1;
+		END_IF;
+		cascade_pumps[index_active_pumps[i]].cascade_pump:=TRUE;
+		i:=i + 1;
+		start_time:=t#0s;
+	END_IF;
+ELSIF in_pressure > set_pressure THEN
+	work_time:=TIME() - start_time;
+	IF work_time >= delay_off THEN
+		IF i = index_pivot AND index_pivot > 1 THEN
+			i:=i - 1;
+		END_IF;
+		cascade_pumps[index_active_pumps[i]].cascade_pump:=FALSE;
+		i:=i - 1;
+		start_time:=t#0s;
+	END_IF;
+END_IF;
+
+IF i > len_active_pumps  THEN
+	i:= len_active_pumps;
+ELSIF i < 1 THEN
+	i:=1;
+END_IF;
+
+get_info_message;
+END_FUNCTION_BLOCK
+ACTION	get_info_message:
+IF enable AND error_message = 'Ошибок нет!' THEN
+	info_cascade.pivot:=pivot;
+	info_cascade.error_message:=error_message;
+	info_cascade.cascade_pump1:=cascade_pumps[1];
+	info_cascade.cascade_pump2:=cascade_pumps[2];
+	info_cascade.cascade_pump3:=cascade_pumps[3];
+	info_cascade.cascade_pump4:=cascade_pumps[4];
+	info_cascade.cascade_pump5:=cascade_pumps[5];
+	info_cascade.cascade_pump6:=cascade_pumps[6];
+	info_cascade.cascade_pump7:=cascade_pumps[7];
+	info_cascade.cascade_pump8:=cascade_pumps[8];
+ELSE
+	info_cascade.pivot:=pivot;
+	info_cascade.error_message:=error_message;
+	cascade_pumps[1].cascade_pump:=FALSE;
+	cascade_pumps[2].cascade_pump:=FALSE;
+	cascade_pumps[3].cascade_pump:=FALSE;
+	cascade_pumps[4].cascade_pump:=FALSE;
+	cascade_pumps[5].cascade_pump:=FALSE;
+	cascade_pumps[6].cascade_pump:=FALSE;
+	cascade_pumps[7].cascade_pump:=FALSE;
+	cascade_pumps[8].cascade_pump:=FALSE;
+	info_cascade.cascade_pump1:=cascade_pumps[1];
+	info_cascade.cascade_pump2:=cascade_pumps[2];
+	info_cascade.cascade_pump3:=cascade_pumps[3];
+	info_cascade.cascade_pump4:=cascade_pumps[4];
+	info_cascade.cascade_pump5:=cascade_pumps[5];
+	info_cascade.cascade_pump6:=cascade_pumps[6];
+	info_cascade.cascade_pump7:=cascade_pumps[7];
+	info_cascade.cascade_pump8:=cascade_pumps[8];
+END_IF;
+END_ACTION
+
+ACTION	working:
+
+
+cascade_pumps[pivot].cascade_pump:=TRUE;
+
+IF in_pressure < set_pressure THEN
+	start_delay(IN:=TRUE, PT:=t#15s);
+	IF start_delay.Q THEN
+		cascade_pumps[i].cascade_pump:=TRUE;
+		i:=i+1;
+	END_IF;
+ELSIF in_pressure > set_pressure THEN
+	start_delay(IN:=TRUE, PT:=t#15s);
+	IF start_delay.Q THEN
+		cascade_pumps[i].cascade_pump:=FALSE;
+		i:=i-1;
+	END_IF;
+END_IF;
+END_ACTION
+
+
+
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/FunctionClasses\/Cycle\/Methods' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION get_pump_in_cycle : BOOL (*Функция возвращающая флаг работы выбранного насоса *)
+VAR_INPUT
+	info_cycle:classInfoCycle;
+	pump_number:SINT;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+IF pump_number=info_cycle.pump_number THEN
+	get_pump_in_cycle:=info_cycle.run_timer;
+ELSE
+	get_pump_in_cycle:=FALSE;
+END_IF;
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/FunctionClasses\/Cycle' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION_BLOCK cnt
+VAR_INPUT
+	set_point:WORD;
+END_VAR
+VAR_OUTPUT
+	time_cnt:WORD;
+END_VAR
+VAR
+	start: TON;
+	off: TOF;
+	clk: F_TRIG;
+	count: CTU;
+	imp: R_TRIG;
+	ttp: TP;
+END_VAR
+(* @END_DECLARATION := '0' *)
+_CFC_BODY
+_ELEMENT
+_ID: 53
+_MACROID: -1
+_POS: 15, 9
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: start
+_TYPENAME: TON
+_ENENO: 0
+_INPUTS: 2
+_IN
+_INPUTID: 55
+_INPUTIDX: 0
+_NEGATE: 1
+_END
+_IN
+_INPUTID: 57
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 2
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 54
+_MACROID: -1
+_POS: 38, 9
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: off
+_TYPENAME: TOF
+_ENENO: 0
+_INPUTS: 2
+_IN
+_INPUTID: 59
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 58
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 2
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 55
+_MACROID: -1
+_POS: 48, 9
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: clk
+_TYPENAME: F_TRIG
+_ENENO: 0
+_INPUTS: 1
+_IN
+_INPUTID: 54
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 56
+_MACROID: -1
+_POS: 61, 9
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: count
+_TYPENAME: CTU
+_ENENO: 0
+_INPUTS: 3
+_IN
+_INPUTID: 55
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 56
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 61
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 2
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 57
+_MACROID: -1
+_POS: 15, 12
+_TYPE: _INPUT
+_TEXT: t#0ms
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 58
+_MACROID: -1
+_POS: 37, 12
+_TYPE: _INPUT
+_TEXT: t#1000ms
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 59
+_MACROID: -1
+_POS: 25, 9
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: imp
+_TYPENAME: R_TRIG
+_ENENO: 0
+_INPUTS: 1
+_IN
+_INPUTID: 53
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 60
+_MACROID: -1
+_POS: 74, 12
+_TYPE: _OUTPUT
+_TEXT: time_cnt
+_INPUTID: 56
+_INPUTIDX: 1
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 61
+_MACROID: -1
+_POS: 61, 13
+_TYPE: _INPUT
+_TEXT: set_point
+_NEGATE: 0
+_CONNECTOR: 
+_END
+
+END_FUNCTION_BLOCK
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/FunctionClasses\/Cycle' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION_BLOCK cnt_time
+VAR_INPUT
+	set:WORD;
+END_VAR
+VAR_OUTPUT
+	get_time:WORD;
+END_VAR
+VAR
+	start:TON;
+	off:TOF;
+	imp:R_TRIG;
+	clk:F_TRIG;
+	count:CTU;
+END_VAR
+(* @END_DECLARATION := '0' *)
+start(IN:=NOT clk.Q, PT:=t#0s);
+imp(CLK:=start.Q);
+off(IN:=imp.Q, PT:=t#1100ms);
+clk(CLK:=off.Q);
+count(CU:=clk.Q,RESET:=count.Q, PV:=set);
+get_time:=count.CV;
+END_FUNCTION_BLOCK
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/FunctionClasses\/Cycle' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION_BLOCK cycle
+VAR_INPUT
+	enable:BOOL;
+	set_timer:TIME;
+	pump1:BOOL:=FALSE;
+	pump2:BOOL:=FALSE;
+	pump3:BOOL:=FALSE;
+	pump4:BOOL:=FALSE;
+	pump5:BOOL:=FALSE;
+	pump6:BOOL:=FALSE;
+	pump7:BOOL:=FALSE;
+	pump8:BOOL:=FALSE;
+	(* info_timer:classInfoCycle;*)
+	(*time_clk:BOOL:=FALSE;*)
+END_VAR
+VAR_OUTPUT
+	info_cycle:classInfoCycle;
+END_VAR
+VAR
+	pumps: ARRAY [1..8] OF BOOL;
+	i: SINT:=8;
+	old:BOOL;
+	start_timer: TIME:=t#0ms;
+	start_delay:TON;
+	in: BOOL;
+
+	working_time:TIME;
+	Q:BOOL;
+	n: SINT;
+END_VAR
+(* @END_DECLARATION := '0' *)
+pumps[1]:=pump1;
+pumps[2]:=pump2;
+pumps[3]:=pump3;
+pumps[4]:=pump4;
+pumps[5]:=pump5;
+pumps[6]:=pump6;
+pumps[7]:=pump7;
+pumps[8]:=pump8;
+
+
+n:=i;
+
+IF pumps[i]=FALSE THEN
+	i:=i+1;
+END_IF;
+
+(* запоминаем стартовое время *)
+IF  start_timer=t#0ms THEN
+	start_timer:=get_systime();
+	in:=TRUE;
+END_IF;
+
+working_time:=work_time(start_timer);
+
+
+IF working_time>=set_timer THEN
+	in:=FALSE;
+	i:=i+1;
+	start_timer:=t#0ms;
+END_IF;
+
+start_delay(IN:=in, PT:=t#3s);
+Q:=start_delay.Q;
+
+IF i>8 THEN
+	i:=1;
+END_IF;
+
+IF enable THEN
+	info_cycle.working_time:=working_time;
+	info_cycle.run_timer:=Q;
+	info_cycle.pump_number:=n;
+ELSE
+	info_cycle.working_time:=T#0s;
+	info_cycle.run_timer:=FALSE;
+	info_cycle.pump_number:=1;
+	start_timer:=t#0s;
+END_IF;
+END_FUNCTION_BLOCK
+ACTION	old:
+(*ELSIF time_clk THEN
+	i:=i+1;
+	run_timer_enable:=FALSE;
+	(*Q:=FALSE;*)
+ELSE
+	run_enable:=TRUE;
+
+	(* Q:=info_timer.run_timer; *)
+END_IF;
+
+IF i>8 THEN
+	i:=1;
+END_IF;
+
+IF run_timer_enable THEN
+	start_cycle:=get_systime;
+	run_timer_enable:=FALSE;
+END_IF;*)
+old:=TRUE;
+END_ACTION
+
+
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/FunctionClasses\/Cycle' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION_BLOCK cycle_timer_fb_
+VAR_INPUT
+	set_time:TIME;
+	start_timer:BOOL;
+END_VAR
+VAR_OUTPUT
+	cycle_timer:classInfoCycle;
+END_VAR
+VAR
+	timer_on:TON;
+	time_work:TOF;
+	delay_on:TIME:= t#3s;
+	delay_off: TIME:=t#100ms;
+END_VAR
+(* @END_DECLARATION := '0' *)
+(* делаем задержку на включение *)
+timer_on.IN:=start_timer;
+timer_on.PT:=delay_on;
+(* стартуем *)
+
+time_work.IN := timer_on.Q;
+time_work.PT := set_time;
+
+cycle_timer.run_timer:=time_work.Q;
+cycle_timer.working_time:=time_work.ET;
+END_FUNCTION_BLOCK
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/FunctionClasses\/Cycle' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION cycle_timer_fun : classInfoCycle
+VAR_INPUT
+	set_time:TIME;
+	start_timer:BOOL;
+END_VAR
+
+VAR
+	timer_on:TON;
+	time_work:TOF;
+	delay_on:TIME:= t#3s;
+	delay_off: TIME:=t#100ms;
+END_VAR
+(* @END_DECLARATION := '0' *)
+(* делаем задержку на включение *)
+timer_on.IN:=start_timer;
+timer_on.PT:=delay_on;
+(* стартуем *)
+
+time_work.IN := timer_on.Q;
+time_work.PT := set_time;
+
+cycle_timer_fun.run_timer:=time_work.Q;
+cycle_timer_fun.working_time:=time_work.ET;
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/FunctionClasses\/Cycle' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION get_systime : TIME
+VAR_INPUT
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+get_systime:=TIME();
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/FunctionClasses\/Cycle' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION get_timer_info : classInfoCycle
+VAR_INPUT
+	q:BOOL;
+	et:TIME;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+get_timer_info.run_timer:=q;
+get_timer_info.working_time:=et;
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/FunctionClasses\/Cycle' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION set_cycle_timer : TIME
+VAR_INPUT
+	hours: WORD;
+	minutes:  WORD;
+	seconds: WORD;
+END_VAR
+VAR
+	MILLISECONDS_IN_HOUR: DWORD := 3600000;
+	MILLISECONDS_IN_MINUTE: DWORD  := 60000;
+	MILLISECONDS_IN_SECOND: DWORD  := 1000;
+END_VAR
+(* @END_DECLARATION := '0' *)
+set_cycle_timer := DWORD_TO_TIME((WORD_TO_DWORD(hours) * MILLISECONDS_IN_HOUR) + (WORD_TO_DWORD(minutes) * MILLISECONDS_IN_MINUTE) + (WORD_TO_DWORD(seconds) * MILLISECONDS_IN_SECOND));
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/FunctionClasses\/Cycle' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION_BLOCK timer_c
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+	t:TIME;
+END_VAR
+VAR
+	timer: TP;
+	clk1: R_TRIG;
+	clk2: F_TRIG;
+	count: CTU;
+END_VAR
+(* @END_DECLARATION := '0' *)
+_CFC_BODY
+
+END_FUNCTION_BLOCK
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/FunctionClasses\/Cycle' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION work_time : TIME
+VAR_INPUT
+	start:TIME;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+work_time:=TIME() - start;
+
+(*IF work_time >= set THEN
+	work_time:=FALSE;
+ELSE
+	work_time:=TRUE;
+END_IF;*)
+
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/FunctionClasses' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION get_alarm_pump : BOOL
+VAR_INPUT
+	source:STRING(2);
+	discrete_inputs:classPLC110_32;
+END_VAR
+VAR
+	kpi35: BOOL;
+	kpi36:  BOOL;
+	alarm_pump1: BOOL;
+	alarm_pump2:BOOL;
+	kpi:BOOL;
+
+END_VAR
+(* @END_DECLARATION := '0' *)
+source :=source;
+IF source = 'HW' THEN
+	kpi35 := discrete_inputs.discrete_inputs.first_byte.Bit1;
+	kpi36 := discrete_inputs.discrete_inputs.first_byte.Bit2;
+	alarm_pump1 := discrete_inputs.discrete_inputs.first_byte.Bit5;
+	alarm_pump2 := discrete_inputs.discrete_inputs.first_byte.Bit6;
+ELSIF source = 'WS' THEN
+	kpi35 := discrete_inputs.discrete_inputs.first_byte.Bit3;
+	kpi36 := discrete_inputs.discrete_inputs.first_byte.Bit4;
+	alarm_pump1 := discrete_inputs.discrete_inputs.first_byte.Bit7;
+	alarm_pump2 := discrete_inputs.discrete_inputs.first_byte.Bit8;
+ELSE
+	get_alarm_pump := FALSE;
+END_IF
+get_alarm_pump := kpi35 OR kpi36 OR alarm_pump1 OR alarm_pump2;
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/FunctionClasses' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION get_cycle_enable : BOOL
+(**)
+VAR_INPUT
+	pump_station_class:classPumpStation;
+END_VAR
+VAR
+	pump1:BOOL;
+ 	pump2:BOOL;
+END_VAR
+(* @END_DECLARATION := '0' *)
+pump1 := pump_station_class.pump1;
+pump2 := pump_station_class.pump2;
+get_cycle_enable := pump1 AND pump2;
+
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ObjectsProject\/Actions' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION int_to_time_hms : TIME
+VAR_INPUT
+	hours: WORD;
+	minutes:  WORD;
+	seconds: WORD;
+END_VAR
+VAR
+	MILLISECONDS_IN_HOUR: DWORD := 3600000;
+	MILLISECONDS_IN_MINUTE: DWORD  := 60000;
+	MILLISECONDS_IN_SECOND: DWORD  := 1000;
+END_VAR
+(* @END_DECLARATION := '0' *)
+int_to_time_hms := DWORD_TO_TIME((WORD_TO_DWORD(hours) * MILLISECONDS_IN_HOUR) + (WORD_TO_DWORD(minutes) * MILLISECONDS_IN_MINUTE) + (WORD_TO_DWORD(seconds) * MILLISECONDS_IN_SECOND));
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ObjectsProject\/AnalogInputsModule\/AnalogInputChannel' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION_BLOCK AnalogInputChannel
+VAR_INPUT
+	set_channel:classSetAnalogInputChannel;
+	value:REAL;
+	error_code:WORD;
+	sensor:classSetPressureSensor4_20;
+END_VAR
+VAR_OUTPUT
+	info_message:classInfoAnalogInputChannel;
+END_VAR
+VAR
+	channel:classAnalogInputChannel;
+END_VAR
+(* @END_DECLARATION := '0' *)
+channel.set_channel:=get_params_value_scaling(set_channel.ain_l, set_channel.ain_h, set_channel.analog_min_value, set_channel.analog_max_value);
+channel.value:=value;
+channel.error_code:=error_code;
+
+info_message:=get_infos_analog_input_channel(sensor, channel);
+END_FUNCTION_BLOCK
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ObjectsProject\/AnalogInputsModule\/AnalogInputChannel' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION_BLOCK ParamsAnalogInputChannel
+VAR_INPUT
+	(* Конфигурационные параметры канала модуля. см. инструкцию прибора: приложение. таблица В.2 *)
+	(* Границы АЦП и значения по умолчанию: для датчика 4-20mA  *)
+	ain_l: REAL := 0;  (* Параметр Ain.L *)
+	ain_h: REAL := 1000;  (* Параметр Ain.H *)
+	analog_min_value: REAL := 4;  (* Диапазон нижней границы датчика давления *)
+	analog_max_value: REAL := 20;  (* Диапазон верхней границы датчика давления *)
+
+END_VAR
+VAR_OUTPUT
+	params_channel:classSetAnalogInputChannel;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+params_channel.ain_l:=ain_l;
+params_channel.ain_h:=ain_h;
+params_channel.analog_min_value:=analog_min_value;
+params_channel.analog_max_value:=analog_max_value;
+END_FUNCTION_BLOCK
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ObjectsProject\/AnalogInputsModule\/MB110_8a\/Methods' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION get_channel_current_value : REAL
+(* функция распаковывает InfoMessage от AnalogInputsModule  и достает из нужного канала значения тока *)
+VAR_INPUT
+	ch_number:INT;
+	Ain_info:classInfoAnalogInputModule;
+END_VAR
+VAR
+	list_value : ARRAY [1..8] OF REAL;
+END_VAR
+(* @END_DECLARATION := '0' *)
+list_value[1]:=Ain_info.channel1.current_value;
+list_value[2]:=Ain_info.channel2.current_value;
+list_value[3]:=Ain_info.channel3.current_value;
+list_value[4]:=Ain_info.channel4.current_value;
+list_value[5]:=Ain_info.channel5.current_value;
+list_value[6]:=Ain_info.channel6.current_value;
+list_value[7]:=Ain_info.channel7.current_value;
+list_value[8]:=Ain_info.channel8.current_value;
+
+get_channel_current_value:= list_value[ch_number];
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ObjectsProject\/AnalogInputsModule\/MB110_8a\/Methods' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION get_current_value : REAL
+(* Функция преобразовывает сигнал с АЦП в значение тока *)
+VAR_INPUT
+	code_error:WORD;
+	ch_set:classSetAnalogInputChannel;
+	ch_value:REAL;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+IF code_error = 0 THEN
+	get_current_value:=value_scaling(ch_value, get_set_Ain_value_params(ch_set));
+ELSE
+	(* если модуль вернул ошибку покажем писюны *)
+	get_current_value:=-8;
+END_IF;
+
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ObjectsProject\/AnalogInputsModule\/MB110_8a\/Methods' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION get_set_Ain_value_params : classParamsValueScaling
+(* Преобразование из типа настроек входа в параметры масштабирования *)
+VAR_INPUT
+	set:classSetAnalogInputChannel;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+get_set_Ain_value_params.in_min:=set.ain_l;
+get_set_Ain_value_params.in_max:=set.ain_h;
+get_set_Ain_value_params.out_min:=set.analog_min_value;
+get_set_Ain_value_params.out_max:=set.analog_max_value;
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ObjectsProject\/AnalogInputsModule\/MB110_8a\/Methods' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION get_setAin : classSetAnalogInputChannel
+(* Упаковыка настроек в dataclass *)
+VAR_INPUT
+	ch_ain_l: REAL := 0;  (* Параметр Ain.L *)
+	ch_ain_h: REAL := 100;  (* Параметр Ain.H *)
+	ch_analog_min_value: REAL := 4;  (* Диапазон нижней границы датчика *)
+	ch_analog_max_value: REAL := 20;  (* Диапазон верхней границы датчика *)
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+get_setAin.ain_l:=ch_ain_l;
+get_setAin.ain_h:=ch_ain_h;
+get_setAin.analog_min_value:=ch_analog_min_value;
+get_setAin.analog_max_value:=ch_analog_max_value;
+
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ObjectsProject\/AnalogInputsModule\/MB110_8a' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION_BLOCK MB110_8a
+VAR_INPUT
+	ch1_error_code:WORD:=61447;
+	ch1_value:REAL;
+	ch2_error_code:WORD:=61447;
+	ch2_value:REAL;
+	ch3_error_code:WORD:=61447;
+	ch3_value:REAL;
+	ch4_error_code:WORD:=61447;
+	ch4_value:REAL;
+	ch5_error_code:WORD:=61447;
+	ch5_value:REAL;
+	ch6_error_code:WORD:=61447;
+	ch6_value:REAL;
+	ch7_error_code:WORD:=61447;
+	ch7_value:REAL;
+	ch8_error_code:WORD:=61447;
+	ch8_value:REAL;
+	settings:classSetAnalogInputsModule;
+END_VAR
+VAR_OUTPUT
+	info:classInfoAnalogInputModule;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+
+get_info_message;
+
+
+
+END_FUNCTION_BLOCK
+ACTION	get_info_message:
+
+info.channel1.error_message:=get_error_code(ch1_error_code);
+info.channel2.error_message:=get_error_code(ch2_error_code);
+info.channel3.error_message:=get_error_code(ch3_error_code);
+info.channel4.error_message:=get_error_code(ch4_error_code);
+info.channel5.error_message:=get_error_code(ch5_error_code);
+info.channel6.error_message:=get_error_code(ch6_error_code);
+info.channel7.error_message:=get_error_code(ch7_error_code);
+info.channel8.error_message:=get_error_code(ch8_error_code);
+
+info.channel1.current_value:=get_current_value(ch1_error_code,settings.ch1_set, ch1_value);
+info.channel2.current_value:=get_current_value(ch2_error_code,settings.ch2_set, ch2_value);
+info.channel3.current_value:=get_current_value(ch3_error_code,settings.ch3_set, ch3_value);
+info.channel4.current_value:=get_current_value(ch4_error_code,settings.ch4_set, ch4_value);
+info.channel5.current_value:=get_current_value(ch5_error_code,settings.ch5_set, ch5_value);
+info.channel6.current_value:=get_current_value(ch6_error_code,settings.ch6_set, ch6_value);
+info.channel7.current_value:=get_current_value(ch7_error_code,settings.ch7_set, ch7_value);
+info.channel8.current_value:=get_current_value(ch8_error_code,settings.ch8_set, ch8_value);
+
+END_ACTION
+
+
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ObjectsProject\/AnalogInputsModule\/MB110_8a' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION_BLOCK SetChannelsAnalogInputsModule
+VAR_INPUT
+	(* Конфигурационные параметры канала модуля. см. инструкцию прибора: приложение. таблица В.2 *)
+	(* Границы АЦП и значения по умолчанию: для датчика 4-20mA  *)
+
+	ch1_ain_l: REAL := 0;  (* Параметр Ain.L *)
+	ch1_ain_h: REAL := 100;  (* Параметр Ain.H *)
+	ch1_analog_min_value: REAL := 4;  (* Диапазон нижней границы датчика *)
+	ch1_analog_max_value: REAL := 20;  (* Диапазон верхней границы датчика *)
+
+	ch2_ain_l: REAL := 0;  (* Параметр Ain.L *)
+	ch2_ain_h: REAL := 100;  (* Параметр Ain.H *)
+	ch2_analog_min_value: REAL := 4;  (* Диапазон нижней границы датчика *)
+	ch2_analog_max_value: REAL := 20;  (* Диапазон верхней границы датчика *)
+
+	ch3_ain_l: REAL := 0;  (* Параметр Ain.L *)
+	ch3_ain_h: REAL := 100;  (* Параметр Ain.H *)
+	ch3_analog_min_value: REAL := 4;  (* Диапазон нижней границы датчика *)
+	ch3_analog_max_value: REAL := 20;  (* Диапазон верхней границы датчика *)
+
+	ch4_ain_l: REAL := 0;  (* Параметр Ain.L *)
+	ch4_ain_h: REAL := 100;  (* Параметр Ain.H *)
+	ch4_analog_min_value: REAL := 4;  (* Диапазон нижней границы датчика *)
+	ch4_analog_max_value: REAL := 20;  (* Диапазон верхней границы датчика *)
+
+	ch5_ain_l: REAL := 0;  (* Параметр Ain.L *)
+	ch5_ain_h: REAL := 100;  (* Параметр Ain.H *)
+	ch5_analog_min_value: REAL := 4;  (* Диапазон нижней границы датчика *)
+	ch5_analog_max_value: REAL := 20;  (* Диапазон верхней границы датчика *)
+
+	ch6_ain_l: REAL := 0;  (* Параметр Ain.L *)
+	ch6_ain_h: REAL := 100;  (* Параметр Ain.H *)
+	ch6_analog_min_value: REAL := 4;  (* Диапазон нижней границы датчика *)
+	ch6_analog_max_value: REAL := 20;  (* Диапазон верхней границы датчика *)
+
+	ch7_ain_l: REAL := 0;  (* Параметр Ain.L *)
+	ch7_ain_h: REAL := 100;  (* Параметр Ain.H *)
+	ch7_analog_min_value: REAL := 4;  (* Диапазон нижней границы датчика *)
+	ch7_analog_max_value: REAL := 20;  (* Диапазон верхней границы датчика *)
+
+	ch8_ain_l: REAL := 0;  (* Параметр Ain.L *)
+	ch8_ain_h: REAL := 100;  (* Параметр Ain.H *)
+	ch8_analog_min_value: REAL := 4;  (* Диапазон нижней границы датчика *)
+	ch8_analog_max_value: REAL := 20;  (* Диапазон верхней границы датчика *)
+END_VAR
+VAR_OUTPUT
+	settings:classSetAnalogInputsModule;
+END_VAR
+VAR
+
+END_VAR
+(* @END_DECLARATION := '0' *)
+
+get_settings;
+
+END_FUNCTION_BLOCK
+ACTION	get_settings:
+
+settings.ch1_set:=get_setAin(ch1_ain_l, ch1_ain_h, ch1_analog_min_value, ch1_analog_max_value);
+settings.ch2_set:=get_setAin(ch2_ain_l, ch2_ain_h, ch2_analog_min_value, ch2_analog_max_value);
+settings.ch3_set:=get_setAin(ch3_ain_l, ch3_ain_h, ch3_analog_min_value, ch3_analog_max_value);
+settings.ch4_set:=get_setAin(ch4_ain_l, ch4_ain_h, ch4_analog_min_value, ch4_analog_max_value);
+settings.ch5_set:=get_setAin(ch5_ain_l, ch5_ain_h, ch5_analog_min_value, ch5_analog_max_value);
+settings.ch6_set:=get_setAin(ch6_ain_l, ch6_ain_h, ch6_analog_min_value, ch6_analog_max_value);
+settings.ch7_set:=get_setAin(ch7_ain_l, ch7_ain_h, ch7_analog_min_value, ch7_analog_max_value);
+settings.ch8_set:=get_setAin(ch8_ain_l, ch8_ain_h, ch8_analog_min_value, ch8_analog_max_value);
+END_ACTION
+
+
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ObjectsProject\/AnalogOutputsModule\/MY110_8u' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION_BLOCK get_info_analog_outputs_module
+VAR_INPUT
+	ch1_current:REAL;
+	ch2_current:REAL;
+	ch3_current:REAL;
+	ch4_current:REAL;
+	ch5_current:REAL;
+	ch6_current:REAL;
+	ch7_current:REAL;
+	ch8_current:REAL;
+END_VAR
+VAR_OUTPUT
+	info:classAnalogOutputModule;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+info.channel1.current_value:=ch1_current;
+info.channel2.current_value:=ch2_current;
+info.channel3.current_value:=ch3_current;
+info.channel4.current_value:=ch4_current;
+info.channel5.current_value:=ch5_current;
+info.channel6.current_value:=ch6_current;
+info.channel7.current_value:=ch7_current;
+info.channel8.current_value:=ch8_current;
+END_FUNCTION_BLOCK
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ObjectsProject\/AnalogOutputsModule\/MY110_8u' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION_BLOCK MY110_8u
+VAR_INPUT
+	info_current_channel:classAnalogOutputModule;
+END_VAR
+VAR_OUTPUT
+	ch1_value:WORD;
+	ch2_value:WORD;
+	ch3_value:WORD;
+	ch4_value:WORD;
+	ch5_value:WORD;
+	ch6_value:WORD;
+	ch7_value:WORD;
+	ch8_value:WORD;
+END_VAR
+VAR
+	ch_ain_l: REAL := 4;  (* Диапазон нижней границы выходных элементов *)
+	ch_ain_h: REAL := 20;  (* Диапазон верхней границы выходных элементов *)
+	ch_analog_min_value: REAL :=  0;  (* Нижняя граница ЦАП *)
+	ch_analog_max_value: REAL := 1000;  (* Верхняя граница ЦАП *)
+	set_params:classParamsValueScaling;
+END_VAR
+(* @END_DECLARATION := '0' *)
+set_params:=get_params_value_scaling(ch_ain_l, ch_ain_h, ch_analog_min_value, ch_analog_max_value);
+
+ch1_value:=REAL_TO_INT(value_scaling(info_current_channel.channel1.current_value, set_params));
+ch2_value:=REAL_TO_INT(value_scaling(info_current_channel.channel2.current_value, set_params));
+ch3_value:=REAL_TO_INT(value_scaling(info_current_channel.channel3.current_value, set_params));
+ch4_value:=REAL_TO_INT(value_scaling(info_current_channel.channel4.current_value, set_params));
+ch5_value:=REAL_TO_INT(value_scaling(info_current_channel.channel5.current_value, set_params));
+ch6_value:=REAL_TO_INT(value_scaling(info_current_channel.channel6.current_value, set_params));
+ch7_value:=REAL_TO_INT(value_scaling(info_current_channel.channel7.current_value, set_params));
+ch8_value:=REAL_TO_INT(value_scaling(info_current_channel.channel8.current_value, set_params));
+END_FUNCTION_BLOCK
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ObjectsProject\/InvertorDrive\/Methods' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION get_active : BOOL
+VAR_INPUT
+	info_invertor_drive:classInfoInvertorDrive;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+get_active:=info_invertor_drive.active;
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ObjectsProject\/InvertorDrive\/Methods' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION get_aout_current_in_info : REAL
+VAR_INPUT
+	info_invertor_drive:classInfoInvertorDrive;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+get_aout_current_in_info:=info_invertor_drive.aout_frequency;
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ObjectsProject\/InvertorDrive\/Methods' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION get_external_alarm : STRING(79)
+(* Получение сообщения аварии по сухому ходу или превышению давления *)
+VAR_INPUT
+	low_pressure_in:BOOL;
+	high_pressure_out:BOOL;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+IF low_pressure_in THEN
+	get_external_alarm:='Низкое давление на входе';
+ELSIF high_pressure_out THEN
+	get_external_alarm:='Высокое давление на выходе';
+ELSE
+	get_external_alarm:='GOOD';
+END_IF;
+
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ObjectsProject\/InvertorDrive\/Methods' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION get_frequency_in_info : REAL
+VAR_INPUT
+	info_invertor_drive:classInfoInvertorDrive;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+get_frequency_in_info:=info_invertor_drive.frequency;
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ObjectsProject\/InvertorDrive\/Methods' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION get_run_in_info : BOOL
+VAR_INPUT
+	info_invertor_drive:classInfoInvertorDrive;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+get_run_in_info:=info_invertor_drive.run ;
+
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ObjectsProject\/InvertorDrive' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION_BLOCK InvertorDrive
+VAR_INPUT
+(* discrete inputs *)
+	start:BOOL:=FALSE;
+	reset_fault:BOOL:=FALSE;
+	low_pressure_in:BOOL;  (* external alarm *)
+	high_pressure_out:BOOL;  (* external alrm *)
+(* discrete outputs *)
+	status_run:BOOL;
+	status_alarm:BOOL;
+(* analog inputs *)
+	ain_value:REAL:=0;  (* mA or V *)
+(* analog outputs *)
+	aout_value:REAL:=0;
+(* PID settings *)
+	auto:BOOL:=FALSE;
+	direct_logic:BOOL:=TRUE;  (* флаг прямого/обратного управления; при обратном управлении если значение контролируемой величины ниже уставки, выходная частота уменьшается, и наоборот*)
+	set_point:REAL:=0;  (* уставка, задается в единицах измерения контролируемой величины *)
+	(* value:REAL;  текущее значение контролируемой величины, получаемое с датчика *)
+	P:REAL:=2;  (* Пропорциональный коэффициент регулятора, при увеличении выход регулятора изменяется быстрее*)
+	I:INT:=10;  (* Интегральный коэффичиент регулятора, время в секундах *)
+	D:INT:=0;  (* Дифференциальный коэффичиент регулятора, время в секундах *)
+
+(* limit work frequency *)
+	manual:REAL:=0;(*Hz*)
+	min_range:REAL:=15;  (*Hz*)
+	max_range:REAL:=50;  (*Hz*)
+
+(* Статус в работе/не в работе *)
+	active:BOOL:=FALSE;
+END_VAR
+VAR_OUTPUT
+	info:classInfoInvertorDrive;
+	settings_pid:classSetPid;
+END_VAR
+VAR
+	invertor_drive:classInvertorDrive;
+       set_auto:classSetAutoInvertorDrive;
+	set_frequency: classSetLimitFrequency;
+	set_pid:classSetPid;
+
+	discrete_inputs: classInvertorDriveDiscreteInputs;
+	discrete_outputs: classInvertorDriveDiscreteOutputs;
+	analog_inputs: classInvertorDriveAnalogInputs;
+	analog_outputs:classInvertorDriveAnalogOutputs;
+
+	overflow:BOOL:=FALSE;
+
+	external_alarm:STRING(79);
+
+	info_alarm: classAlarmInvertorDrive;
+END_VAR
+(* @END_DECLARATION := '0' *)
+init;
+
+info_alarm.external_alarm:= get_external_alarm(discrete_inputs.low_pressure_in, discrete_inputs.high_pressure_out);  (* Проверяем давление на входе и выходе *)
+
+get_PID_set;
+
+get_infomessage;
+END_FUNCTION_BLOCK
+ACTION	get_infoMessage:
+info.active:=active;
+info.set_pid:=set_pid;
+info.alarm.external_alarm:=info_alarm.external_alarm;
+
+IF discrete_outputs.status_alarm THEN
+	info_alarm.fault_invertor_drive:='Авария частотного преобразователя!';
+	analog_outputs.out_frequency:=0;
+ELSE
+	info_alarm.fault_invertor_drive:='Аварий нет';
+END_IF;
+
+info.alarm.fault_invertor_drive:=info_alarm.fault_invertor_drive;
+
+IF discrete_outputs.status_run THEN
+	info.status_run:='Запущен';
+
+ELSE
+	info.status_run:='Остановлен';
+	analog_outputs.out_frequency:=0;
+END_IF;
+
+(* Получаем частоту на выходе *)
+info.frequency:=analog_outputs.out_frequency;
+(* Получаем значение частоты на аналоговом выходе 4-20мА *)
+info.aout_frequency:=value_scaling(analog_outputs.out_frequency, get_params_value_scaling(0, 50, 4, 20));
+
+(*  если нет аварий или ошибок запускаем частотник *)
+IF info.alarm.external_alarm  <> 'GOOD' THEN
+	discrete_inputs.start:=FALSE;
+ELSIF info.alarm.fault_invertor_drive <> 'Аварий нет' THEN
+	discrete_inputs.start:=FALSE;
+ELSE
+	discrete_inputs.start:=invertor_drive.discrete_inputs.start;
+END_IF;
+
+info.reset_fault:=discrete_inputs.reset_fault;
+
+info.run:=discrete_inputs.start;
+
+END_ACTION
+
+ACTION	get_PID_set:
+
+analog_inputs:=invertor_drive.analog_input;
+set_auto:=invertor_drive.set.set_auto;
+set_frequency:=invertor_drive.set.set_frequency;
+
+overflow:=FALSE; (* сюда прикрутить таймер цикла *)
+
+set_pid:=get_set_pid(set_auto.direct_logic,	set_auto.value, set_auto.set_point, set_auto.P, set_auto.I, set_auto.D, set_frequency.manual, 0, set_frequency.min_range, set_frequency.max_range, NOT set_auto.auto, overflow);
+
+settings_pid:=set_pid;
+END_ACTION
+
+ACTION	init:
+invertor_drive.analog_input.set_frequency:=ain_value;
+invertor_drive.analog_output.out_frequency:=aout_value;
+
+invertor_drive.discrete_inputs.start:=start;
+invertor_drive.discrete_inputs.reset_fault:=reset_fault;
+invertor_drive.discrete_inputs.low_pressure_in:=low_pressure_in;
+invertor_drive.discrete_inputs.high_pressure_out:=high_pressure_out;
+
+invertor_drive.discrete_outputs.status_run:=status_run;
+invertor_drive.discrete_outputs.status_alarm:=status_alarm;
+
+invertor_drive.set.set_frequency.min_range:=min_range;
+invertor_drive.set.set_frequency.max_range:=max_range;
+
+invertor_drive.set.set_auto.auto:=auto;
+invertor_drive.set.set_auto.direct_logic:=direct_logic;
+invertor_drive.set.set_auto.set_point:=set_point;
+invertor_drive.set.set_auto.value:=ain_value;
+invertor_drive.set.set_auto.P:=P;
+invertor_drive.set.set_auto.I:=I;
+invertor_drive.set.set_auto.D:=D;
+
+invertor_drive.set.set_frequency.manual:=manual;
+invertor_drive.set.set_frequency.min_range:=min_range;
+invertor_drive.set.set_frequency.max_range:=max_range;
+
+discrete_inputs:=invertor_drive.discrete_inputs;
+discrete_outputs:=invertor_drive.discrete_outputs;
+analog_outputs:=invertor_drive.analog_output;
+END_ACTION
+
+
+
+
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ObjectsProject\/PID_regulator\/Methods' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION get_PID : classInfoPid
+VAR_INPUT
+	set:classSetPid;
+END_VAR
+VAR
+	regulator:PID;
+END_VAR
+(* @END_DECLARATION := '0' *)
+regulator.ACTUAL:=set.actual;
+regulator.SET_POINT:=set.set_point;
+regulator.KP:=set.P;
+regulator.TN:=set.I;
+regulator.TV:=set.D;
+regulator.Y_MANUAL:=set.Y_manual;
+regulator.Y_OFFSET:=set.Y_offset;
+regulator.Y_MIN:=set.Y_min;
+regulator.Y_MAX:=set.Y_max;
+regulator.MANUAL:=set.manual;
+regulator.RESET:=set.reset;
+
+get_PID.out_value:=regulator.Y;
+get_PID.limits_active:=regulator.LIMITS_ACTIVE;
+get_PID.overflow:=regulator.OVERFLOW;
+
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ObjectsProject\/PID_regulator\/Methods' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION get_set_pid : classSetPid
+VAR_INPUT
+	direct_logic:BOOL:=TRUE;
+	actual:REAL;
+	set_point:REAL;
+	P:REAL:=2;  (* Пропорциональный коэффициент регулятора, при увеличении выход регулятора изменяется быстрее*)
+	I:INT:=10;  (* Интегральный коэффичиент регулятора, время в секундах *)
+	D:INT:=0;  (* Дифференциальный коэффичиент регулятора, время в секундах *)
+	Y_manual:REAL:=0;  (* Hz *)
+	Y_offset:REAL:=0;
+	Y_min:REAL;
+	Y_max:REAL;
+	manual:BOOL:=TRUE;  (* поумолчанию включаем ручной режим *)
+	reset:BOOL:=FALSE;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+IF direct_logic = TRUE THEN
+	get_set_pid.actual:=actual;
+	get_set_pid.set_point:=set_point;
+ELSE
+	get_set_pid.actual:=set_point;
+	get_set_pid.set_point:=actual;
+END_IF;
+
+get_set_pid.P:=P;
+get_set_pid.I:=I;
+get_set_pid.D:=D;
+get_set_pid.Y_manual:=Y_manual;
+get_set_pid.Y_offset:=Y_offset;
+get_set_pid.Y_min:=Y_min;
+get_set_pid.Y_max:=Y_max;
+get_set_pid.manual:=manual;
+get_set_pid.reset:=reset;
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ObjectsProject\/PID_regulator' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION_BLOCK params_in_set_PID
+VAR_INPUT
+	set:classSetPid;
+END_VAR
+VAR_OUTPUT
+	actual:REAL;
+	set_point:REAL;
+	P:REAL;
+	I:REAL;
+	D:REAL;
+	Y_manual:REAL;
+	Y_offset:REAL;
+	Y_min:REAL;
+	Y_max:REAL;
+	manual:BOOL;
+	reset:BOOL;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+actual:=set.actual;
+set_point:=set.set_point;
+P:=set.P;
+I:=set.I;
+D:=set.D;
+Y_manual:=set.Y_manual;
+Y_offset:=set.Y_offset;
+Y_min:=set.Y_min;
+Y_max:=set.Y_max;
+manual:=set.manual;
+reset:=set.reset;
+END_FUNCTION_BLOCK
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ObjectsProject\/PLC110\/32m2' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION_BLOCK PLC110_32m2
+VAR_INPUT
+	FDI1:BOOL;
+	FDI2:BOOL;
+	DI1:BOOL;
+	DI2:BOOL;
+	DI3:BOOL;
+	DI4:BOOL;
+	DI5:BOOL;
+	DI6:BOOL;
+	DI7:BOOL;
+	DI8:BOOL;
+	DI9:BOOL;
+	DI10:BOOL;
+	DI11:BOOL;
+	DI12:BOOL;
+	DI13:BOOL;
+	DI14:BOOL;
+	DI15:BOOL;
+	DI16:BOOL;
+	SI:BOOL;
+	status_outputs:classPLC32m2StatusOutputs;
+END_VAR
+VAR_OUTPUT
+	FDO1:BOOL;
+	FDO2:BOOL;
+	FDO3:BOOL;
+	FDO4:BOOL;
+	DO1:BOOL;
+	DO2:BOOL;
+	DO3:BOOL;
+	DO4:BOOL;
+	DO5:BOOL;
+	DO6:BOOL;
+	DO7:BOOL;
+	DO8:BOOL;
+	DO9:BOOL;
+	DO10:BOOL;
+	DO11:BOOL;
+	DO12:BOOL;
+	DO13:BOOL;
+	DO14:BOOL;
+	DO15:BOOL;
+	DO16:BOOL;
+	SO:BOOL;
+	status_inputs:classPLC32m2StatusInputs;
+END_VAR
+VAR
+	fast_inputs:classFastDiscreteInputs;
+	discrete_inputs:classDiscreteInputs;
+	special_input:classSpecialInput;
+	fast_outputs:classFastDiscreteOutputs;
+	discrete_outputs:classDiscreteOutputs;
+	special_output:classSpecialOutput;
+END_VAR
+(* @END_DECLARATION := '0' *)
+init;
+
+get_status_inputs;
+
+get_status_outputs;
+
+END_FUNCTION_BLOCK
+ACTION	get_status_inputs:
+status_inputs.fast_inputs:=fast_inputs;
+status_inputs.discrete_inputs:=discrete_inputs;
+status_inputs.special_input:=special_input;
+END_ACTION
+
+ACTION	get_status_outputs:
+
+FDO1:=status_outputs.fast_outputs.Bit1;
+FDO2:=status_outputs.fast_outputs.Bit2;
+FDO3:=status_outputs.fast_outputs.Bit3;
+FDO4:=status_outputs.fast_outputs.Bit4;
+
+DO1:=status_outputs.discrete_outputs.first_byte.Bit1;
+DO2:=status_outputs.discrete_outputs.first_byte.Bit2;
+DO3:=status_outputs.discrete_outputs.first_byte.Bit3;
+DO4:=status_outputs.discrete_outputs.first_byte.Bit4;
+DO5:=status_outputs.discrete_outputs.first_byte.Bit5;
+DO6:=status_outputs.discrete_outputs.first_byte.Bit6;
+DO7:=status_outputs.discrete_outputs.first_byte.Bit7;
+DO8:=status_outputs.discrete_outputs.first_byte.Bit8;
+DO9:=status_outputs.discrete_outputs.second_byte.Bit1;
+DO10:=status_outputs.discrete_outputs.second_byte.Bit2;
+DO11:=status_outputs.discrete_outputs.second_byte.Bit3;
+DO12:=status_outputs.discrete_outputs.second_byte.Bit4;
+DO13:=status_outputs.discrete_outputs.second_byte.Bit5;
+DO14:=status_outputs.discrete_outputs.second_byte.Bit6;
+DO15:=status_outputs.discrete_outputs.second_byte.Bit7;
+DO16:=status_outputs.discrete_outputs.second_byte.Bit8;
+
+SO:=status_outputs.special_output.Bit1;
+END_ACTION
+
+ACTION	init:
+fast_inputs.Bit1:=FDI1;
+fast_inputs.Bit2:=FDI2;
+
+discrete_inputs.first_byte.Bit1:=DI1;
+discrete_inputs.first_byte.Bit2:=DI2;
+discrete_inputs.first_byte.Bit3:=DI3;
+discrete_inputs.first_byte.Bit4:=DI4;
+discrete_inputs.first_byte.Bit5:=DI5;
+discrete_inputs.first_byte.Bit6:=DI6;
+discrete_inputs.first_byte.Bit7:=DI7;
+discrete_inputs.first_byte.Bit8:=DI8;
+discrete_inputs.second_byte.Bit1:=DI9;
+discrete_inputs.second_byte.Bit2:=DI10;
+discrete_inputs.second_byte.Bit3:=DI11;
+discrete_inputs.second_byte.Bit4:=DI12;
+discrete_inputs.second_byte.Bit5:=DI13;
+discrete_inputs.second_byte.Bit6:=DI14;
+discrete_inputs.second_byte.Bit7:=DI15;
+discrete_inputs.second_byte.Bit8:=DI16;
+
+special_input.Bit1:=SI;
+
+fast_outputs.Bit1:=FDO1;
+fast_outputs.Bit2:=FDO2;
+fast_outputs.Bit3:=FDO3;
+fast_outputs.Bit4:=FDO4;
+
+discrete_outputs.first_byte.Bit1:=DO1;
+discrete_outputs.first_byte.Bit2:=DO2;
+discrete_outputs.first_byte.Bit3:=DO3;
+discrete_outputs.first_byte.Bit4:=DO4;
+discrete_outputs.first_byte.Bit5:=DO5;
+discrete_outputs.first_byte.Bit6:=DO6;
+discrete_outputs.first_byte.Bit7:=DO7;
+discrete_outputs.first_byte.Bit8:=DO8;
+
+discrete_outputs.second_byte.Bit1:=DO9;
+discrete_outputs.second_byte.Bit2:=DO10;
+discrete_outputs.second_byte.Bit3:=DO11;
+discrete_outputs.second_byte.Bit4:=DO12;
+discrete_outputs.second_byte.Bit5:=DO13;
+discrete_outputs.second_byte.Bit6:=DO14;
+discrete_outputs.second_byte.Bit7:=DO15;
+discrete_outputs.second_byte.Bit8:=DO16;
+
+special_output.Bit1:=SO;
+END_ACTION
+
+
+
+
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ObjectsProject\/PLC110\/Methods' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION get_di : BOOL
+VAR_INPUT
+	input_number:INT;
+	status_inputs:classPLC32m2StatusInputs;
+END_VAR
+VAR
+	in_f:classDiscreteInputByte;
+	in_s:classDiscreteInputByte;
+	di_list:ARRAY[1..17] OF BOOL;
+END_VAR
+(* @END_DECLARATION := '0' *)
+in_f:=status_inputs.discrete_inputs.first_byte;
+in_s:=status_inputs.discrete_inputs.second_byte;
+
+di_list[1]:=in_f.Bit1;
+di_list[2]:=in_f.Bit2;
+di_list[3]:=in_f.Bit3;
+di_list[4]:=in_f.Bit4;
+di_list[5]:=in_f.Bit5;
+di_list[6]:=in_f.Bit6;
+di_list[7]:=in_f.Bit7;
+di_list[8]:=in_f.Bit8;
+
+di_list[9]:=in_s.Bit1;
+di_list[10]:=in_s.Bit2;
+di_list[12]:=in_s.Bit3;
+di_list[13]:=in_s.Bit4;
+di_list[14]:=in_s.Bit5;
+di_list[15]:=in_s.Bit6;
+di_list[16]:=in_s.Bit7;
+di_list[17]:=in_s.Bit8;
+
+get_di:=di_list[input_number];
+
+
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ObjectsProject\/PLC110\/Methods' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION get_fdi : BOOL
+(* Распаковывает из статуса входов модуля выбранный FDI *)
+VAR_INPUT
+	num:INT;
+	status_inputs:classPLC32m2StatusInputs;
+END_VAR
+VAR
+	fdi_list:ARRAY [1..2] OF BOOL;
+END_VAR
+(* @END_DECLARATION := '0' *)
+fdi_list[1]:=status_inputs.fast_inputs.Bit1;
+fdi_list[2]:=status_inputs.fast_inputs.Bit2;
+
+get_fdi:=fdi_list[num];
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ObjectsProject\/PLC110\/Methods' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION_BLOCK get_status_outputs
+VAR_INPUT
+	fdo1:BOOL:=FALSE;
+	fdo2:BOOL:=FALSE;
+	fdo3:BOOL:=FALSE;
+	fdo4:BOOL:=FALSE;
+	do1:BOOL:=FALSE;
+	do2:BOOL:=FALSE;
+	do3:BOOL:=FALSE;
+	do4:BOOL:=FALSE;
+	do5:BOOL:=FALSE;
+	do6:BOOL:=FALSE;
+	do7:BOOL:=FALSE;
+	do8:BOOL:=FALSE;
+	do9:BOOL:=FALSE;
+	do10:BOOL:=FALSE;
+	do11:BOOL:=FALSE;
+	do12:BOOL:=FALSE;
+	do13:BOOL:=FALSE;
+	do14:BOOL:=FALSE;
+	do15:BOOL:=FALSE;
+	do16:BOOL:=FALSE;
+	sdo:BOOL:=FALSE;
+END_VAR
+VAR_OUTPUT
+	get_status_outputs:classPLC32m2StatusOutputs;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+get_status_outputs:=get_status_outputs_def(fdo1, fdo2, fdo3, fdo4, do1, do2, do3, do4, do5, do6, do7, do8, do9, do10, do11, do12, do13, do14, do15, do16, sdo);
+
+END_FUNCTION_BLOCK
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ObjectsProject\/PLC110\/Methods' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION get_status_outputs_def : classPLC32m2StatusOutputs
+VAR_INPUT
+	fdo1:BOOL:=FALSE;
+	fdo2:BOOL:=FALSE;
+	fdo3:BOOL:=FALSE;
+	fdo4:BOOL:=FALSE;
+	do1:BOOL:=FALSE;
+	do2:BOOL:=FALSE;
+	do3:BOOL:=FALSE;
+	do4:BOOL:=FALSE;
+	do5:BOOL:=FALSE;
+	do6:BOOL:=FALSE;
+	do7:BOOL:=FALSE;
+	do8:BOOL:=FALSE;
+	do9:BOOL:=FALSE;
+	do10:BOOL:=FALSE;
+	do11:BOOL:=FALSE;
+	do12:BOOL:=FALSE;
+	do13:BOOL:=FALSE;
+	do14:BOOL:=FALSE;
+	do15:BOOL:=FALSE;
+	do16:BOOL:=FALSE;
+	sdo:BOOL:=FALSE;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+get_status_outputs_def.fast_outputs.Bit1:=fdo1;
+get_status_outputs_def.fast_outputs.Bit2:=fdo2;
+get_status_outputs_def.fast_outputs.Bit3:=fdo3;
+get_status_outputs_def.fast_outputs.Bit4:=fdo4;
+
+get_status_outputs_def.discrete_outputs.first_byte.Bit1:=do1;
+get_status_outputs_def.discrete_outputs.first_byte.Bit2:=do2;
+get_status_outputs_def.discrete_outputs.first_byte.Bit3:=do3;
+get_status_outputs_def.discrete_outputs.first_byte.Bit4:=do4;
+get_status_outputs_def.discrete_outputs.first_byte.Bit5:=do5;
+get_status_outputs_def.discrete_outputs.first_byte.Bit6:=do6;
+get_status_outputs_def.discrete_outputs.first_byte.Bit7:=do7;
+get_status_outputs_def.discrete_outputs.first_byte.Bit8:=do8;
+get_status_outputs_def.discrete_outputs.second_byte.Bit1:=do9;
+get_status_outputs_def.discrete_outputs.second_byte.Bit2:=do10;
+get_status_outputs_def.discrete_outputs.second_byte.Bit3:=do11;
+get_status_outputs_def.discrete_outputs.second_byte.Bit4:=do12;
+get_status_outputs_def.discrete_outputs.second_byte.Bit5:=do13;
+get_status_outputs_def.discrete_outputs.second_byte.Bit6:=do14;
+get_status_outputs_def.discrete_outputs.second_byte.Bit7:=do15;
+get_status_outputs_def.discrete_outputs.second_byte.Bit8:=do16;
+
+get_status_outputs_def.special_output.Bit1:=sdo;
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ObjectsProject\/PressureSensors\/CurrentSensors\/Current_4_20' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION_BLOCK CurrentSensorPressure_4_20
+VAR_INPUT
+	current_value:REAL;  (*значение тока 4-20мА *)
+	set:classSetPressureSensor4_20;  (* верхняя и нижняя границы давления *)
+END_VAR
+VAR_OUTPUT
+	pressure:REAL;  (* Давление на выходе *)
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+pressure:=value_scaling(current_value, get_set_sensor_value_params(set));
+
+END_FUNCTION_BLOCK
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ObjectsProject\/PressureSensors\/CurrentSensors\/Current_4_20' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION get_set_sensor_value_params : classParamsValueScaling
+VAR_INPUT
+	sensor_set:classSetPressureSensor4_20;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+get_set_sensor_value_params.in_min:=sensor_set.min_current_range;
+get_set_sensor_value_params.in_max:=sensor_set.max_current_range;
+get_set_sensor_value_params.out_min:=sensor_set.min_measure_range;
+get_set_sensor_value_params.out_max:=sensor_set.max_measure_range;
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ObjectsProject\/PressureSensors\/CurrentSensors\/Current_4_20' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION_BLOCK SetCurrentSensorPressure_4_20
+VAR_INPUT
+	min_measure_range:REAL;
+	max_measure_range:REAL;
+	min_current_range:REAL:=4;
+	max_current_range:REAL:=20;
+END_VAR
+VAR_OUTPUT
+	sensor_params:classSetPressureSensor4_20;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+sensor_params.min_measure_range:=min_measure_range;
+sensor_params.max_measure_range:=max_measure_range;
+sensor_params.min_current_range:=min_current_range;
+sensor_params.max_current_range:=max_current_range;
+END_FUNCTION_BLOCK
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ObjectsProject\/PressureSensors\/Kpi' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION_BLOCK Kpi
+VAR_INPUT
+	input:BOOL;  (* давление на входе *)
+	(* model:INT;
+	on:BOOL; *)
+END_VAR
+VAR_OUTPUT
+	NC:BOOL; (* normal close №2 *)
+	NO:BOOL; (* normal open №4 *)
+END_VAR
+VAR
+	set:classSetKpi;
+END_VAR
+(* @END_DECLARATION := '0' *)
+(* IF model = 35 THEN
+	set.range:=2;
+	set.diff:=0.4;
+ELSIF model = 36 THEN
+	set.range:= 8;
+	set.diff:=0.5;
+END_IF; *)
+
+NC:=NOT input;
+NO:=input;
+END_FUNCTION_BLOCK
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION_BLOCK cycle_timer_fb
+VAR_INPUT
+	timer_enable: BOOL;
+	cycle_time: TIME;
+	run_delay_time: TIME;
+END_VAR
+VAR_OUTPUT
+	run_flag: BOOL;
+	timer_end_impulse: BOOL;
+END_VAR
+VAR
+	run_delay: TON;
+	run_timer_flag: R_TRIG;
+	cycle_process: TOF;
+END_VAR
+(* @END_DECLARATION := '0' *)
+run_delay.PT := run_delay_time;
+run_delay.IN := timer_enable;
+END_FUNCTION_BLOCK
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION_BLOCK DiscreteOutput
+VAR_INPUT
+	run_enable:  BOOL;
+	reset_fault_enable: BOOL;
+END_VAR
+VAR_OUTPUT
+	run: BOOL;
+	reset_fault: BOOL;
+END_VAR
+VAR
+END_VAR
+(* @END_DECLARATION := '0' *)
+run:=run_enable;
+END_FUNCTION_BLOCK
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION_BLOCK Int_to_Time_timer
+VAR_INPUT
+	hours: BYTE;
+	minutes:  BYTE;
+	seconds: BYTE;
+END_VAR
+VAR_OUTPUT
+	timer_time: TIME;
+END_VAR
+VAR
+	MILLISECONDS_IN_HOUR: DWORD := 3600000;
+	MILLISECONDS_IN_MINUTE: DWORD  := 60000;
+	MILLISECONDS_IN_SECOND: DWORD  := 1000;
+END_VAR
+(* @END_DECLARATION := '0' *)
+timer_time := DWORD_TO_TIME((BYTE_TO_DWORD(hours) * MILLISECONDS_IN_HOUR) + (BYTE_TO_DWORD(minutes) * MILLISECONDS_IN_MINUTE) + (BYTE_TO_DWORD(seconds) * MILLISECONDS_IN_SECOND));
+END_FUNCTION_BLOCK
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+PROGRAM PLC_PRG
+VAR
+	info_channel:classInfoAnalogInputChannel;
+
+	info2: classInfoAnalogInputChannel;
+	channel1: AnalogInputChannel;
+	sensor1: SetCurrentSensorPressure_4_20;
+	Settings1: ParamsAnalogInputChannel;
+	PLC: PLC110_32m2;
+	PLCstatus_intputs:classPLC32m2StatusInputs;
+	Kpi35_HW: Kpi;
+	Kpi36_HW: Kpi;
+
+
+
+	AinModuleSettings: SetChannelsAnalogInputsModule;
+	AnalogInputsModule: MB110_8a;
+	Ain_info: classInfoAnalogInputModule;
+
+	set_pressure1: SetCurrentSensorPressure_4_20;
+	HW_in: CurrentSensorPressure_4_20;
+	set_pressure2: SetCurrentSensorPressure_4_20;
+	HW_out: CurrentSensorPressure_4_20;
+	set_pressure3: SetCurrentSensorPressure_4_20;
+	WS_in: CurrentSensorPressure_4_20;
+	set_pressure4: SetCurrentSensorPressure_4_20;
+	WS_out: CurrentSensorPressure_4_20;
+
+	hw_in_bar: REAL;
+	hw_out_bar: REAL;
+	ws_in_bar: REAL;
+	ws_out_bar: REAL;
+	set_PID: params_in_set_PID;
+
+
+	PLCstatus_outputs: classPLC32m2StatusOutputs;
+	PLCoutputs: get_status_outputs;
+
+	AnalogOutputsModule: MY110_8u;
+	InfoAnalogOutputsModule: get_info_analog_outputs_module;
+	timer: classInfoCycle;
+
+	h: WORD;
+	m: WORD;
+	se: WORD:=15;
+
+	HW_cycle: cycle;
+	info_cycle: classInfoCycle;
+
+	auto: BOOL;
+	HW_id1: InvertorDrive;
+	HW_id2: InvertorDrive;
+	PID_id1: PID;
+	PID_id2: PID;
+	info_id1: classInfoInvertorDrive;
+	info_id2: classInfoInvertorDrive;
+
+	HW_cascade: cascade;
+	info_cascade: classInfoCascade;
+	WS_id1: InvertorDrive;
+	WS_id2: InvertorDrive;
+	info_ws_id2: classInfoInvertorDrive;
+	info_ws_id1: classInfoInvertorDrive;
+	hw_id1_set_PID: params_in_set_PID;
+	hw_id_2_set_PID: params_in_set_PID;
+	ws_id1_set_PID: params_in_set_PID;
+	ws_id2_set_PID: params_in_set_PID;
+	PID_ws_id1: PID;
+	PID_ws_id2: PID;
+	num_pump: SINT:=1;
+	WS_id3: InvertorDrive;
+	info_ws_id3: classInfoInvertorDrive;
+	en_cyc: BOOL;
+END_VAR
+(* @END_DECLARATION := '0' *)
+_CFC_BODY
+_ELEMENT
+_ID: 192
+_MACROID: -1
+_POS: 30, 5
+_TYPE: _OUTPUT
+_TEXT: water_supply_run_id1
+_INPUTID: 118
+_INPUTIDX: 2
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 156
+_MACROID: -1
+_POS: 12, 6
+_TYPE: _INPUT
+_TEXT: pressure_max_hot_water
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 438
+_MACROID: -1
+_POS: 53, 6
+_TYPE: _INPUT
+_TEXT: info_id2
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 316
+_MACROID: -1
+_POS: 55, 4
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_run_in_info
+_ENENO: 0
+_INPUTS: 1
+_IN
+_INPUTID: 438
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 157
+_MACROID: -1
+_POS: 12, 7
+_TYPE: _INPUT
+_TEXT: pressure_min_water_supply
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 188
+_MACROID: -1
+_POS: 19, 33
+_TYPE: _INPUT
+_TEXT: input_pressure_ws
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 492
+_MACROID: -1
+_POS: 50, 33
+_TYPE: _INPUT
+_TEXT: info_ws_id1
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 179
+_MACROID: -1
+_POS: 22, 34
+_TYPE: _INPUT
+_TEXT: error_output_pressure_ws
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 189
+_MACROID: -1
+_POS: 20, 35
+_TYPE: _INPUT
+_TEXT: output_pressure_ws
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 239
+_MACROID: -1
+_POS: 73, 80
+_TYPE: _OUTPUT
+_TEXT: hw_in_bar
+_INPUTID: 211
+_INPUTIDX: 0
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 246
+_MACROID: -1
+_POS: 10, 81
+_TYPE: _INPUT
+_TEXT: 0
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 210
+_MACROID: -1
+_POS: 10, 79
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: set_pressure1
+_TYPENAME: SetCurrentSensorPressure_4_20
+_ENENO: 0
+_INPUTS: 4
+_IN
+_INPUTID: 246
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 247
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 228
+_MACROID: -1
+_POS: 17, 77
+_TYPE: _INPUT
+_TEXT: Ain_info
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 232
+_MACROID: -1
+_POS: 33, 79
+_TYPE: _INPUT
+_TEXT: 1
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 231
+_MACROID: -1
+_POS: 33, 77
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_channel_current_value
+_ENENO: 0
+_INPUTS: 2
+_IN
+_INPUTID: 232
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 228
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 211
+_MACROID: -1
+_POS: 58, 78
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: HW_in
+_TYPENAME: CurrentSensorPressure_4_20
+_ENENO: 0
+_INPUTS: 2
+_IN
+_INPUTID: 231
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 210
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 169
+_MACROID: -1
+_POS: 3, 42
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: AinModuleSettings
+_TYPENAME: SetChannelsAnalogInputsModule
+_ENENO: 0
+_INPUTS: 32
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 194
+_MACROID: -1
+_POS: 30, 7
+_TYPE: _OUTPUT
+_TEXT: hot_water_reset_faults_id1
+_INPUTID: 118
+_INPUTIDX: 4
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 158
+_MACROID: -1
+_POS: 12, 8
+_TYPE: _INPUT
+_TEXT: pressure_max_water_supply
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 195
+_MACROID: -1
+_POS: 30, 8
+_TYPE: _OUTPUT
+_TEXT: hot_water_reset_faults_id2
+_INPUTID: 118
+_INPUTIDX: 5
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 159
+_MACROID: -1
+_POS: 12, 9
+_TYPE: _INPUT
+_TEXT: status_alarm_hw_id1
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 196
+_MACROID: -1
+_POS: 30, 9
+_TYPE: _OUTPUT
+_TEXT: water_supply_reset_faults_id1
+_INPUTID: 118
+_INPUTIDX: 6
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 490
+_MACROID: -1
+_POS: 54, 9
+_TYPE: _INPUT
+_TEXT: info_ws_id1
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 318
+_MACROID: -1
+_POS: 57, 7
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_run_in_info
+_ENENO: 0
+_INPUTS: 1
+_IN
+_INPUTID: 490
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 160
+_MACROID: -1
+_POS: 12, 10
+_TYPE: _INPUT
+_TEXT: status_alarm_hw_id2
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 197
+_MACROID: -1
+_POS: 30, 10
+_TYPE: _OUTPUT
+_TEXT: water_supply_reset_faults_id2
+_INPUTID: 118
+_INPUTIDX: 7
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 161
+_MACROID: -1
+_POS: 12, 11
+_TYPE: _INPUT
+_TEXT: status_alarm_sw_id1
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 162
+_MACROID: -1
+_POS: 12, 12
+_TYPE: _INPUT
+_TEXT: status_alarm_sw_id2
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 319
+_MACROID: -1
+_POS: 57, 10
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_run_in_info
+_ENENO: 0
+_INPUTS: 1
+_IN
+_INPUTID: 491
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 163
+_MACROID: -1
+_POS: 12, 13
+_TYPE: _INPUT
+_TEXT: status_run_hw_id1
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 164
+_MACROID: -1
+_POS: 12, 14
+_TYPE: _INPUT
+_TEXT: status_run_hw_id2
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 165
+_MACROID: -1
+_POS: 12, 15
+_TYPE: _INPUT
+_TEXT: status_run_ws_id1
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 313
+_MACROID: -1
+_POS: 53, 3
+_TYPE: _INPUT
+_TEXT: info_id1
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 314
+_MACROID: -1
+_POS: 62, 1
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_run_in_info
+_ENENO: 0
+_INPUTS: 1
+_IN
+_INPUTID: 313
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 166
+_MACROID: -1
+_POS: 12, 16
+_TYPE: _INPUT
+_TEXT: status_run_ws_id2
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 309
+_MACROID: -1
+_POS: 81, 1
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: PLCoutputs
+_TYPENAME: get_status_outputs
+_ENENO: 0
+_INPUTS: 21
+_IN
+_INPUTID: 314
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 316
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 318
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 319
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 529
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 311
+_MACROID: -1
+_POS: 99, 3
+_TYPE: _OUTPUT
+_TEXT: PLCstatus_outputs
+_INPUTID: 309
+_INPUTIDX: 0
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 530
+_MACROID: -1
+_POS: 51, 16
+_TYPE: _INPUT
+_TEXT: info_ws_id3
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 529
+_MACROID: -1
+_POS: 57, 14
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_run_in_info
+_ENENO: 0
+_INPUTS: 1
+_IN
+_INPUTID: 530
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 312
+_MACROID: -1
+_POS: 12, 22
+_TYPE: _INPUT
+_TEXT: PLCstatus_outputs
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 167
+_MACROID: -1
+_POS: 33, 24
+_TYPE: _OUTPUT
+_TEXT: PLCstatus_intputs
+_INPUTID: 118
+_INPUTIDX: 21
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 172
+_MACROID: -1
+_POS: 40, 28
+_TYPE: _OUTPUT
+_TEXT: Ain_info
+_INPUTID: 170
+_INPUTIDX: 0
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 249
+_MACROID: -1
+_POS: 9, 115
+_TYPE: _INPUT
+_TEXT: PLCstatus_intputs
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 251
+_MACROID: -1
+_POS: 13, 114
+_TYPE: _INPUT
+_TEXT: 1
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 250
+_MACROID: -1
+_POS: 15, 112
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_di
+_ENENO: 0
+_INPUTS: 2
+_IN
+_INPUTID: 251
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 249
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 119
+_MACROID: -1
+_POS: 29, 112
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: Kpi35_HW
+_TYPENAME: Kpi
+_ENENO: 0
+_INPUTS: 1
+_IN
+_INPUTID: 250
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 2
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 191
+_MACROID: -1
+_POS: 30, 4
+_TYPE: _OUTPUT
+_TEXT: hot_water_run_id2
+_INPUTID: 118
+_INPUTIDX: 1
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 155
+_MACROID: -1
+_POS: 12, 5
+_TYPE: _INPUT
+_TEXT: pressure_min_hot_water
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 326
+_MACROID: -1
+_POS: 110, 27
+_TYPE: _OUTPUT
+_TEXT: output_value_hw_id1
+_INPUTID: 322
+_INPUTIDX: 0
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 176
+_MACROID: -1
+_POS: 21, 28
+_TYPE: _INPUT
+_TEXT: error_input_pressure_hw
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 170
+_MACROID: -1
+_POS: 26, 26
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: AnalogInputsModule
+_TYPENAME: MB110_8a
+_ENENO: 0
+_INPUTS: 17
+_IN
+_INPUTID: 176
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 186
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 177
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 187
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 178
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 188
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 179
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 189
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 169
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 118
+_MACROID: -1
+_POS: 18, 1
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: PLC
+_TYPENAME: PLC110_32m2
+_ENENO: 0
+_INPUTS: 20
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 155
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 156
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 157
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 158
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 159
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 160
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 161
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 162
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 163
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 164
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 165
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 166
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 312
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 22
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 440
+_MACROID: -1
+_POS: 52, 30
+_TYPE: _INPUT
+_TEXT: info_id2
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 497
+_MACROID: -1
+_POS: 110, 30
+_TYPE: _OUTPUT
+_TEXT: output_value_ws_id2
+_INPUTID: 322
+_INPUTIDX: 3
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 187
+_MACROID: -1
+_POS: 20, 31
+_TYPE: _INPUT
+_TEXT: output_pressure_hw
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 178
+_MACROID: -1
+_POS: 21, 32
+_TYPE: _INPUT
+_TEXT: error_input_pressure_ws
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 193
+_MACROID: -1
+_POS: 30, 6
+_TYPE: _OUTPUT
+_TEXT: water_supply_run_id2
+_INPUTID: 118
+_INPUTIDX: 3
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 294
+_MACROID: -1
+_POS: 84, 113
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: PID_id1
+_TYPENAME: PID
+_ENENO: 0
+_INPUTS: 11
+_IN
+_INPUTID: 293
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 293
+_INPUTIDX: 1
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 293
+_INPUTIDX: 2
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 293
+_INPUTIDX: 3
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 293
+_INPUTIDX: 4
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 293
+_INPUTIDX: 5
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 293
+_INPUTIDX: 6
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 293
+_INPUTIDX: 7
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 293
+_INPUTIDX: 8
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 293
+_INPUTIDX: 9
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 294
+_INPUTIDX: 2
+_NEGATE: 0
+_END
+_OUTPUTS: 3
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 253
+_MACROID: -1
+_POS: 13, 118
+_TYPE: _INPUT
+_TEXT: 2
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 252
+_MACROID: -1
+_POS: 15, 116
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_di
+_ENENO: 0
+_INPUTS: 2
+_IN
+_INPUTID: 253
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 249
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 120
+_MACROID: -1
+_POS: 29, 116
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: Kpi36_HW
+_TYPENAME: Kpi
+_ENENO: 0
+_INPUTS: 1
+_IN
+_INPUTID: 252
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 2
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 496
+_MACROID: -1
+_POS: 110, 29
+_TYPE: _OUTPUT
+_TEXT: output_value_ws_id1
+_INPUTID: 322
+_INPUTIDX: 2
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 177
+_MACROID: -1
+_POS: 22, 30
+_TYPE: _INPUT
+_TEXT: error_output_pressure_hw
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 322
+_MACROID: -1
+_POS: 90, 25
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: AnalogOutputsModule
+_TYPENAME: MY110_8u
+_ENENO: 0
+_INPUTS: 1
+_IN
+_INPUTID: 323
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 8
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 325
+_MACROID: -1
+_POS: 52, 27
+_TYPE: _INPUT
+_TEXT: info_id1
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 324
+_MACROID: -1
+_POS: 52, 25
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_aout_current_in_info
+_ENENO: 0
+_INPUTS: 1
+_IN
+_INPUTID: 325
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 323
+_MACROID: -1
+_POS: 76, 25
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: InfoAnalogOutputsModule
+_TYPENAME: get_info_analog_outputs_module
+_ENENO: 0
+_INPUTS: 8
+_IN
+_INPUTID: 324
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 441
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 495
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 494
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 442
+_MACROID: -1
+_POS: 110, 28
+_TYPE: _OUTPUT
+_TEXT: output_value_hw_id2
+_INPUTID: 322
+_INPUTIDX: 1
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 186
+_MACROID: -1
+_POS: 19, 29
+_TYPE: _INPUT
+_TEXT: input_pressure_hw
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 190
+_MACROID: -1
+_POS: 30, 3
+_TYPE: _OUTPUT
+_TEXT: hot_water_run_id1
+_INPUTID: 118
+_INPUTIDX: 0
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 448
+_MACROID: -1
+_POS: 13, 140
+_TYPE: _INPUT
+_TEXT: 2
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 260
+_MACROID: -1
+_POS: 46, 155
+_TYPE: _INPUT
+_TEXT: TRUE
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 133
+_MACROID: -1
+_POS: 48, 112
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: HW_id1
+_TYPENAME: InvertorDrive
+_ENENO: 0
+_INPUTS: 18
+_IN
+_INPUTID: 445
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 119
+_INPUTIDX: 1
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 120
+_INPUTIDX: 1
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 306
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 305
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 258
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 294
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 262
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 263
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 302
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 260
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 2
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 240
+_MACROID: -1
+_POS: 73, 86
+_TYPE: _OUTPUT
+_TEXT: hw_out_bar
+_INPUTID: 213
+_INPUTIDX: 0
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 212
+_MACROID: -1
+_POS: 10, 85
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: set_pressure2
+_TYPENAME: SetCurrentSensorPressure_4_20
+_ENENO: 0
+_INPUTS: 4
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 247
+_MACROID: -1
+_POS: 10, 82
+_TYPE: _INPUT
+_TEXT: 16
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 234
+_MACROID: -1
+_POS: 33, 85
+_TYPE: _INPUT
+_TEXT: 2
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 233
+_MACROID: -1
+_POS: 33, 83
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_channel_current_value
+_ENENO: 0
+_INPUTS: 2
+_IN
+_INPUTID: 234
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 228
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 213
+_MACROID: -1
+_POS: 58, 84
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: HW_out
+_TYPENAME: CurrentSensorPressure_4_20
+_ENENO: 0
+_INPUTS: 2
+_IN
+_INPUTID: 233
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 212
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 242
+_MACROID: -1
+_POS: 73, 92
+_TYPE: _OUTPUT
+_TEXT: ws_in_bar
+_INPUTID: 215
+_INPUTIDX: 0
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 498
+_MACROID: -1
+_POS: 10, 93
+_TYPE: _INPUT
+_TEXT: 0
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 214
+_MACROID: -1
+_POS: 10, 91
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: set_pressure3
+_TYPENAME: SetCurrentSensorPressure_4_20
+_ENENO: 0
+_INPUTS: 4
+_IN
+_INPUTID: 498
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 499
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 236
+_MACROID: -1
+_POS: 33, 91
+_TYPE: _INPUT
+_TEXT: 3
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 235
+_MACROID: -1
+_POS: 33, 89
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_channel_current_value
+_ENENO: 0
+_INPUTS: 2
+_IN
+_INPUTID: 236
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 228
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 215
+_MACROID: -1
+_POS: 58, 90
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: WS_in
+_TYPENAME: CurrentSensorPressure_4_20
+_ENENO: 0
+_INPUTS: 2
+_IN
+_INPUTID: 235
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 214
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 499
+_MACROID: -1
+_POS: 10, 94
+_TYPE: _INPUT
+_TEXT: 16
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 238
+_MACROID: -1
+_POS: 33, 97
+_TYPE: _INPUT
+_TEXT: 4
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 237
+_MACROID: -1
+_POS: 33, 95
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_channel_current_value
+_ENENO: 0
+_INPUTS: 2
+_IN
+_INPUTID: 238
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 228
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 217
+_MACROID: -1
+_POS: 58, 96
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: WS_out
+_TYPENAME: CurrentSensorPressure_4_20
+_ENENO: 0
+_INPUTS: 2
+_IN
+_INPUTID: 237
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 216
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 243
+_MACROID: -1
+_POS: 73, 98
+_TYPE: _OUTPUT
+_TEXT: ws_out_bar
+_INPUTID: 217
+_INPUTIDX: 0
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 216
+_MACROID: -1
+_POS: 10, 97
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: set_pressure4
+_TYPENAME: SetCurrentSensorPressure_4_20
+_ENENO: 0
+_INPUTS: 4
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 258
+_MACROID: -1
+_POS: 26, 130
+_TYPE: _INPUT
+_TEXT: hw_in_bar
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 262
+_MACROID: -1
+_POS: 45, 122
+_TYPE: _INPUT
+_TEXT: auto
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 295
+_MACROID: -1
+_POS: 63, 114
+_TYPE: _OUTPUT
+_TEXT: info_id1
+_INPUTID: 133
+_INPUTIDX: 0
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 293
+_MACROID: -1
+_POS: 68, 113
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: hw_id1_set_PID
+_TYPENAME: params_in_set_PID
+_ENENO: 0
+_INPUTS: 1
+_IN
+_INPUTID: 133
+_INPUTIDX: 1
+_NEGATE: 0
+_END
+_OUTPUTS: 11
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 307
+_MACROID: -1
+_POS: 13, 122
+_TYPE: _INPUT
+_TEXT: 5
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 305
+_MACROID: -1
+_POS: 15, 120
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_di
+_ENENO: 0
+_INPUTS: 2
+_IN
+_INPUTID: 307
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 249
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 263
+_MACROID: -1
+_POS: 44, 124
+_TYPE: _INPUT
+_TEXT: 9
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 308
+_MACROID: -1
+_POS: 13, 126
+_TYPE: _INPUT
+_TEXT: 9
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 306
+_MACROID: -1
+_POS: 15, 124
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_di
+_ENENO: 0
+_INPUTS: 2
+_IN
+_INPUTID: 308
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 249
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 302
+_MACROID: -1
+_POS: 44, 128
+_TYPE: _INPUT
+_TEXT: 10
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 443
+_MACROID: -1
+_POS: 50, 221
+_TYPE: _OUTPUT
+_TEXT: info_cycle
+_INPUTID: 358
+_INPUTIDX: 0
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 471
+_MACROID: -1
+_POS: 8, 161
+_TYPE: _INPUT
+_TEXT: info_cascade
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 476
+_MACROID: -1
+_POS: 14, 159
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_pump_in_cascade
+_ENENO: 0
+_INPUTS: 2
+_IN
+_INPUTID: 471
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 477
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 477
+_MACROID: -1
+_POS: 12, 162
+_TYPE: _INPUT
+_TEXT: 1
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 461
+_MACROID: -1
+_POS: 48, 161
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: WS_id1
+_TYPENAME: InvertorDrive
+_ENENO: 0
+_INPUTS: 18
+_IN
+_INPUTID: 476
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 482
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 466
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 480
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 484
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 488
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 260
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 2
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 464
+_MACROID: -1
+_POS: 62, 163
+_TYPE: _OUTPUT
+_TEXT: info_ws_id1
+_INPUTID: 461
+_INPUTIDX: 0
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 330
+_MACROID: -1
+_POS: 8, 222
+_TYPE: _INPUT
+_TEXT: h
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 329
+_MACROID: -1
+_POS: 12, 220
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: set_cycle_timer
+_ENENO: 0
+_INPUTS: 3
+_IN
+_INPUTID: 330
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 331
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 332
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 525
+_MACROID: -1
+_POS: 13, 196
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_pump_in_cascade
+_ENENO: 0
+_INPUTS: 2
+_IN
+_INPUTID: 471
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 527
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 489
+_MACROID: -1
+_POS: 48, 203
+_TYPE: _INPUT
+_TEXT: 40
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 527
+_MACROID: -1
+_POS: 11, 199
+_TYPE: _INPUT
+_TEXT: 7
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 526
+_MACROID: -1
+_POS: 13, 200
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_auto_in_cascade
+_ENENO: 0
+_INPUTS: 2
+_IN
+_INPUTID: 471
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 527
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 521
+_MACROID: -1
+_POS: 81, 210
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: WS_id3
+_TYPENAME: InvertorDrive
+_ENENO: 0
+_INPUTS: 18
+_IN
+_INPUTID: 525
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 526
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 2
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 523
+_MACROID: -1
+_POS: 98, 212
+_TYPE: _OUTPUT
+_TEXT: info_ws_id3
+_INPUTID: 521
+_INPUTIDX: 0
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 507
+_MACROID: -1
+_POS: 36, 221
+_TYPE: _INPUT
+_TEXT: en_cyc
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 358
+_MACROID: -1
+_POS: 37, 219
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: HW_cycle
+_TYPENAME: cycle
+_ENENO: 0
+_INPUTS: 10
+_IN
+_INPUTID: 507
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 329
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 456
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 457
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 331
+_MACROID: -1
+_POS: 8, 223
+_TYPE: _INPUT
+_TEXT: m
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 332
+_MACROID: -1
+_POS: 8, 224
+_TYPE: _INPUT
+_TEXT: se
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 434
+_MACROID: -1
+_POS: 84, 137
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: PID_id2
+_TYPENAME: PID
+_ENENO: 0
+_INPUTS: 11
+_IN
+_INPUTID: 437
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 437
+_INPUTIDX: 1
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 437
+_INPUTIDX: 2
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 437
+_INPUTIDX: 3
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 437
+_INPUTIDX: 4
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 437
+_INPUTIDX: 5
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 437
+_INPUTIDX: 6
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 437
+_INPUTIDX: 7
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 437
+_INPUTIDX: 8
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 437
+_INPUTIDX: 9
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 434
+_INPUTIDX: 2
+_NEGATE: 0
+_END
+_OUTPUTS: 3
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 444
+_MACROID: -1
+_POS: 8, 134
+_TYPE: _INPUT
+_TEXT: info_cycle
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 445
+_MACROID: -1
+_POS: 14, 132
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_pump_in_cycle
+_ENENO: 0
+_INPUTS: 2
+_IN
+_INPUTID: 444
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 446
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 446
+_MACROID: -1
+_POS: 13, 135
+_TYPE: _INPUT
+_TEXT: 1
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 435
+_MACROID: -1
+_POS: 48, 136
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: HW_id2
+_TYPENAME: InvertorDrive
+_ENENO: 0
+_INPUTS: 18
+_IN
+_INPUTID: 447
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 119
+_INPUTIDX: 1
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 120
+_INPUTIDX: 1
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 452
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 454
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 258
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 434
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 262
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 263
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 260
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 2
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 436
+_MACROID: -1
+_POS: 63, 138
+_TYPE: _OUTPUT
+_TEXT: info_id2
+_INPUTID: 435
+_INPUTIDX: 0
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 447
+_MACROID: -1
+_POS: 14, 137
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_pump_in_cycle
+_ENENO: 0
+_INPUTS: 2
+_IN
+_INPUTID: 444
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 448
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 437
+_MACROID: -1
+_POS: 68, 137
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: hw_id_2_set_PID
+_TYPENAME: params_in_set_PID
+_ENENO: 0
+_INPUTS: 1
+_IN
+_INPUTID: 435
+_INPUTIDX: 1
+_NEGATE: 0
+_END
+_OUTPUTS: 11
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 441
+_MACROID: -1
+_POS: 52, 28
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_aout_current_in_info
+_ENENO: 0
+_INPUTS: 1
+_IN
+_INPUTID: 440
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 451
+_MACROID: -1
+_POS: 16, 144
+_TYPE: _INPUT
+_TEXT: 6
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 452
+_MACROID: -1
+_POS: 18, 142
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_di
+_ENENO: 0
+_INPUTS: 2
+_IN
+_INPUTID: 451
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 249
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 453
+_MACROID: -1
+_POS: 16, 148
+_TYPE: _INPUT
+_TEXT: 10
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 454
+_MACROID: -1
+_POS: 18, 146
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_di
+_ENENO: 0
+_INPUTS: 2
+_IN
+_INPUTID: 453
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 249
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 465
+_MACROID: -1
+_POS: 69, 162
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: ws_id1_set_PID
+_TYPENAME: params_in_set_PID
+_ENENO: 0
+_INPUTS: 1
+_IN
+_INPUTID: 461
+_INPUTIDX: 1
+_NEGATE: 0
+_END
+_OUTPUTS: 11
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 458
+_MACROID: -1
+_POS: 10, 227
+_TYPE: _INPUT
+_TEXT: info_id1
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 456
+_MACROID: -1
+_POS: 12, 225
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_active
+_ENENO: 0
+_INPUTS: 1
+_IN
+_INPUTID: 458
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 472
+_MACROID: -1
+_POS: 10, 233
+_TYPE: _INPUT
+_TEXT: info_ws_id1
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 487
+_MACROID: -1
+_POS: 49, 240
+_TYPE: _INPUT
+_TEXT: TRUE
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 455
+_MACROID: -1
+_POS: 55, 238
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: HW_cascade
+_TYPENAME: cascade
+_ENENO: 0
+_INPUTS: 14
+_IN
+_INPUTID: 487
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 484
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 483
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 485
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 486
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 486
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 474
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 475
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 522
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 459
+_MACROID: -1
+_POS: 10, 230
+_TYPE: _INPUT
+_TEXT: info_id2
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 457
+_MACROID: -1
+_POS: 12, 228
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_active
+_ENENO: 0
+_INPUTS: 1
+_IN
+_INPUTID: 459
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 460
+_MACROID: -1
+_POS: 68, 240
+_TYPE: _OUTPUT
+_TEXT: info_cascade
+_INPUTID: 455
+_INPUTIDX: 0
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 462
+_MACROID: -1
+_POS: 48, 187
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: WS_id2
+_TYPENAME: InvertorDrive
+_ENENO: 0
+_INPUTS: 18
+_IN
+_INPUTID: 478
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 482
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 481
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 484
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 489
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 2
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 466
+_MACROID: -1
+_POS: 84, 162
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: PID_ws_id1
+_TYPENAME: PID
+_ENENO: 0
+_INPUTS: 11
+_IN
+_INPUTID: 465
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 465
+_INPUTIDX: 1
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 465
+_INPUTIDX: 2
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 465
+_INPUTIDX: 3
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 465
+_INPUTIDX: 4
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 465
+_INPUTIDX: 5
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 465
+_INPUTIDX: 6
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 465
+_INPUTIDX: 7
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 465
+_INPUTIDX: 8
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 465
+_INPUTIDX: 9
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 466
+_INPUTIDX: 2
+_NEGATE: 0
+_END
+_OUTPUTS: 3
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 470
+_MACROID: -1
+_POS: 62, 189
+_TYPE: _OUTPUT
+_TEXT: info_ws_id2
+_INPUTID: 462
+_INPUTIDX: 0
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 468
+_MACROID: -1
+_POS: 69, 188
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: ws_id2_set_PID
+_TYPENAME: params_in_set_PID
+_ENENO: 0
+_INPUTS: 1
+_IN
+_INPUTID: 462
+_INPUTIDX: 1
+_NEGATE: 0
+_END
+_OUTPUTS: 11
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 469
+_MACROID: -1
+_POS: 84, 188
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: PID_ws_id2
+_TYPENAME: PID
+_ENENO: 0
+_INPUTS: 11
+_IN
+_INPUTID: 468
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 468
+_INPUTIDX: 1
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 468
+_INPUTIDX: 2
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 468
+_INPUTIDX: 3
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 468
+_INPUTIDX: 4
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 468
+_INPUTIDX: 5
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 468
+_INPUTIDX: 6
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 468
+_INPUTIDX: 7
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 468
+_INPUTIDX: 8
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 468
+_INPUTIDX: 9
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 469
+_INPUTIDX: 2
+_NEGATE: 0
+_END
+_OUTPUTS: 3
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 473
+_MACROID: -1
+_POS: 10, 236
+_TYPE: _INPUT
+_TEXT: info_ws_id2
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 474
+_MACROID: -1
+_POS: 12, 231
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_active
+_ENENO: 0
+_INPUTS: 1
+_IN
+_INPUTID: 472
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 475
+_MACROID: -1
+_POS: 12, 234
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_active
+_ENENO: 0
+_INPUTS: 1
+_IN
+_INPUTID: 473
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 480
+_MACROID: -1
+_POS: 14, 163
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_auto_in_cascade
+_ENENO: 0
+_INPUTS: 2
+_IN
+_INPUTID: 471
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 477
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 482
+_MACROID: -1
+_POS: 20, 177
+_TYPE: _INPUT
+_TEXT: ws_in_bar
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 488
+_MACROID: -1
+_POS: 48, 177
+_TYPE: _INPUT
+_TEXT: 15
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 484
+_MACROID: -1
+_POS: 19, 179
+_TYPE: _INPUT
+_TEXT: 9
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 478
+_MACROID: -1
+_POS: 14, 187
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_pump_in_cascade
+_ENENO: 0
+_INPUTS: 2
+_IN
+_INPUTID: 471
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 479
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 479
+_MACROID: -1
+_POS: 12, 190
+_TYPE: _INPUT
+_TEXT: 2
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 481
+_MACROID: -1
+_POS: 14, 191
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_auto_in_cascade
+_ENENO: 0
+_INPUTS: 2
+_IN
+_INPUTID: 471
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 479
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 524
+_MACROID: -1
+_POS: 7, 239
+_TYPE: _INPUT
+_TEXT: info_ws_id3
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 522
+_MACROID: -1
+_POS: 12, 237
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_active
+_ENENO: 0
+_INPUTS: 1
+_IN
+_INPUTID: 524
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 483
+_MACROID: -1
+_POS: 50, 242
+_TYPE: _INPUT
+_TEXT: hw_in_bar
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 485
+_MACROID: -1
+_POS: 48, 243
+_TYPE: _INPUT
+_TEXT: num_pump
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 486
+_MACROID: -1
+_POS: 48, 244
+_TYPE: _INPUT
+_TEXT: t#10s
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 491
+_MACROID: -1
+_POS: 54, 12
+_TYPE: _INPUT
+_TEXT: info_ws_id2
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 493
+_MACROID: -1
+_POS: 50, 36
+_TYPE: _INPUT
+_TEXT: info_ws_id1
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 494
+_MACROID: -1
+_POS: 52, 34
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_aout_current_in_info
+_ENENO: 0
+_INPUTS: 1
+_IN
+_INPUTID: 493
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 495
+_MACROID: -1
+_POS: 52, 31
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_aout_current_in_info
+_ENENO: 0
+_INPUTS: 1
+_IN
+_INPUTID: 492
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+
+END_PROGRAM
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/AnalogIModule\/AnalogInputModule\/AnalogInputChannel' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classAnalogInputChannel :
+STRUCT
+	set_channel:classParamsValueScaling;
+	value: REAL;
+	error_code: WORD;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/AnalogIModule\/AnalogInputModule\/SetAnalogInputsModule\/SetAnalogInputChannel' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classSetAnalogInputChannel :
+STRUCT
+	(* Конфигурационные параметры канала модуля. см. инструкцию прибора: приложение. таблица В.2 *)
+	(* Границы АЦП и значения по умолчанию: для датчика 4-20mA  *)
+	ain_l: REAL := 0;  (* Параметр Ain.L *)
+	ain_h: REAL := 1000;  (* Параметр Ain.H *)
+	analog_min_value: REAL := 4;  (* Диапазон нижней границы датчика давления *)
+	analog_max_value: REAL := 20;  (* Диапазон верхней границы датчика давления *)
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/AnalogIModule\/AnalogInputModule\/SetAnalogInputsModule' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classSetAnalogInputsModule :
+STRUCT
+	ch1_set:classSetAnalogInputChannel;
+	ch2_set:classSetAnalogInputChannel;
+	ch3_set:classSetAnalogInputChannel;
+	ch4_set:classSetAnalogInputChannel;
+	ch5_set:classSetAnalogInputChannel;
+	ch6_set:classSetAnalogInputChannel;
+	ch7_set:classSetAnalogInputChannel;
+	ch8_set:classSetAnalogInputChannel;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/AnalogIModule\/AnalogInputModule' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classAnalogInputModule :
+STRUCT
+	channel1:classAnalogInputChannel;
+	channel2:classAnalogInputChannel;
+	channel3:classAnalogInputChannel;
+	channel4:classAnalogInputChannel;
+	channel5:classAnalogInputChannel;
+	channel6:classAnalogInputChannel;
+	channel7:classAnalogInputChannel;
+	channel8:classAnalogInputChannel;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/AnalogIModule\/AnalogOutputModule\/AnalogOutputChannel' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classAnalogOutputChannel :
+STRUCT
+	current_value: REAL;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/AnalogIModule\/AnalogOutputModule' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classAnalogOutputModule :
+STRUCT
+	channel1:classAnalogOutputChannel;
+	channel2:classAnalogOutputChannel;
+	channel3:classAnalogOutputChannel;
+	channel4:classAnalogOutputChannel;
+	channel5:classAnalogOutputChannel;
+	channel6:classAnalogOutputChannel;
+	channel7:classAnalogOutputChannel;
+	channel8:classAnalogOutputChannel;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/classesFunction' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classParamsValueScaling :
+STRUCT
+	in_min: REAL:=0;
+	in_max: REAL:=100;
+	out_min: REAL:=0;
+	out_max: REAL:=100;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/Cycle' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classCycleSet :
+STRUCT
+	enable:BOOL;  (* Разрешение цикла *)
+	(* num_start:SINT;  Номер насоса с которого начинать цикл *)
+
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/InfoMessages\/InfoAnalogInputModule\/InfoAnalogInputChannel' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classInfoAnalogInputChannel :
+STRUCT
+	current_value:REAL;
+	error_message:STRING(79);
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/InfoMessages\/InfoAnalogInputModule' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classInfoAnalogInputModule :
+STRUCT
+	channel1:classInfoAnalogInputChannel;
+	channel2:classInfoAnalogInputChannel;
+	channel3:classInfoAnalogInputChannel;
+	channel4:classInfoAnalogInputChannel;
+	channel5:classInfoAnalogInputChannel;
+	channel6:classInfoAnalogInputChannel;
+	channel7:classInfoAnalogInputChannel;
+	channel8:classInfoAnalogInputChannel;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/InfoMessages\/InfoCascade' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classInfoCascade :
+STRUCT
+	pivot:SINT;
+	error_message:STRING(79);
+	cascade_pump1:classInfoCascadePump;
+	cascade_pump2:classInfoCascadePump;
+	cascade_pump3:classInfoCascadePump;
+	cascade_pump4:classInfoCascadePump;
+	cascade_pump5:classInfoCascadePump;
+	cascade_pump6:classInfoCascadePump;
+	cascade_pump7:classInfoCascadePump;
+	cascade_pump8:classInfoCascadePump;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/InfoMessages\/InfoCascade' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classInfoCascadePump :
+STRUCT
+	cascade_pump:BOOL:=FALSE;  (*Статус работы насоса*)
+	manual:SINT:=40;  (*Hz*)
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/InfoMessages\/InfoCycle' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classInfoCycle :
+STRUCT
+	run_timer: BOOL; (* статус работы таймера *)
+	working_time: TIME; (*  время работы таймера *)
+	pump_number:SINT;  (* номер насоса в работе *)
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/InfoMessages\/InfoInvertorDrive' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classAlarmInvertorDrive :
+STRUCT
+	external_alarm:STRING(79);
+	fault_invertor_drive:STRING(79);
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/InfoMessages\/InfoInvertorDrive' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classInfoExternalAlarm :
+STRUCT
+	low_pressure_in:BOOL;
+	high_pressure_out:BOOL;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/InfoMessages\/InfoInvertorDrive' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classInfoInvertorDrive :
+STRUCT
+	active:BOOL;
+	status_run:STRING(79);
+	set_pid:classSetPid;
+	alarm:classAlarmInvertorDrive;
+	frequency:REAL;  (* Hz *)
+	aout_frequency:REAL;  (* mA *)
+	run:BOOL;
+	reset_fault:BOOL;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/InfoMessages\/InfoPID' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classInfoPid :
+STRUCT
+	out_value:REAL:=0;
+	limits_active:BOOL:=FALSE;
+	overflow:BOOL:=FALSE;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/InfoMessages\/PLC\/110_32_m2' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classPLC32m2StatusInputs :
+STRUCT
+	fast_inputs:classFastDiscreteInputs;
+	discrete_inputs:classDiscreteInputs;
+	special_input:classSpecialInput;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/InfoMessages\/PLC\/110_32_m2' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classPLC32m2StatusOutputs :
+STRUCT
+	fast_outputs:classFastDiscreteOutputs;
+	discrete_outputs:classDiscreteOutputs;
+	special_output:classSpecialOutput;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/InfoMessages' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classInfoMessage :
+STRUCT
+	working_time: TIME;
+	time_left: TIME;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/InvertorDrive\/SetInvertorDrive\/SetAutoInvertorDrive' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classSetAutoInvertorDrive :
+STRUCT
+	auto:BOOL:=FALSE;
+	direct_logic:BOOL:=TRUE;  (* флаг прямого/обратного управления; при обратном управлении если значение контролируемой величины ниже уставки, выходная частота уменьшается, и наоборот*)
+	set_point:REAL:=0;  (* уставка, задается в единицах измерения контролируемой величины *)
+	value:REAL:=0;  (* текущее значение контролируемой величины, получаемое с датчика *)
+	P:REAL:=2;  (* Пропорциональный коэффициент регулятора, при увеличении выход регулятора изменяется быстрее*)
+	I:INT:=10;  (* Интегральный коэффичиент регулятора, время в секундах *)
+	D:INT:=0;  (* Дифференциальный коэффичиент регулятора, время в секундах *)
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/InvertorDrive\/SetInvertorDrive\/SetLimitFrequency' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classSetLimitFrequency :
+STRUCT
+	manual:REAL;  (* Hz *)
+	min_range:REAL;  (* Hz *)
+	max_range:REAL;  (* Hz *)
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/InvertorDrive\/SetInvertorDrive' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classSetInvertorDrive :
+STRUCT
+	set_auto:classSetAutoInvertorDrive;
+	set_frequency:classSetLimitFrequency;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/InvertorDrive' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classInvertorDrive :
+STRUCT
+	discrete_inputs:classInvertorDriveDiscreteInputs;
+	discrete_outputs:classInvertorDriveDiscreteOutputs;
+	analog_input:classInvertorDriveAnalogInputs;
+	analog_output:classInvertorDriveAnalogOutputs;
+	set:classSetInvertorDrive;
+	min_frequency:INT;
+	max_frequency:INT;
+	set_frequency:REAL;
+	real_frequency:REAL;(* значение с аналогового выхода частотника *)
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/InvertorDrive' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classInvertorDriveAnalogInputs :
+STRUCT
+	set_frequency:REAL;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/InvertorDrive' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classInvertorDriveAnalogOutputs :
+STRUCT
+	out_frequency:REAL;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/InvertorDrive' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classInvertorDriveDiscreteInputs :
+STRUCT
+	start:BOOL;
+	reset_fault:BOOL;
+(* external alarm *)
+	low_pressure_in:BOOL;
+	high_pressure_out:BOOL;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/InvertorDrive' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classInvertorDriveDiscreteOutputs :
+STRUCT
+	status_run:BOOL;
+	status_alarm:BOOL;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/PID' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classSetPid :
+STRUCT
+	actual:REAL;
+	set_point:REAL;
+	P:REAL;  (* Пропорциональный коэффициент регулятора, при увеличении выход регулятора изменяется быстрее*)
+	I:INT;  (* Интегральный коэффичиент регулятора, время в секундах *)
+	D:INT;  (* Дифференциальный коэффичиент регулятора, время в секундах *)
+	Y_manual:REAL:=0;
+	Y_offset:REAL;
+	Y_min:REAL;
+	Y_max:REAL;
+	manual:BOOL;
+	reset:BOOL;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/PLC_110_32_m2\/DiscreteInputs\/DiscreteInputByte' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classDiscreteInputByte :
+STRUCT
+	Bit1:BOOL;
+	Bit2:BOOL;
+	Bit3:BOOL;
+	Bit4:BOOL;
+	Bit5:BOOL;
+	Bit6:BOOL;
+	Bit7:BOOL;
+	Bit8:BOOL;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/PLC_110_32_m2\/DiscreteInputs' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classDiscreteInputs :
+STRUCT
+	first_byte:classDiscreteInputByte;
+	second_byte:classDiscreteInputByte;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/PLC_110_32_m2\/DiscreteInputs' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classFastDiscreteInputs :
+STRUCT
+	Bit1:BOOL;
+	Bit2:BOOL;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/PLC_110_32_m2\/DiscreteInputs' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classSpecialInput :
+STRUCT
+	Bit1:BOOL;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/PLC_110_32_m2\/DiscreteOutputs\/DiscreteOutputByte' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classDiscreteOutputByte :
+STRUCT
+	Bit1:BOOL;
+	Bit2:BOOL;
+	Bit3:BOOL;
+	Bit4:BOOL;
+	Bit5:BOOL;
+	Bit6:BOOL;
+	Bit7:BOOL;
+	Bit8:BOOL;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/PLC_110_32_m2\/DiscreteOutputs' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classDiscreteOutputs :
+STRUCT
+	first_byte:classDiscreteOutputByte;
+	second_byte:classDiscreteOutputByte;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/PLC_110_32_m2\/DiscreteOutputs' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classFastDiscreteOutputs :
+STRUCT
+	Bit1:BOOL;
+	Bit2:BOOL;
+	Bit3:BOOL;
+	Bit4:BOOL;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/PLC_110_32_m2\/DiscreteOutputs' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classSpecialOutput :
+STRUCT
+	Bit1:BOOL;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/PLC_110_32_m2' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classPLC110_32 :
+STRUCT
+	fast_discrete_inputs:classFastDiscreteInputs;
+	discrete_inputs:classDiscreteInputs;
+	special_input:classSpecialInput;
+	fast_discrete_outputs:classFastDiscreteOutputs;
+	discrete_output:classDiscreteOutputs;
+	special_output:classSpecialOutput;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/Sensors\/Kpi' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classSetKpi :
+STRUCT
+	range:REAL;
+	diff:REAL:=0.2;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/Sensors\/PressureSensors\/CurrentPressures\/4-20mA' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classSetPressureSensor4_20 :
+STRUCT
+	min_measure_range:REAL;
+	max_measure_range:REAL;
+	min_current_range:REAL:=4;
+	max_current_range:REAL:=20;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/Sensors\/PressureSensors\/CurrentPressures' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE SetCustomSensor :
+STRUCT
+	min_measure_range:REAL;
+	max_measure_range:REAL;
+	min_current_range:REAL:=4;
+	max_current_range:REAL:=20;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/SP310\/PumpStationSettings' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classPumpStation :
+STRUCT
+	source:STRING(2);
+	pump1:BOOL;
+	pump2:BOOL;
+	P:REAL;
+	I:REAL;
+	D:REAL;
+	set_point:REAL;
+	cycle_enable:BOOL;
+	cascade_enable:BOOL;
+	seconds_cycle: TIME;
+	minutes_cycle: TIME;
+	hours_cycle: TIME;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/ClassesProject\/SP310' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE classSP310 :
+STRUCT
+	hot_water:classPumpStation;
+	water_supply:classPumpStation;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/Types data Analog_module\/AnalogInputChannel' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE CAN_AnalogInputChannel :
+STRUCT
+	current_value: REAL;
+	error_message: STRING(79);
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/Types data Analog_module' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE CAN_in_RS485_Analog_module :
+STRUCT
+
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/Types data InvertorDrive' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE InvertorStatusData :
+STRUCT
+	status_alarm: BOOL;
+	status_run: BOOL;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/Types data SP310' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE CAN_In_RS232_SP310 :
+STRUCT
+	pressure_input: REAL;
+	pressure_output: REAL;
+	status_run_invertor_drive1: BOOL;
+	status_run_invertor_drive2: BOOL;
+	status_alarm_invertor_drive1: BOOL;
+	status_alarm_invertor_drive2: BOOL;
+	PID_value: REAL;
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/Types data SP310' *)
+(* @OBJECTFLAGS := '0, 8' *)
+TYPE CAN_Out_RS232_SP310 :
+STRUCT
+	auto_PID_enable: BOOL;
+	cycle_enable: BOOL;
+	cascade_enable: BOOL;
+	set_point: REAL;
+	P: REAL;
+	I: REAL;
+	D: REAL;
+	value_manual_invertor_drive1: REAL;
+	value_manual_invertor_drive2: REAL;
+	pressure_range_min: REAL;
+	pressure_range_max: REAL;
+
+END_STRUCT
+END_TYPE
+(* @END_DECLARATION := '0' *)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @GLOBAL_VARIABLE_LIST := 'Global_Variables' *)
+(* @PATH := '' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+VAR_GLOBAL
+END_VAR
+
+(* @OBJECT_END := 'Global_Variables' *)
+(* @CONNECTIONS := Global_Variables
+FILENAME : ''
+FILETIME : 0
+EXPORT : 0
+NUMOFCONNECTIONS : 0
+*)
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @GLOBAL_VARIABLE_LIST := 'Variable_Configuration' *)
+(* @PATH := '' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+VAR_CONFIG
+END_VAR
+
+(* @OBJECT_END := 'Variable_Configuration' *)
+(* @CONNECTIONS := Variable_Configuration
+FILENAME : ''
+FILETIME : 0
+EXPORT : 0
+NUMOFCONNECTIONS : 0
+*)
+
+PLC_CONFIGURATION
+_GLOBAL
+_VERSION: 3
+_AUTOADR: 1
+_CHECKADR: 1
+_SAVECONFIGFILESINPROJECT: 0
+_END_GLOBAL
+
+_MODULE: '3S'
+_SECTION_NAME: 'Root'
+_INDEX_IN_PARENT: '-1'
+_MODULE_NAME: 'PLC110_32'
+_NODE_ID: -1
+_IECIN: %IB0
+_IECOUT: %QB0
+_IECDIAG: %MB0
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, 'PLC110-32_v2'
+_PARAM 2: 0, '1'
+_PARAM 3: 0, '1000'
+_END_PARAMETER
+
+_MODULE: '3S'
+_SECTION_NAME: 'I_SIMPLE_INPUT'
+_INDEX_IN_PARENT: '1'
+_MODULE_NAME: 'Fast discrete inputs'
+_NODE_ID: 0
+_IECIN: %IB0
+_IECOUT: %QB0
+_IECDIAG: %MB0
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, 'Fast discrete inputs'
+_PARAM 2: 0, '10000'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'BitInput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: 'Discrete input 1'
+_CHANNEL_MODE: 'I'
+_IECADR: %IX0.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+
+_CHANNEL
+_SECTION_NAME: 'BitInput'
+_INDEX_IN_PARENT: '2'
+_SYMBOLIC_NAME: ''
+_COMMENT: 'Discrete input 2'
+_CHANNEL_MODE: 'I'
+_IECADR: %IX0.1
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'ID130'
+_INDEX_IN_PARENT: '2'
+_MODULE_NAME: 'Discrete inputs'
+_NODE_ID: 1
+_IECIN: %IB1
+_IECOUT: %QB1
+_IECDIAG: %MB1
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, 'Discrete inputs'
+_PARAM 2: 0, '16'
+_PARAM 3: 0, '16'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'ByteInput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'discrete_input_first_byte'
+_COMMENT: 'discrete_input_first_byte'
+_CHANNEL_MODE: 'I'
+_IECADR: %IB1.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_BIT 0: %IX1.0.0 'pressure_min_hot_water' 'Hot water kpi35 pressure min'
+_BIT 1: %IX1.0.1 'pressure_max_hot_water' 'Hot water kpi36 pressure max'
+_BIT 2: %IX1.0.2 'pressure_min_water_supply' 'Water supply kpi35 pressure min'
+_BIT 3: %IX1.0.3 'pressure_max_water_supply' 'Water supply kpi36 pressure max'
+_BIT 4: %IX1.0.4 'status_alarm_hw_id1' 'STATUS: Alarm hot water invertor drive1'
+_BIT 5: %IX1.0.5 'status_alarm_hw_id2' 'STATUS: Alarm hot water invertor drive2'
+_BIT 6: %IX1.0.6 'status_alarm_sw_id1' 'STATUS: Alarm water supply invertor drive1'
+_BIT 7: %IX1.0.7 'status_alarm_sw_id2' 'STATUS: Alarm water supply invertor drive2'
+_END_CHANNEL
+
+_CHANNEL
+_SECTION_NAME: 'ByteInput'
+_INDEX_IN_PARENT: '2'
+_SYMBOLIC_NAME: 'discrete_input_second_byte'
+_COMMENT: 'discrete input_second_byte'
+_CHANNEL_MODE: 'I'
+_IECADR: %IB1.1
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_BIT 0: %IX1.1.0 'status_run_hw_id1' 'STATUS: Run hot water invertor drive1'
+_BIT 1: %IX1.1.1 'status_run_hw_id2' 'STATUS: Run hot water invertor drive2'
+_BIT 2: %IX1.1.2 'status_run_ws_id1' 'STATUS: Run water supply invertor drive1'
+_BIT 3: %IX1.1.3 'status_run_ws_id2' 'STATUS: Run water supply invertor drive2'
+_BIT 4: %IX1.1.4 '' 'N/A'
+_BIT 5: %IX1.1.5 '' 'N/A'
+_BIT 6: %IX1.1.6 '' 'N/A'
+_BIT 7: %IX1.1.7 '' 'N/A'
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'OWEN_ID570'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: 'Fast discrete outputs'
+_NODE_ID: 2
+_IECIN: %IB2
+_IECOUT: %QB2
+_IECDIAG: %MB2
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, 'Fast discrete outputs'
+_PARAM 2: 0, 'FALSE'
+_PARAM 3: 0, 'FALSE'
+_PARAM 4: 0, 'FALSE'
+_PARAM 5: 0, 'FALSE'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'BitOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'hot_water_run_id1'
+_COMMENT: 'Run hot water invertor drive1'
+_CHANNEL_MODE: 'Q'
+_IECADR: %QX2.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+
+_CHANNEL
+_SECTION_NAME: 'BitOutput'
+_INDEX_IN_PARENT: '2'
+_SYMBOLIC_NAME: 'hot_water_run_id2'
+_COMMENT: 'Run hot water invertor drive2'
+_CHANNEL_MODE: 'Q'
+_IECADR: %QX2.1
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+
+_CHANNEL
+_SECTION_NAME: 'BitOutput'
+_INDEX_IN_PARENT: '3'
+_SYMBOLIC_NAME: 'water_supply_run_id1'
+_COMMENT: 'Run water supply invertor drive1'
+_CHANNEL_MODE: 'Q'
+_IECADR: %QX2.2
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+
+_CHANNEL
+_SECTION_NAME: 'BitOutput'
+_INDEX_IN_PARENT: '4'
+_SYMBOLIC_NAME: 'water_supply_run_id2'
+_COMMENT: 'Run water supply invertor drive2'
+_CHANNEL_MODE: 'Q'
+_IECADR: %QX2.3
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'ID131'
+_INDEX_IN_PARENT: '4'
+_MODULE_NAME: 'Discrete outputs'
+_NODE_ID: 3
+_IECIN: %IB3
+_IECOUT: %QB3
+_IECDIAG: %MB3
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, 'Discrete outputs'
+_PARAM 2: 0, '0'
+_PARAM 3: 0, '0'
+_PARAM 4: 0, '0'
+_PARAM 5: 0, '24'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'ByteOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: '8 discrete outputs'
+_CHANNEL_MODE: 'Q'
+_IECADR: %QB3.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_BIT 0: %QX3.0.0 'hot_water_reset_faults_id1' 'Reset faults hot water invertor drive1'
+_BIT 1: %QX3.0.1 'hot_water_reset_faults_id2' 'Reset faults hot water invertor drive2'
+_BIT 2: %QX3.0.2 'water_supply_reset_faults_id1' 'Reset faults water supply invertor drive1'
+_BIT 3: %QX3.0.3 'water_supply_reset_faults_id2' 'Reset faults water supply invertor drive2'
+_BIT 4: %QX3.0.4 '' 'N/A'
+_BIT 5: %QX3.0.5 '' 'N/A'
+_BIT 6: %QX3.0.6 '' 'N/A'
+_BIT 7: %QX3.0.7 '' 'N/A'
+_END_CHANNEL
+
+_CHANNEL
+_SECTION_NAME: 'ByteOutput'
+_INDEX_IN_PARENT: '2'
+_SYMBOLIC_NAME: ''
+_COMMENT: '8 discrete outputs'
+_CHANNEL_MODE: 'Q'
+_IECADR: %QB3.1
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_BIT 0: %QX3.1.0 '' 'Bit 0'
+_BIT 1: %QX3.1.1 '' 'Bit 1'
+_BIT 2: %QX3.1.2 '' 'Bit 2'
+_BIT 3: %QX3.1.3 '' 'Bit 3'
+_BIT 4: %QX3.1.4 '' 'Bit 4'
+_BIT 5: %QX3.1.5 '' 'Bit 5'
+_BIT 6: %QX3.1.6 '' 'Bit 6'
+_BIT 7: %QX3.1.7 '' 'Bit 7'
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'ID103'
+_INDEX_IN_PARENT: '5'
+_MODULE_NAME: 'Special input'
+_NODE_ID: 4
+_IECIN: %IB4
+_IECOUT: %QB4
+_IECDIAG: %MB4
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, 'Special input'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'BitInput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: 'Special input'
+_CHANNEL_MODE: 'I'
+_IECADR: %IX4.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'ID104'
+_INDEX_IN_PARENT: '6'
+_MODULE_NAME: 'Special output'
+_NODE_ID: 5
+_IECIN: %IB5
+_IECOUT: %QB5
+_IECDIAG: %MB5
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, 'Special output'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'BitOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: 'Special output'
+_CHANNEL_MODE: 'Q'
+_IECADR: %QX5.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'MODBUS_MASTER_ID450'
+_INDEX_IN_PARENT: '7'
+_MODULE_NAME: 'ModBus (Master)'
+_NODE_ID: 6
+_IECIN: %IB6
+_IECOUT: %QB6
+_IECDIAG: %MB6
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'Analog Input Module МВ110-8А'
+
+_PARAMETER
+_PARAM 1: 0, 'ModBus (Master)'
+_PARAM 2: 0, 'No'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'DWordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: 'Last address'
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD6.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '2'
+_SYMBOLIC_NAME: ''
+_COMMENT: 'Last error'
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW6.1
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+
+_MODULE: '3S'
+_SECTION_NAME: 'COM1_USART'
+_INDEX_IN_PARENT: '1'
+_MODULE_NAME: 'RS-485-1'
+_NODE_ID: 0
+_IECIN: %IB6.0
+_IECOUT: %QB6.0
+_IECDIAG: %MB6.0
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, 'RS-485-1'
+_PARAM 2: 0, '115200'
+_PARAM 3: 0, 'NO PARITY CHECK'
+_PARAM 4: 0, '8 bits'
+_PARAM 5: 0, 'One stop bit'
+_PARAM 6: 0, 'RS485'
+_PARAM 7: 0, 'RTU'
+_PARAM 8: 0, '0'
+_PARAM 9: 0, 'No'
+_END_PARAMETER
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'ID2000'
+_INDEX_IN_PARENT: '2'
+_MODULE_NAME: 'Universal Modbus device'
+_NODE_ID: 1
+_IECIN: %IB6.1
+_IECOUT: %QB6.1
+_IECDIAG: %MB6.1
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, 'Universal Modbus device'
+_PARAM 2: 0, '10:0:0:223'
+_PARAM 3: 0, '150'
+_PARAM 4: 0, '502'
+_PARAM 5: 0, 'Serial'
+_PARAM 6: 0, '16'
+_PARAM 7: 0, 'By poll time'
+_PARAM 8: 0, '100'
+_PARAM 9: 0, 'No'
+_PARAM 10: 0, '0'
+_PARAM 11: 0, 'Trace_mode'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'ComChannel'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: 'Command (0xff - Start)'
+_CHANNEL_MODE: 'Q'
+_IECADR: %QB6.1.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+
+_MODULE: '3S'
+_SECTION_NAME: 'ID2007'
+_INDEX_IN_PARENT: '1'
+_MODULE_NAME: 'Real input module'
+_NODE_ID: 0
+_IECIN: %IB6.1.0
+_IECOUT: %QB6.1.0
+_IECDIAG: %MB6.1.0
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'Input pressure hot water'
+
+_PARAMETER
+_PARAM 1: 0, 'float input module'
+_PARAM 2: 0, '4'
+_PARAM 3: 0, 'Read holding Registers  (0x03)'
+_PARAM 8: 0, 'No'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'input_pressure_hw'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD6.1.0.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'ID2003'
+_INDEX_IN_PARENT: '1'
+_MODULE_NAME: 'Register input module'
+_NODE_ID: 1
+_IECIN: %IB6.1.1
+_IECOUT: %QB6.1.1
+_IECDIAG: %MB6.1.1
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'Code error input pressure hot water'
+
+_PARAMETER
+_PARAM 1: 0, 'Register input module'
+_PARAM 2: 0, '2'
+_PARAM 3: 0, 'Read holding Registers  (0x03)'
+_PARAM 8: 0, 'No'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'error_input_pressure_hw'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW6.1.1.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'ID2007'
+_INDEX_IN_PARENT: '1'
+_MODULE_NAME: 'Real input module'
+_NODE_ID: 2
+_IECIN: %IB6.1.2
+_IECOUT: %QB6.1.2
+_IECDIAG: %MB6.1.2
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'Output pressure hot water'
+
+_PARAMETER
+_PARAM 1: 0, 'float input module'
+_PARAM 2: 0, '10'
+_PARAM 3: 0, 'Read holding Registers  (0x03)'
+_PARAM 8: 0, 'No'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'output_pressure_hw'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD6.1.2.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'ID2003'
+_INDEX_IN_PARENT: '1'
+_MODULE_NAME: 'Register input module'
+_NODE_ID: 3
+_IECIN: %IB6.1.3
+_IECOUT: %QB6.1.3
+_IECDIAG: %MB6.1.3
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'Code error output hot water'
+
+_PARAMETER
+_PARAM 1: 0, 'Register input module'
+_PARAM 2: 0, '8'
+_PARAM 3: 0, 'Read holding Registers  (0x03)'
+_PARAM 8: 0, 'No'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'error_output_pressure_hw'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW6.1.3.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'ID2007'
+_INDEX_IN_PARENT: '1'
+_MODULE_NAME: 'Real input module'
+_NODE_ID: 4
+_IECIN: %IB6.1.4
+_IECOUT: %QB6.1.4
+_IECDIAG: %MB6.1.4
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'Input pressure water supply'
+
+_PARAMETER
+_PARAM 1: 0, 'float input module'
+_PARAM 2: 0, '16'
+_PARAM 3: 0, 'Read holding Registers  (0x03)'
+_PARAM 8: 0, 'No'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'input_pressure_ws'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD6.1.4.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'ID2003'
+_INDEX_IN_PARENT: '1'
+_MODULE_NAME: 'Register input module'
+_NODE_ID: 5
+_IECIN: %IB6.1.5
+_IECOUT: %QB6.1.5
+_IECDIAG: %MB6.1.5
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'Code error input water supply'
+
+_PARAMETER
+_PARAM 1: 0, 'Register input module'
+_PARAM 2: 0, '14'
+_PARAM 3: 0, 'Read holding Registers  (0x03)'
+_PARAM 8: 0, 'No'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'error_input_pressure_ws'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW6.1.5.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'ID2007'
+_INDEX_IN_PARENT: '1'
+_MODULE_NAME: 'Real input module'
+_NODE_ID: 6
+_IECIN: %IB6.1.6
+_IECOUT: %QB6.1.6
+_IECDIAG: %MB6.1.6
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'Output pressure water supply'
+
+_PARAMETER
+_PARAM 1: 0, 'float input module'
+_PARAM 2: 0, '22'
+_PARAM 3: 0, 'Read holding Registers  (0x03)'
+_PARAM 8: 0, 'No'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'output_pressure_ws'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD6.1.6.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'ID2003'
+_INDEX_IN_PARENT: '1'
+_MODULE_NAME: 'Register input module'
+_NODE_ID: 7
+_IECIN: %IB6.1.7
+_IECOUT: %QB6.1.7
+_IECDIAG: %MB6.1.7
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'Code error output water supply'
+
+_PARAMETER
+_PARAM 1: 0, 'Register input module'
+_PARAM 2: 0, '20'
+_PARAM 3: 0, 'Read holding Registers  (0x03)'
+_PARAM 8: 0, 'No'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'error_output_pressure_ws'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW6.1.7.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+_END_MODULE
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'MODBUS_MASTER_ID450'
+_INDEX_IN_PARENT: '7'
+_MODULE_NAME: 'ModBus (Master)'
+_NODE_ID: 7
+_IECIN: %IB7
+_IECOUT: %QB7
+_IECDIAG: %MB7
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'Analog Output Module MB110-8И'
+
+_PARAMETER
+_PARAM 1: 0, 'ModBus (Master)'
+_PARAM 2: 0, 'No'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'DWordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: 'Last address'
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD7.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '2'
+_SYMBOLIC_NAME: ''
+_COMMENT: 'Last error'
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW7.1
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+
+_MODULE: '3S'
+_SECTION_NAME: 'COM1_USART'
+_INDEX_IN_PARENT: '1'
+_MODULE_NAME: 'RS-485-1'
+_NODE_ID: 0
+_IECIN: %IB7.0
+_IECOUT: %QB7.0
+_IECDIAG: %MB7.0
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, 'RS-485-1'
+_PARAM 2: 0, '115200'
+_PARAM 3: 0, 'NO PARITY CHECK'
+_PARAM 4: 0, '8 bits'
+_PARAM 5: 0, 'One stop bit'
+_PARAM 6: 0, 'RS485'
+_PARAM 7: 0, 'ASCII'
+_PARAM 8: 0, '0'
+_PARAM 9: 0, 'No'
+_END_PARAMETER
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'ID2000'
+_INDEX_IN_PARENT: '2'
+_MODULE_NAME: 'Universal Modbus device'
+_NODE_ID: 1
+_IECIN: %IB7.1
+_IECOUT: %QB7.1
+_IECDIAG: %MB7.1
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, 'Universal Modbus device'
+_PARAM 2: 0, '10:0:0:223'
+_PARAM 3: 0, '150'
+_PARAM 4: 0, '502'
+_PARAM 5: 0, 'Serial'
+_PARAM 6: 0, '1'
+_PARAM 7: 0, 'By poll time'
+_PARAM 8: 0, '100'
+_PARAM 9: 0, 'No'
+_PARAM 10: 0, '0'
+_PARAM 11: 0, 'Trace_mode'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'ComChannel'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: 'Command (0xff - Start)'
+_CHANNEL_MODE: 'Q'
+_IECADR: %QB7.1.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+
+_MODULE: '3S'
+_SECTION_NAME: 'ID2004'
+_INDEX_IN_PARENT: '1'
+_MODULE_NAME: 'Register output module'
+_NODE_ID: 0
+_IECIN: %IB7.1.0
+_IECOUT: %QB7.1.0
+_IECDIAG: %MB7.1.0
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'Output frequency hot water invertor drive1'
+
+_PARAMETER
+_PARAM 1: 0, 'Register'
+_PARAM 2: 0, '0'
+_PARAM 3: 0, 'Preset singl register (0x06)'
+_PARAM 8: 0, 'No'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'output_value_hw_id1'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW7.1.0.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'ID2004'
+_INDEX_IN_PARENT: '1'
+_MODULE_NAME: 'Register output module'
+_NODE_ID: 1
+_IECIN: %IB7.1.1
+_IECOUT: %QB7.1.1
+_IECDIAG: %MB7.1.1
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'Output frequency hot water invertor drive2'
+
+_PARAMETER
+_PARAM 1: 0, 'Register'
+_PARAM 2: 0, '0'
+_PARAM 3: 0, 'Preset singl register (0x06)'
+_PARAM 8: 0, 'No'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'output_value_hw_id2'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW7.1.1.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'ID2004'
+_INDEX_IN_PARENT: '1'
+_MODULE_NAME: 'Register output module'
+_NODE_ID: 2
+_IECIN: %IB7.1.2
+_IECOUT: %QB7.1.2
+_IECDIAG: %MB7.1.2
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'Output frequensy water supply invertor drive1'
+
+_PARAMETER
+_PARAM 1: 0, 'Register'
+_PARAM 2: 0, '0'
+_PARAM 3: 0, 'Preset singl register (0x06)'
+_PARAM 8: 0, 'No'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'output_value_ws_id1'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW7.1.2.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'ID2004'
+_INDEX_IN_PARENT: '1'
+_MODULE_NAME: 'Register output module'
+_NODE_ID: 3
+_IECIN: %IB7.1.3
+_IECOUT: %QB7.1.3
+_IECDIAG: %MB7.1.3
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'Output frequency water supply invertor drive2'
+
+_PARAMETER
+_PARAM 1: 0, 'Register'
+_PARAM 2: 0, '0'
+_PARAM 3: 0, 'Preset singl register (0x06)'
+_PARAM 8: 0, 'No'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'output_value_ws_id2'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW7.1.3.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+_END_MODULE
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'MODBUS_ID400'
+_INDEX_IN_PARENT: '7'
+_MODULE_NAME: 'ModBus (slave)'
+_NODE_ID: 8
+_IECIN: %IB8
+_IECOUT: %QB8
+_IECDIAG: %MB8
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'Operating  Panel SP310'
+
+_PARAMETER
+_PARAM 1: 0, 'ModBus (slave)'
+_PARAM 2: 0, '1'
+_END_PARAMETER
+
+_MODULE: '3S'
+_SECTION_NAME: 'MODBUS_ID302'
+_INDEX_IN_PARENT: '1'
+_MODULE_NAME: 'Modbus'
+_NODE_ID: 0
+_IECIN: %IB8.0
+_IECOUT: %QB8.0
+_IECDIAG: %MB8.0
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, 'Modbus'
+_END_PARAMETER
+
+_MODULE: '3S'
+_SECTION_NAME: 'COM2_USART'
+_INDEX_IN_PARENT: '1'
+_MODULE_NAME: 'RS-232'
+_NODE_ID: 0
+_IECIN: %IB8.0.0
+_IECOUT: %QB8.0.0
+_IECDIAG: %MB8.0.0
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, 'RS-232'
+_PARAM 2: 0, '115200'
+_PARAM 3: 0, 'NO PARITY CHECK'
+_PARAM 4: 0, '8 bits'
+_PARAM 5: 0, 'One stop bit'
+_PARAM 6: 0, 'RS232'
+_PARAM 7: 0, 'ASCII'
+_PARAM 8: 0, '0'
+_PARAM 9: 0, 'No'
+_END_PARAMETER
+_END_MODULE
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: '8Bit'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '8 bits'
+_NODE_ID: 1
+_IECIN: %IB8.1
+_IECOUT: %QB8.1
+_IECDIAG: %MB8.1
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'settings PID, cascade, cycle'
+
+_PARAMETER
+_PARAM 1: 0, '8 bit'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'ByteOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QB8.1.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_BIT 0: %QX8.1.0.0 'hot_water_PID' 'auto PID hot water'
+_BIT 1: %QX8.1.0.1 'water_supply_PID' 'auto PID water supply'
+_BIT 2: %QX8.1.0.2 'hot_water_cascade' 'hot water cascade enable'
+_BIT 3: %QX8.1.0.3 'water_supply_cascade' 'water supply cascade enable'
+_BIT 4: %QX8.1.0.4 'hot_water_cycle' 'hot water cycle enable'
+_BIT 5: %QX8.1.0.5 'supply_water_cycle' 'water supply cycle enable'
+_BIT 6: %QX8.1.0.6 '' 'Bit 6'
+_BIT 7: %QX8.1.0.7 '' 'Bit 7'
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Float'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: 'Float'
+_NODE_ID: 2
+_IECIN: %IB8.2
+_IECOUT: %QB8.2
+_IECDIAG: %MB8.2
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'Set point  PID hot water'
+
+_PARAMETER
+_PARAM 1: 0, 'float'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'hot_water_set_point_PID'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD8.2.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Float'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: 'Float'
+_NODE_ID: 3
+_IECIN: %IB8.3
+_IECOUT: %QB8.3
+_IECDIAG: %MB8.3
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'Set point PID water suppply'
+
+_PARAMETER
+_PARAM 1: 0, 'float'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'water_supply_set_point_PID'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD8.3.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Float'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: 'Float'
+_NODE_ID: 4
+_IECIN: %IB8.4
+_IECOUT: %QB8.4
+_IECDIAG: %MB8.4
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'P hot water'
+
+_PARAMETER
+_PARAM 1: 0, 'float'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'P_hot_water'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD8.4.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Float'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: 'Float'
+_NODE_ID: 5
+_IECIN: %IB8.5
+_IECOUT: %QB8.5
+_IECDIAG: %MB8.5
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'I hot water'
+
+_PARAMETER
+_PARAM 1: 0, 'float'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'I_hot_water'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD8.5.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Float'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: 'Float'
+_NODE_ID: 6
+_IECIN: %IB8.6
+_IECOUT: %QB8.6
+_IECDIAG: %MB8.6
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'D hot water'
+
+_PARAMETER
+_PARAM 1: 0, 'float'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'D_hot_water'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD8.6.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Float'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: 'Float'
+_NODE_ID: 7
+_IECIN: %IB8.7
+_IECOUT: %QB8.7
+_IECDIAG: %MB8.7
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'P water supply'
+
+_PARAMETER
+_PARAM 1: 0, 'float'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'water_supply_P'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD8.7.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Float'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: 'Float'
+_NODE_ID: 8
+_IECIN: %IB8.8
+_IECOUT: %QB8.8
+_IECDIAG: %MB8.8
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'I water supply'
+
+_PARAMETER
+_PARAM 1: 0, 'float'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'water_supply_I'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD8.8.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Float'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: 'Float'
+_NODE_ID: 9
+_IECIN: %IB8.9
+_IECOUT: %QB8.9
+_IECDIAG: %MB8.9
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'D water supply'
+
+_PARAMETER
+_PARAM 1: 0, 'float'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'water_supply_D'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD8.9.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Float'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: 'Float'
+_NODE_ID: 10
+_IECIN: %IB8.10
+_IECOUT: %QB8.10
+_IECDIAG: %MB8.10
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'hot water pressure range min '
+
+_PARAMETER
+_PARAM 1: 0, 'float'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'hw_pressure_range_min'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD8.10.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Float'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: 'Float'
+_NODE_ID: 11
+_IECIN: %IB8.11
+_IECOUT: %QB8.11
+_IECDIAG: %MB8.11
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'hot water pressure range max'
+
+_PARAMETER
+_PARAM 1: 0, 'float'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'hw_pressure_range_max'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD8.11.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Float'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: 'Float'
+_NODE_ID: 12
+_IECIN: %IB8.12
+_IECOUT: %QB8.12
+_IECDIAG: %MB8.12
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'water supply pressure range min'
+
+_PARAMETER
+_PARAM 1: 0, 'float'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'water_supply_pressure_range_min'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD8.12.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Float'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: 'Float'
+_NODE_ID: 13
+_IECIN: %IB8.13
+_IECOUT: %QB8.13
+_IECDIAG: %MB8.13
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'water supply pressure range max'
+
+_PARAMETER
+_PARAM 1: 0, 'float'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'water_supply_pressure_range_max'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD8.13.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Float'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: 'Float'
+_NODE_ID: 14
+_IECIN: %IB8.14
+_IECOUT: %QB8.14
+_IECDIAG: %MB8.14
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'Set point hot water manual value frequency invertor drive1'
+
+_PARAMETER
+_PARAM 1: 0, 'float'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'hw_value_manual_frequency_id1'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD8.14.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Float'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: 'Float'
+_NODE_ID: 15
+_IECIN: %IB8.15
+_IECOUT: %QB8.15
+_IECDIAG: %MB8.15
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'Set point hot water manual value frequency invertor drive2'
+
+_PARAMETER
+_PARAM 1: 0, 'float'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'hw_value_manual_frequency_id2'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD8.15.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Float'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: 'Float'
+_NODE_ID: 16
+_IECIN: %IB8.16
+_IECOUT: %QB8.16
+_IECDIAG: %MB8.16
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'Set point water supply manual value frequency invertor drive1'
+
+_PARAMETER
+_PARAM 1: 0, 'float'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'water_supply_manual_frequency_id1'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD8.16.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Float'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: 'Float'
+_NODE_ID: 17
+_IECIN: %IB8.17
+_IECOUT: %QB8.17
+_IECDIAG: %MB8.17
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'Set point water supply manual value frequency invertor drive2'
+
+_PARAMETER
+_PARAM 1: 0, 'float'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'water_supply_manual_frequency_id2'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD8.17.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+_END_MODULE
+_END_MODULE
+PLC_END
+
+
+RESOURCE
+{event_task : 'start','Called when program starts','','FUNCTION systemevent: DWORD$R$NVAR_INPUT$R$N$TdwEvent: INT;$R$N$TdwFilter: INT;$R$N$TdwOwner: INT;$R$NEND_VAR$R$N'}{event_task_info : 0,1,27845}
+{event_task : 'stop','Called when program stops','','FUNCTION systemevent: DWORD$R$NVAR_INPUT$R$N$TdwEvent: INT;$R$N$TdwFilter: INT;$R$N$TdwOwner: INT;$R$NEND_VAR$R$N'}{event_task_info : 0,2,27845}
+{event_task : 'before_reset','Called before reset takes place','','FUNCTION systemevent: DWORD$R$NVAR_INPUT$R$N$TdwEvent: INT;$R$N$TdwFilter: INT;$R$N$TdwOwner: INT;$R$NEND_VAR$R$N'}{event_task_info : 0,3,27845}
+{event_task : 'after_reset','Called after reset took place','','FUNCTION systemevent: DWORD$R$NVAR_INPUT$R$N$TdwEvent: INT;$R$N$TdwFilter: INT;$R$N$TdwOwner: INT;$R$NEND_VAR$R$N'}{event_task_info : 0,4,27845}
+{event_task : 'debug_loop','Debug loop at breakpoint','','FUNCTION systemevent: DWORD$R$NVAR_INPUT$R$N$TdwEvent: INT;$R$N$TdwFilter: INT;$R$N$TdwOwner: INT;$R$NEND_VAR$R$N'}{event_task_info : 0,31,27845}
+{event_task : 'Timer','Timer(20mks)(only in PLC110)','','FUNCTION systemevent: DWORD$R$NVAR_INPUT$R$N$TdwEvent: INT;$R$N$TdwFilter: INT;$R$N$TdwOwner: INT;$R$NEND_VAR$R$N'}{event_task_info : 0,1000,27845}
+
+END_RESOURCE
+
+
+_ALARMCONFIG
+_ALARMCONFIGNEXTTEXTID : 10002
+_ALARMCONFIGFORMATS : 'HH$':$'mm$':$'ss','dd$'-$'MM$'-$'yyyy'
+_ALARMCLASSLIST : 1
+_ALARMCLASSID : 0
+_ALARMCLASSACKTYPE : 0
+_ALARMCLASSNAME : 'DEFAULT'
+_ALARMCLASSDESCRIPTION : ''
+_ALARMCLASSBGCOLORS : 16777215,16777215,16777215
+_ALARMCLASSTEXTCOLORS : 3394560,255,16711680
+_ALARMCLASSBITMAPS : '','',''
+_ALARMACTIONLIST : 0
+(* @ALARMCLASSRESETCOLORS := '_ALARMCLASSRESETCOLORS: 33023,16777215' *)
+(* @ALARMCLASSRESETBITMAP := '_ALARMCLASSRESETBITMAP: $'$'' *)
+_ALARMGROUPLISTNAME : 'Система'
+_ALARMGROUPPATH : 'Система'
+_ALARMGROUPLIST : 0
+_VISUALSETTINGSFLAGS : 0,0,0,0
+_VISUALSETTINGSFLAGS : '','',''
+_VISUALSETTINGSDYNTEXTFILECOUNT : 0
+
+(* @ALARMCONFIGFLAGS := '_ALARMCONFIGFLAGS: 4' *)
+(* @ALARMCONFIGGLOBALDB_STR := '_ALARMCONFIGGLOBALDB_STRINGS: $'$',$'$',$'$',$'$'' *)
+(* @ALARMCONFIGGLOBALDB_NUM := '_ALARMCONFIGGLOBALDB_NUMBERS: 0,0' *)
+_END_ALARMCONFIG
+
+
+LIBRARY
+ANALYZATION.LIB 5.10.99 09:05:06
+(* @LIBRARYSYMFILEINFO := '0' *)
+NumOfPOUs: 2
+AnalyzeExpression: 0
+AppendErrorString: 0
+NumOfGVLs: 1
+Globale_Variablen: 0
+END_LIBRARY
+
+LIBRARY
+IECSFC.LIB 13.4.06 15:51:28
+(* @LIBRARYSYMFILEINFO := '0' *)
+NumOfPOUs: 1
+SFCActionControl: 0
+NumOfGVLs: 1
+Globale_Variablen: 0
+END_LIBRARY
+
+LIBRARY
+STANDARD.LIB 4.10.05 11:14:46
+(* @LIBRARYSYMFILEINFO := '0' *)
+NumOfPOUs: 21
+CONCAT: 0
+CTD: 0
+CTU: 0
+CTUD: 0
+DELETE: 0
+F_TRIG: 0
+FIND: 0
+INSERT: 0
+LEFT: 0
+LEN: 0
+MID: 0
+R_TRIG: 0
+REPLACE: 0
+RIGHT: 0
+RS: 0
+RTC: 0
+SEMA: 0
+SR: 0
+TOF: 0
+TON: 0
+TP: 0
+NumOfGVLs: 0
+END_LIBRARY
+
+LIBRARY
+SYSLIBCALLBACK.LIB 26.10.21 13:46:42
+(* @LIBRARYSYMFILEINFO := '0' *)
+NumOfPOUs: 2
+SysCallbackRegister: 0
+SysCallbackUnregister: 0
+NumOfGVLs: 0
+END_LIBRARY
+
+LIBRARY
+SYSLIBTIME.LIB 26.10.21 13:46:42
+(* @LIBRARYSYMFILEINFO := '0' *)
+NumOfPOUs: 2
+CurTime: 0
+CurTimeEx: 0
+NumOfGVLs: 1
+Globale_Variablen: 0
+END_LIBRARY
+
+LIBRARY
+SYSTASKINFO.LIB 26.10.21 13:46:42
+(* @LIBRARYSYMFILEINFO := '0' *)
+NumOfPOUs: 1
+taskinfo: 0
+NumOfGVLs: 1
+Globale_Variablen: 0
+END_LIBRARY
+
+LIBRARY
+Util.lib 18.5.10 15:14:28
+(* @LIBRARYSYMFILEINFO := '0' *)
+NumOfPOUs: 24
+BCD_TO_INT: 2048
+BLINK: 2048
+CHARCURVE: 2048
+DERIVATIVE: 2048
+EXTRACT: 2048
+FREQ_MEASURE: 2048
+GEN: 2048
+HYSTERESIS: 2048
+INT_TO_BCD: 2048
+INTEGRAL: 2048
+LIMITALARM: 2048
+LIN_TRAFO: 2048
+PACK: 2048
+PD: 2048
+PID: 2048
+PID_FIXCYCLE: 2048
+PUTBIT: 2048
+RAMP_INT: 2048
+RAMP_REAL: 2048
+STATISTICS_INT: 2048
+STATISTICS_REAL: 2048
+UNPACK: 2048
+VARIANCE: 2048
+Version_Util: 2048
+NumOfGVLs: 1
+Globale_Variablen: 0
+END_LIBRARY
+
+
+
+_WORKSPACE
+_GLOBALVISUALSETTINGS
+_VISUALSETTINGSFLAGS : 0,0,0,0
+_VISUALSETTINGSFLAGS : '','',''
+_VISUALSETTINGSDYNTEXTFILECOUNT : 0
+_VISUALBITMAPLISTCOUNT : 0
+_END_GLOBALVISUALSETTINGS
+_END_WORKSPACE
