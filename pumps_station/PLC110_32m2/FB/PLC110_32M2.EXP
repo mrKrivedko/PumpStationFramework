@@ -1,0 +1,148 @@
+FUNCTION_BLOCK PLC110_32m2
+
+VAR_INPUT
+	FDI1:BOOL;
+	FDI2:BOOL;
+	DI1:BOOL;
+	DI2:BOOL;
+	DI3:BOOL;
+	DI4:BOOL;
+	DI5:BOOL;
+	DI6:BOOL;
+	DI7:BOOL;
+	DI8:BOOL;
+	DI9:BOOL;
+	DI10:BOOL;
+	DI11:BOOL;
+	DI12:BOOL;
+	DI13:BOOL;
+	DI14:BOOL;
+	DI15:BOOL;
+	DI16:BOOL;
+	SI:BOOL;
+	status_outputs:classPLC32m2StatusOutputs;
+END_VAR
+
+VAR_OUTPUT
+	FDO1:BOOL;
+	FDO2:BOOL;
+	FDO3:BOOL;
+	FDO4:BOOL;
+	DO1:BOOL;
+	DO2:BOOL;
+	DO3:BOOL;
+	DO4:BOOL;
+	DO5:BOOL;
+	DO6:BOOL;
+	DO7:BOOL;
+	DO8:BOOL;
+	DO9:BOOL;
+	DO10:BOOL;
+	DO11:BOOL;
+	DO12:BOOL;
+	DO13:BOOL;
+	DO14:BOOL;
+	DO15:BOOL;
+	DO16:BOOL;
+	SO:BOOL;
+	status_inputs:classPLC32m2StatusInputs;
+END_VAR
+
+VAR
+	fast_inputs:classFastDiscreteInputs;
+	discrete_inputs:classDiscreteInputs;
+	special_input:classSpecialInput;
+	fast_outputs:classFastDiscreteOutputs;
+	discrete_outputs:classDiscreteOutputs;
+	special_output:classSpecialOutput;
+END_VAR
+
+init;
+
+get_status_inputs;
+
+get_status_outputs;
+
+END_FUNCTION_BLOCK
+
+ACTION	get_status_inputs:
+status_inputs.fast_inputs:=fast_inputs;
+status_inputs.discrete_inputs:=discrete_inputs;
+status_inputs.special_input:=special_input;
+END_ACTION
+
+ACTION	get_status_outputs:
+
+FDO1:=status_outputs.fast_outputs.Bit1;
+FDO2:=status_outputs.fast_outputs.Bit2;
+FDO3:=status_outputs.fast_outputs.Bit3;
+FDO4:=status_outputs.fast_outputs.Bit4;
+
+DO1:=status_outputs.discrete_outputs.first_byte.Bit1;
+DO2:=status_outputs.discrete_outputs.first_byte.Bit2;
+DO3:=status_outputs.discrete_outputs.first_byte.Bit3;
+DO4:=status_outputs.discrete_outputs.first_byte.Bit4;
+DO5:=status_outputs.discrete_outputs.first_byte.Bit5;
+DO6:=status_outputs.discrete_outputs.first_byte.Bit6;
+DO7:=status_outputs.discrete_outputs.first_byte.Bit7;
+DO8:=status_outputs.discrete_outputs.first_byte.Bit8;
+DO9:=status_outputs.discrete_outputs.second_byte.Bit1;
+DO10:=status_outputs.discrete_outputs.second_byte.Bit2;
+DO11:=status_outputs.discrete_outputs.second_byte.Bit3;
+DO12:=status_outputs.discrete_outputs.second_byte.Bit4;
+DO13:=status_outputs.discrete_outputs.second_byte.Bit5;
+DO14:=status_outputs.discrete_outputs.second_byte.Bit6;
+DO15:=status_outputs.discrete_outputs.second_byte.Bit7;
+DO16:=status_outputs.discrete_outputs.second_byte.Bit8;
+
+SO:=status_outputs.special_output.Bit1;
+END_ACTION
+
+ACTION	init:
+fast_inputs.Bit1:=FDI1;
+fast_inputs.Bit2:=FDI2;
+
+discrete_inputs.first_byte.Bit1:=DI1;
+discrete_inputs.first_byte.Bit2:=DI2;
+discrete_inputs.first_byte.Bit3:=DI3;
+discrete_inputs.first_byte.Bit4:=DI4;
+discrete_inputs.first_byte.Bit5:=DI5;
+discrete_inputs.first_byte.Bit6:=DI6;
+discrete_inputs.first_byte.Bit7:=DI7;
+discrete_inputs.first_byte.Bit8:=DI8;
+discrete_inputs.second_byte.Bit1:=DI9;
+discrete_inputs.second_byte.Bit2:=DI10;
+discrete_inputs.second_byte.Bit3:=DI11;
+discrete_inputs.second_byte.Bit4:=DI12;
+discrete_inputs.second_byte.Bit5:=DI13;
+discrete_inputs.second_byte.Bit6:=DI14;
+discrete_inputs.second_byte.Bit7:=DI15;
+discrete_inputs.second_byte.Bit8:=DI16;
+
+special_input.Bit1:=SI;
+
+fast_outputs.Bit1:=FDO1;
+fast_outputs.Bit2:=FDO2;
+fast_outputs.Bit3:=FDO3;
+fast_outputs.Bit4:=FDO4;
+
+discrete_outputs.first_byte.Bit1:=DO1;
+discrete_outputs.first_byte.Bit2:=DO2;
+discrete_outputs.first_byte.Bit3:=DO3;
+discrete_outputs.first_byte.Bit4:=DO4;
+discrete_outputs.first_byte.Bit5:=DO5;
+discrete_outputs.first_byte.Bit6:=DO6;
+discrete_outputs.first_byte.Bit7:=DO7;
+discrete_outputs.first_byte.Bit8:=DO8;
+
+discrete_outputs.second_byte.Bit1:=DO9;
+discrete_outputs.second_byte.Bit2:=DO10;
+discrete_outputs.second_byte.Bit3:=DO11;
+discrete_outputs.second_byte.Bit4:=DO12;
+discrete_outputs.second_byte.Bit5:=DO13;
+discrete_outputs.second_byte.Bit6:=DO14;
+discrete_outputs.second_byte.Bit7:=DO15;
+discrete_outputs.second_byte.Bit8:=DO16;
+
+special_output.Bit1:=SO;
+END_ACTION

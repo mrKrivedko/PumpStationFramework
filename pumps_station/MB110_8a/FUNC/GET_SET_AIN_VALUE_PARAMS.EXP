@@ -1,0 +1,13 @@
+FUNCTION get_set_Ain_value_params : classParamsValueScaling
+(* �������������� �� ���� �������� ����� � ��������� ��������������� *)
+
+VAR_INPUT
+	set:classSetAnalogInputChannel;
+END_VAR
+
+get_set_Ain_value_params.in_min:=set.ain_l;
+get_set_Ain_value_params.in_max:=set.ain_h;
+get_set_Ain_value_params.out_min:=set.analog_min_value;
+get_set_Ain_value_params.out_max:=set.analog_max_value;
+
+END_FUNCTION

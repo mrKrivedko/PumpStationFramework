@@ -1,0 +1,14 @@
+FUNCTION_BLOCK CurrentSensorPressure_4_20
+
+VAR_INPUT
+	current_value:REAL;  (*�������� ���� 4-20�� *)
+	set:classSetPressureSensor4_20;  (* ������� � ������ ������� �������� *)
+END_VAR
+
+VAR_OUTPUT
+	pressure:REAL;  (* �������� �� ������ *)
+END_VAR
+
+pressure:=value_scaling(current_value, get_set_sensor_value_params(set));
+
+END_FUNCTION_BLOCK

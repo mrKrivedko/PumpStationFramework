@@ -1,0 +1,14 @@
+FUNCTION get_pump_in_single : BOOL
+
+VAR_INPUT
+    info_single: classInfoSingle; (* Comment *)
+    pump_number: SINT;
+END_VAR
+
+IF pump_number = info_single.pump_number THEN
+    get_pump_in_single := info.start_pump;
+ELSE
+    get_pump_in_single := FALSE;
+END_IF;
+
+END_FUNCTION

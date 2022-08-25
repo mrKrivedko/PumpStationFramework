@@ -1,0 +1,16 @@
+FUNCTION get_external_alarm : STRING(79)
+(* ��������� ��������� ������ �� ������ ���� ��� ���������� �������� *)
+VAR_INPUT
+	low_pressure_in:BOOL;
+	high_pressure_out:BOOL;
+END_VAR
+
+IF low_pressure_in THEN
+	get_external_alarm:='������ �������� �� �����';
+ELSIF high_pressure_out THEN
+	get_external_alarm:='������� �������� �� ������';
+ELSE
+	get_external_alarm:='GOOD';
+END_IF;
+
+END_FUNCTION

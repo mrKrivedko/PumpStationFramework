@@ -1,0 +1,8 @@
+TYPE classInvertorDriveDiscreteOutputs :
+
+STRUCT
+	status_run:BOOL;
+	status_alarm:BOOL;
+END_STRUCT
+
+END_TYPE

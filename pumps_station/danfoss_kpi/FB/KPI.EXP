@@ -1,0 +1,19 @@
+FUNCTION_BLOCK Kpi
+
+VAR_INPUT
+	input:BOOL;  (* �������� �� ����� *)
+END_VAR
+
+VAR_OUTPUT
+	NC:BOOL; (* normal close �2 *)
+	NO:BOOL; (* normal open �4 *)
+END_VAR
+
+VAR
+	set:classSetKpi;
+END_VAR
+
+NC:=NOT input;
+NO:=input;
+
+END_FUNCTION_BLOCK

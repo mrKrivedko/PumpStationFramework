@@ -1,0 +1,27 @@
+FUNCTION_BLOCK get_info_analog_outputs_module
+
+VAR_INPUT
+	ch1_current:REAL;
+	ch2_current:REAL;
+	ch3_current:REAL;
+	ch4_current:REAL;
+	ch5_current:REAL;
+	ch6_current:REAL;
+	ch7_current:REAL;
+	ch8_current:REAL;
+END_VAR
+
+VAR_OUTPUT
+	info:classAnalogOutputModule;
+END_VAR
+
+info.channel1.current_value := ch1_current;
+info.channel2.current_value := ch2_current;
+info.channel3.current_value := ch3_current;
+info.channel4.current_value := ch4_current;
+info.channel5.current_value := ch5_current;
+info.channel6.current_value := ch6_current;
+info.channel7.current_value := ch7_current;
+info.channel8.current_value := ch8_current;
+
+END_FUNCTION_BLOCK

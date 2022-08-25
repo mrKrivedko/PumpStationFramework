@@ -1,0 +1,8 @@
+TYPE classDiscreteInputs :
+
+STRUCT
+	first_byte:classDiscreteInputByte;
+	second_byte:classDiscreteInputByte;
+END_STRUCT
+
+END_TYPE

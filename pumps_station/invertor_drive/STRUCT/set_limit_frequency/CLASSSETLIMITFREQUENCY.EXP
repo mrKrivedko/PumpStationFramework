@@ -1,0 +1,9 @@
+TYPE classSetLimitFrequency :
+
+STRUCT
+	manual:REAL;  (* Hz *)
+	min_range:REAL;  (* Hz *)
+	max_range:REAL;  (* Hz *)
+END_STRUCT
+
+END_TYPE

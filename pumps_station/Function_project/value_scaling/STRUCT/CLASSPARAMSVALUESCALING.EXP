@@ -1,0 +1,11 @@
+TYPE classParamsValueScaling :
+
+STRUCT
+	in_min: REAL := 0;
+	in_max: REAL := 100;
+	out_min: REAL := 0;
+	out_max: REAL := 100;
+
+END_STRUCT
+
+END_TYPE

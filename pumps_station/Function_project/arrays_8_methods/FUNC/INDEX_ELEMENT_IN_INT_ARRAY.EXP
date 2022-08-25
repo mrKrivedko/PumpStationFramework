@@ -1,0 +1,26 @@
+FUNCTION index_element_in_int_array : INT
+
+VAR_INPUT
+	element:INT;
+	list:ARRAY [1..8] OF  INT;
+END_VAR
+
+VAR
+	size: INT := 8;
+	i: INT;
+	index: INT := 1;
+END_VAR
+
+IF element_in_int_array(element, list) THEN
+	FOR i := 1 TO size DO
+		IF list[i]=element THEN
+			index := i;
+			i := 8;
+		END_IF;
+	END_FOR;
+	index_element_in_int_array := index;
+ELSE
+	index_element_in_int_array := 0;
+END_IF;
+
+END_FUNCTION

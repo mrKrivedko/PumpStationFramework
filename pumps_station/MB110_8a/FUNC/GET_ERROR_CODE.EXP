@@ -1,0 +1,42 @@
+FUNCTION get_error_code: STRING(79)
+(* ������� �������������� ���� ������ �������� ����������� ������ ������ *)
+
+VAR_INPUT
+	code_error: WORD;
+END_VAR
+
+VAR
+	error_message: STRING(79);
+END_VAR
+
+IF code_error=0
+	THEN error_message := '��������� �������';
+ELSIF code_error = 61440
+	THEN error_message := '�������� �������� �������';
+ELSIF code_error = 61446
+	THEN error_message := '������ �� ������. ����� ����������� ������� ���������.';
+ELSIF code_error = 61447
+	THEN error_message := '������ ��������.';
+ELSIF code_error = 61448
+	THEN error_message := '������ ����������� ��������� ������ ��.';
+ELSIF code_error = 61449
+	THEN error_message := '���� ����������� ��������� ������ ��.';
+ELSIF code_error = 61450
+	THEN error_message := '���������� �������� ������� ������.';
+ELSIF code_error = 61451
+	THEN error_message := '���������� �������� ������� ����.';
+ELSIF code_error = 61452
+	THEN error_message := '�������� ��������� �������.';
+ELSIF code_error = 61453
+	THEN error_message := '����� �������.';
+ELSIF code_error = 61454
+	THEN error_message := '���������� ����� � ���.';
+ELSIF code_error = 61455
+	THEN error_message := '������������ ������������� �����������.';
+ELSE
+	error_message := 'Error not Found';
+END_IF
+
+get_error_code := error_message;
+
+END_FUNCTION

@@ -1,0 +1,8 @@
+TYPE classInfoCascadePump :
+
+STRUCT
+	cascade_pump:BOOL := FALSE;  (*������ ������ ������*)
+	manual:SINT := 40;  (*Hz*)
+END_STRUCT
+
+END_TYPE

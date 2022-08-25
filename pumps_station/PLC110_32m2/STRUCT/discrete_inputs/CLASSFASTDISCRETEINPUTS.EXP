@@ -1,0 +1,8 @@
+TYPE classFastDiscreteInputs :
+
+STRUCT
+	Bit1:BOOL;
+	Bit2:BOOL;
+END_STRUCT
+
+END_TYPE

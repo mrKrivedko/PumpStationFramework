@@ -1,0 +1,8 @@
+TYPE classSetInvertorDrive :
+
+STRUCT
+	set_auto:classSetAutoInvertorDrive;
+	set_frequency:classSetLimitFrequency;
+END_STRUCT
+
+END_TYPE

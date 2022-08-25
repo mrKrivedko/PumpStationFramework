@@ -1,0 +1,7 @@
+TYPE classAnalogOutputChannel :
+
+STRUCT
+	current_value: REAL;
+END_STRUCT
+
+END_TYPE

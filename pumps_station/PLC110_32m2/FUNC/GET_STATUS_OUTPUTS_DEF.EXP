@@ -1,0 +1,50 @@
+FUNCTION get_status_outputs_def : classPLC32m2StatusOutputs
+
+VAR_INPUT
+	fdo1:BOOL:=FALSE;
+	fdo2:BOOL:=FALSE;
+	fdo3:BOOL:=FALSE;
+	fdo4:BOOL:=FALSE;
+	do1:BOOL:=FALSE;
+	do2:BOOL:=FALSE;
+	do3:BOOL:=FALSE;
+	do4:BOOL:=FALSE;
+	do5:BOOL:=FALSE;
+	do6:BOOL:=FALSE;
+	do7:BOOL:=FALSE;
+	do8:BOOL:=FALSE;
+	do9:BOOL:=FALSE;
+	do10:BOOL:=FALSE;
+	do11:BOOL:=FALSE;
+	do12:BOOL:=FALSE;
+	do13:BOOL:=FALSE;
+	do14:BOOL:=FALSE;
+	do15:BOOL:=FALSE;
+	do16:BOOL:=FALSE;
+	sdo:BOOL:=FALSE;
+END_VAR
+
+get_status_outputs_def.fast_outputs.Bit1:=fdo1;
+get_status_outputs_def.fast_outputs.Bit2:=fdo2;
+get_status_outputs_def.fast_outputs.Bit3:=fdo3;
+get_status_outputs_def.fast_outputs.Bit4:=fdo4;
+
+get_status_outputs_def.discrete_outputs.first_byte.Bit1:=do1;
+get_status_outputs_def.discrete_outputs.first_byte.Bit2:=do2;
+get_status_outputs_def.discrete_outputs.first_byte.Bit3:=do3;
+get_status_outputs_def.discrete_outputs.first_byte.Bit4:=do4;
+get_status_outputs_def.discrete_outputs.first_byte.Bit5:=do5;
+get_status_outputs_def.discrete_outputs.first_byte.Bit6:=do6;
+get_status_outputs_def.discrete_outputs.first_byte.Bit7:=do7;
+get_status_outputs_def.discrete_outputs.first_byte.Bit8:=do8;
+get_status_outputs_def.discrete_outputs.second_byte.Bit1:=do9;
+get_status_outputs_def.discrete_outputs.second_byte.Bit2:=do10;
+get_status_outputs_def.discrete_outputs.second_byte.Bit3:=do11;
+get_status_outputs_def.discrete_outputs.second_byte.Bit4:=do12;
+get_status_outputs_def.discrete_outputs.second_byte.Bit5:=do13;
+get_status_outputs_def.discrete_outputs.second_byte.Bit6:=do14;
+get_status_outputs_def.discrete_outputs.second_byte.Bit7:=do15;
+get_status_outputs_def.discrete_outputs.second_byte.Bit8:=do16;
+
+get_status_outputs_def.special_output.Bit1:=sdo;
+END_FUNCTION

@@ -1,0 +1,9 @@
+TYPE classInfoCycle :
+
+STRUCT
+	run_timer: BOOL; (* ������ ������ ������� *)
+	working_time: TIME; (*  ����� ������ ������� *)
+	pump_number: SINT;  (* ����� ������ � ������ *)
+END_STRUCT
+
+END_TYPE

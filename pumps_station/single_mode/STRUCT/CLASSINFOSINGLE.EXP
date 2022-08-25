@@ -1,0 +1,6 @@
+TYPE classInfoSingle : STRUCT
+        pivot_pump : INT; (* Comment *)
+        start_pump : BOOL; (* Comment *)
+        message: STRING(79);
+    END_STRUCT
+END_TYPE

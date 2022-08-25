@@ -1,0 +1,15 @@
+FUNCTION get_params_value_scaling : classParamsValueScaling
+
+VAR_INPUT
+	in_min: REAL;
+	in_max: REAL;
+	out_min: REAL;
+	out_max: REAL;
+END_VAR
+
+get_params_value_scaling.in_min := in_min;
+get_params_value_scaling.in_max := in_max;
+get_params_value_scaling.out_min := out_min;
+get_params_value_scaling.out_max := out_max;
+
+END_FUNCTION

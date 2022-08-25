@@ -1,0 +1,22 @@
+FUNCTION_BLOCK ParamsAnalogInputChannel
+
+VAR_INPUT
+	(* ���������������� ��������� ������ ������. ��. ���������� �������: ����������. ������� �.2 *)
+	(* ������� ��� � �������� �� ���������: ��� ������� 4-20mA  *)
+	ain_l: REAL := 0;  (* �������� Ain.L *)
+	ain_h: REAL := 1000;  (* �������� Ain.H *)
+	analog_min_value: REAL := 4;  (* �������� ������ ������� ������� �������� *)
+	analog_max_value: REAL := 20;  (* �������� ������� ������� ������� �������� *)
+
+END_VAR
+
+VAR_OUTPUT
+	params_channel:classSetAnalogInputChannel;
+END_VAR
+
+params_channel.ain_l := ain_l;
+params_channel.ain_h := ain_h;
+params_channel.analog_min_value := analog_min_value;
+params_channel.analog_max_value := analog_max_value;
+
+END_FUNCTION_BLOCK

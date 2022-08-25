@@ -1,0 +1,77 @@
+FUNCTION_BLOCK Cascade_Cycle_Selector
+VAR_INPUT
+    cascade: BOOL;
+    cycle: BOOL;
+    single: BOOL;
+    info_single: classInfoSingle;
+    info_cycle: classInfoCycle;
+    info_cascade: classInfoCascade;
+END_VAR
+VAR_OUTPUT
+    start_pump1: BOOL := FALSE; (* Comment *)
+    start_pump2: BOOL := FALSE; (* Comment *)
+    start_pump3: BOOL := FALSE; (* Comment *)
+    start_pump4: BOOL := FALSE; (* Comment *)
+    start_pump5: BOOL := FALSE; (* Comment *)
+    start_pump6: BOOL := FALSE; (* Comment *)
+    start_pump7: BOOL := FALSE; (* Comment *)
+    start_pump8: BOOL := FALSE; (* Comment *)
+END_VAR
+VAR
+    message: STRING(79); (* Comment *)
+    flag_mode: INT;
+END_VAR
+
+
+IF cascade AND NOT cycle AND NOT single THEN
+    flag_mode := 2;
+    message := 'Выбран каскадный режим работы.';
+ELSIF cycle AND NOT cascade AND NOT single THEN
+    flag_mode := 1;
+    message := 'Выбран циклический режим работы.';
+ELSIF single AND NOT cycle AND NOT cascade THEN
+    flag_mode := 0;
+    message := 'Выбран режим работы одного насоса'; 
+ELSE
+    message := 'Выберите один режим работы!';
+END_IF;
+
+IF flag_mode = 0 THEN
+    start_pump1 := get_pump_in_single(info_single, 1);
+    start_pump2 := get_pump_in_single(info_single, 2);
+    start_pump3 := get_pump_in_single(info_single, 3);
+    start_pump4 := get_pump_in_single(info_single, 4);
+    start_pump5 := get_pump_in_single(info_single, 5);
+    start_pump6 := get_pump_in_single(info_single, 6);
+    start_pump7 := get_pump_in_single(info_single, 7);
+    start_pump8 := get_pump_in_single(info_single, 8);
+ELSIF flag_mode = 1 THEN
+    start_pump1 := get_pump_in_cycle(info_cycle, 1);
+    start_pump2 := get_pump_in_cycle(info_cycle, 2);
+    start_pump3 := get_pump_in_cycle(info_cycle, 3);
+    start_pump4 := get_pump_in_cycle(info_cycle, 4);
+    start_pump5 := get_pump_in_cycle(info_cycle, 5);
+    start_pump6 := get_pump_in_cycle(info_cycle, 6);
+    start_pump7 := get_pump_in_cycle(info_cycle, 7);
+    start_pump8 := get_pump_in_cycle(info_cycle, 8);
+ELSIF flag_mode = 2 THEN
+    start_pump1 := get_pump_in_cascade(info_cascade, 1);
+    start_pump2 := get_pump_in_cascade(info_cascade, 2);
+    start_pump3 := get_pump_in_cascade(info_cascade, 3);
+    start_pump4 := get_pump_in_cascade(info_cascade, 4);
+    start_pump5 := get_pump_in_cascade(info_cascade, 5);
+    start_pump6 := get_pump_in_cascade(info_cascade, 6);
+    start_pump7 := get_pump_in_cascade(info_cascade, 7);
+    start_pump8 := get_pump_in_cascade(info_cascade, 8);
+ELSE
+    start_pump1 := FALSE;
+    start_pump2 := FALSE;
+    start_pump3 := FALSE;
+    start_pump4 := FALSE;
+    start_pump5 := FALSE;
+    start_pump6 := FALSE;
+    start_pump7 := FALSE;
+    start_pump8 := FALSE;
+END_IF;
+
+END_FUNCTION_BLOCK

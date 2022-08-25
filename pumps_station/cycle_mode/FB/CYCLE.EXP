@@ -1,0 +1,78 @@
+FUNCTION_BLOCK cycle
+
+VAR_INPUT
+	enable:BOOL; (* enable cycle mode *)
+	set_timer:TIME; (* set cycle timer *)
+	info_invertor_drive1: classInfoInvertorDrive;
+    info_invertor_drive2: classInfoInvertorDrive;
+    info_invertor_drive3: classInfoInvertorDrive;
+    info_invertor_drive4: classInfoInvertorDrive;
+    info_invertor_drive5: classInfoInvertorDrive;
+    info_invertor_drive6: classInfoInvertorDrive;
+    info_invertor_drive7: classInfoInvertorDrive;
+    info_invertor_drive8: classInfoInvertorDrive;
+	END_VAR
+
+VAR_OUTPUT
+	info_cycle:classInfoCycle;
+END_VAR
+VAR
+	pumps: ARRAY [1..8] OF BOOL;
+	i: SINT:=8;
+	start_timer: TIME:=t#0ms;
+	start_delay:TON;
+	in: BOOL;
+
+	working_time:TIME;
+	Q:BOOL;
+	n: SINT;
+END_VAR
+
+pumps[1]:=get_active(info_invertor_drive1);
+pumps[2]:=get_active(info_invertor_drive2);
+pumps[3]:=get_active(info_invertor_drive3);
+pumps[4]:=get_active(info_invertor_drive4);
+pumps[5]:=get_active(info_invertor_drive5);
+pumps[6]:=get_active(info_invertor_drive6);
+pumps[7]:=get_active(info_invertor_drive7);
+pumps[8]:=get_active(info_invertor_drive8);
+
+n:=i;
+
+IF pumps[i]=FALSE THEN
+	i:=i+1;
+END_IF;
+
+(* ���������� ��������� ����� *)
+IF  start_timer=t#0ms THEN
+	start_timer:=get_systime();
+	in:=TRUE;
+END_IF;
+
+working_time:=work_time(start_timer);
+
+
+IF working_time>=set_timer THEN
+	in:=FALSE;
+	i:=i+1;
+	start_timer:=t#0ms;
+END_IF;
+
+start_delay(IN:=in, PT:=t#3s);
+Q:=start_delay.Q;
+
+IF i>8 THEN
+	i:=1;
+END_IF;
+
+IF enable THEN
+	info_cycle.working_time:=working_time;
+	info_cycle.run_timer:=Q;
+	info_cycle.pump_number:=n;
+ELSE
+	info_cycle.working_time:=T#0s;
+	info_cycle.run_timer:=FALSE;
+	info_cycle.pump_number:=1;
+	start_timer:=t#0s;
+END_IF;
+END_FUNCTION_BLOCK

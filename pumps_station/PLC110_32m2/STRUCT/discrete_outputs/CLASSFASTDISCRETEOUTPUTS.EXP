@@ -1,0 +1,10 @@
+TYPE classFastDiscreteOutputs :
+
+STRUCT
+	Bit1:BOOL;
+	Bit2:BOOL;
+	Bit3:BOOL;
+	Bit4:BOOL;
+END_STRUCT
+
+END_TYPE

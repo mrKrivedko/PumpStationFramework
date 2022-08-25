@@ -1,0 +1,12 @@
+FUNCTION get_set_sensor_value_params : classParamsValueScaling
+
+VAR_INPUT
+	sensor_set:classSetPressureSensor4_20;
+END_VAR
+
+get_set_sensor_value_params.in_min := sensor_set.min_current_range;
+get_set_sensor_value_params.in_max := sensor_set.max_current_range;
+get_set_sensor_value_params.out_min := sensor_set.min_measure_range;
+get_set_sensor_value_params.out_max := sensor_set.max_measure_range;
+
+END_FUNCTION

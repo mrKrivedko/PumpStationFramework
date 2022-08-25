@@ -1,0 +1,8 @@
+TYPE classInfoAnalogInputChannel :
+
+STRUCT
+	current_value:REAL;
+	error_message:STRING(79);
+END_STRUCT
+
+END_TYPE

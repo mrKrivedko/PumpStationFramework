@@ -1,0 +1,36 @@
+FUNCTION get_set_pid : classSetPid
+
+VAR_INPUT
+	direct_logic:BOOL:=TRUE;
+	actual:REAL;
+	set_point:REAL;
+	P:REAL:=2;  (* ���������������� ����������� ����������, ��� ���������� ����� ���������� ���������� �������*)
+	I:INT:=10;  (* ������������ ����������� ����������, ����� � �������� *)
+	D:INT:=0;  (* ���������������� ����������� ����������, ����� � �������� *)
+	Y_manual:REAL:=0;  (* Hz *)
+	Y_offset:REAL:=0;
+	Y_min:REAL;
+	Y_max:REAL;
+	manual:BOOL:=TRUE;  (* ����������� �������� ������ ����� *)
+	reset:BOOL:=FALSE;
+END_VAR
+
+IF direct_logic = TRUE THEN
+	get_set_pid.actual := actual;
+	get_set_pid.set_point := set_point;
+ELSE
+	get_set_pid.actual := set_point;
+	get_set_pid.set_point := actual;
+END_IF;
+
+get_set_pid.P := P;
+get_set_pid.I := I;
+get_set_pid.D := D;
+get_set_pid.Y_manual := Y_manual;
+get_set_pid.Y_offset := Y_offset;
+get_set_pid.Y_min := Y_min;
+get_set_pid.Y_max := Y_max;
+get_set_pid.manual := manual;
+get_set_pid.reset := reset;
+
+END_FUNCTION

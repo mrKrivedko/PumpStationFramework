@@ -1,0 +1,24 @@
+FUNCTION_BLOCK AnalogInputChannel
+
+VAR_INPUT
+	set_channel:classSetAnalogInputChannel;
+	value:REAL;
+	error_code:WORD;
+	sensor:classSetPressureSensor4_20;
+END_VAR
+
+VAR_OUTPUT
+	info_message:classInfoAnalogInputChannel;
+END_VAR
+
+VAR
+	channel:classAnalogInputChannel;
+END_VAR
+
+channel.set_channel := get_params_value_scaling(set_channel.ain_l, set_channel.ain_h, set_channel.analog_min_value, set_channel.analog_max_value);
+channel.value := value;
+channel.error_code := error_code;
+
+info_message := get_infos_analog_input_channel(sensor, channel);
+
+END_FUNCTION_BLOCK

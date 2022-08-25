@@ -1,0 +1,67 @@
+FUNCTION_BLOCK SetChannelsAnalogInputsModule
+
+VAR_INPUT
+	(* ���������������� ��������� ������ ������. ��. ���������� �������: ����������. ������� �.2 *)
+	(* ������� ��� � �������� �� ���������: ��� ������� 4-20mA  *)
+
+	ch1_ain_l: REAL := 0;  (* �������� Ain.L *)
+	ch1_ain_h: REAL := 100;  (* �������� Ain.H *)
+	ch1_analog_min_value: REAL := 4;  (* �������� ������ ������� ������� *)
+	ch1_analog_max_value: REAL := 20;  (* �������� ������� ������� ������� *)
+
+	ch2_ain_l: REAL := 0;  (* �������� Ain.L *)
+	ch2_ain_h: REAL := 100;  (* �������� Ain.H *)
+	ch2_analog_min_value: REAL := 4;  (* �������� ������ ������� ������� *)
+	ch2_analog_max_value: REAL := 20;  (* �������� ������� ������� ������� *)
+
+	ch3_ain_l: REAL := 0;  (* �������� Ain.L *)
+	ch3_ain_h: REAL := 100;  (* �������� Ain.H *)
+	ch3_analog_min_value: REAL := 4;  (* �������� ������ ������� ������� *)
+	ch3_analog_max_value: REAL := 20;  (* �������� ������� ������� ������� *)
+
+	ch4_ain_l: REAL := 0;  (* �������� Ain.L *)
+	ch4_ain_h: REAL := 100;  (* �������� Ain.H *)
+	ch4_analog_min_value: REAL := 4;  (* �������� ������ ������� ������� *)
+	ch4_analog_max_value: REAL := 20;  (* �������� ������� ������� ������� *)
+
+	ch5_ain_l: REAL := 0;  (* �������� Ain.L *)
+	ch5_ain_h: REAL := 100;  (* �������� Ain.H *)
+	ch5_analog_min_value: REAL := 4;  (* �������� ������ ������� ������� *)
+	ch5_analog_max_value: REAL := 20;  (* �������� ������� ������� ������� *)
+
+	ch6_ain_l: REAL := 0;  (* �������� Ain.L *)
+	ch6_ain_h: REAL := 100;  (* �������� Ain.H *)
+	ch6_analog_min_value: REAL := 4;  (* �������� ������ ������� ������� *)
+	ch6_analog_max_value: REAL := 20;  (* �������� ������� ������� ������� *)
+
+	ch7_ain_l: REAL := 0;  (* �������� Ain.L *)
+	ch7_ain_h: REAL := 100;  (* �������� Ain.H *)
+	ch7_analog_min_value: REAL := 4;  (* �������� ������ ������� ������� *)
+	ch7_analog_max_value: REAL := 20;  (* �������� ������� ������� ������� *)
+
+	ch8_ain_l: REAL := 0;  (* �������� Ain.L *)
+	ch8_ain_h: REAL := 100;  (* �������� Ain.H *)
+	ch8_analog_min_value: REAL := 4;  (* �������� ������ ������� ������� *)
+	ch8_analog_max_value: REAL := 20;  (* �������� ������� ������� ������� *)
+END_VAR
+
+VAR_OUTPUT
+	settings:classSetAnalogInputsModule;
+END_VAR
+
+get_settings;
+
+END_FUNCTION_BLOCK
+
+ACTION	get_settings:
+
+settings.ch1_set := get_setAin(ch1_ain_l, ch1_ain_h, ch1_analog_min_value, ch1_analog_max_value);
+settings.ch2_set := get_setAin(ch2_ain_l, ch2_ain_h, ch2_analog_min_value, ch2_analog_max_value);
+settings.ch3_set := get_setAin(ch3_ain_l, ch3_ain_h, ch3_analog_min_value, ch3_analog_max_value);
+settings.ch4_set := get_setAin(ch4_ain_l, ch4_ain_h, ch4_analog_min_value, ch4_analog_max_value);
+settings.ch5_set := get_setAin(ch5_ain_l, ch5_ain_h, ch5_analog_min_value, ch5_analog_max_value);
+settings.ch6_set := get_setAin(ch6_ain_l, ch6_ain_h, ch6_analog_min_value, ch6_analog_max_value);
+settings.ch7_set := get_setAin(ch7_ain_l, ch7_ain_h, ch7_analog_min_value, ch7_analog_max_value);
+settings.ch8_set := get_setAin(ch8_ain_l, ch8_ain_h, ch8_analog_min_value, ch8_analog_max_value);
+
+END_ACTION

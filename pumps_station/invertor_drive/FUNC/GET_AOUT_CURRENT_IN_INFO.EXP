@@ -1,0 +1,8 @@
+FUNCTION get_aout_current_in_info : REAL
+
+VAR_INPUT
+	info_invertor_drive:classInfoInvertorDrive;
+END_VAR
+
+get_aout_current_in_info:=info_invertor_drive.aout_frequency;
+END_FUNCTION

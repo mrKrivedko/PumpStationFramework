@@ -1,0 +1,16 @@
+TYPE classInfoCascade :
+
+STRUCT
+	pivot:SINT;
+	error_message:STRING(79);
+	cascade_pump1:classInfoCascadePump;
+	cascade_pump2:classInfoCascadePump;
+	cascade_pump3:classInfoCascadePump;
+	cascade_pump4:classInfoCascadePump;
+	cascade_pump5:classInfoCascadePump;
+	cascade_pump6:classInfoCascadePump;
+	cascade_pump7:classInfoCascadePump;
+	cascade_pump8:classInfoCascadePump;
+END_STRUCT
+
+END_TYPE

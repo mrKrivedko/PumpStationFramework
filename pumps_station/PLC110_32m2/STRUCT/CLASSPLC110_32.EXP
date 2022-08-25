@@ -1,0 +1,12 @@
+TYPE classPLC110_32 :
+
+STRUCT
+	fast_discrete_inputs:classFastDiscreteInputs;
+	discrete_inputs:classDiscreteInputs;
+	special_input:classSpecialInput;
+	fast_discrete_outputs:classFastDiscreteOutputs;
+	discrete_output:classDiscreteOutputs;
+	special_output:classSpecialOutput;
+END_STRUCT
+
+END_TYPE

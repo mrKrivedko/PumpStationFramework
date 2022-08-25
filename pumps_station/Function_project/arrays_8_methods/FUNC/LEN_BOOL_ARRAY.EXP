@@ -1,0 +1,25 @@
+FUNCTION len_bool_array : INT
+
+VAR_INPUT
+	list: ARRAY [1..8] OF BOOL;
+END_VAR
+
+VAR
+	size: INT := 8;
+	cnt:INT := 0;
+	i: INT;
+END_VAR
+
+FOR i := 1 TO size DO
+	IF list[i] THEN
+		cnt := cnt + 1;
+	END_IF;
+END_FOR;
+
+IF i > 8 THEN
+	i := 1;
+END_IF;
+
+len_bool_array := cnt;
+
+END_FUNCTION

@@ -1,0 +1,8 @@
+TYPE classAlarmInvertorDrive :
+
+STRUCT
+	external_alarm:STRING(79);
+	fault_invertor_drive:STRING(79);
+END_STRUCT
+
+END_TYPE

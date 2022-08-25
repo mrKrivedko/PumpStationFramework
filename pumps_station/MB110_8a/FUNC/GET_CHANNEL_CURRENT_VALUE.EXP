@@ -1,0 +1,24 @@
+FUNCTION get_channel_current_value : REAL
+(* ������� ������������� InfoMessage �� AnalogInputsModule  � ������� �� ������� ������ �������� ���� *)
+
+VAR_INPUT
+	ch_number:INT;
+	Ain_info:classInfoAnalogInputModule;
+END_VAR
+
+VAR
+	list_value : ARRAY [1..8] OF REAL;
+END_VAR
+
+list_value[1] := Ain_info.channel1.current_value;
+list_value[2] := Ain_info.channel2.current_value;
+list_value[3] := Ain_info.channel3.current_value;
+list_value[4] := Ain_info.channel4.current_value;
+list_value[5] := Ain_info.channel5.current_value;
+list_value[6] := Ain_info.channel6.current_value;
+list_value[7] := Ain_info.channel7.current_value;
+list_value[8] := Ain_info.channel8.current_value;
+
+get_channel_current_value := list_value[ch_number];
+
+END_FUNCTION

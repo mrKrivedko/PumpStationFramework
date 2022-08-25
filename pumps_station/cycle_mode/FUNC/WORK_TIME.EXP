@@ -1,0 +1,9 @@
+FUNCTION work_time : TIME
+
+VAR_INPUT
+	start:TIME;
+END_VAR
+
+work_time:=TIME() - start;
+
+END_FUNCTION

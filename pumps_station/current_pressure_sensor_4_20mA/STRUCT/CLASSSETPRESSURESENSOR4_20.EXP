@@ -1,0 +1,10 @@
+TYPE classSetPressureSensor4_20 :
+
+STRUCT
+	min_measure_range:REAL;
+	max_measure_range:REAL;
+	min_current_range:REAL:=4;
+	max_current_range:REAL:=20;
+END_STRUCT
+
+END_TYPE

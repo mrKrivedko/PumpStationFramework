@@ -1,0 +1,17 @@
+TYPE classSetPid :
+
+STRUCT
+	actual:REAL;
+	set_point:REAL;
+	P:REAL;  (* ���������������� ����������� ����������, ��� ���������� ����� ���������� ���������� �������*)
+	I:INT;  (* ������������ ����������� ����������, ����� � �������� *)
+	D:INT;  (* ���������������� ����������� ����������, ����� � �������� *)
+	Y_manual:REAL := 0;
+	Y_offset:REAL;
+	Y_min:REAL;
+	Y_max:REAL;
+	manual:BOOL;
+	reset:BOOL;
+END_STRUCT
+
+END_TYPE

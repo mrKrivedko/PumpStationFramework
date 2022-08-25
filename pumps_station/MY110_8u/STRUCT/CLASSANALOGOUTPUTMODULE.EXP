@@ -1,0 +1,14 @@
+TYPE classAnalogOutputModule :
+
+STRUCT
+	channel1:classAnalogOutputChannel;
+	channel2:classAnalogOutputChannel;
+	channel3:classAnalogOutputChannel;
+	channel4:classAnalogOutputChannel;
+	channel5:classAnalogOutputChannel;
+	channel6:classAnalogOutputChannel;
+	channel7:classAnalogOutputChannel;
+	channel8:classAnalogOutputChannel;
+END_STRUCT
+
+END_TYPE

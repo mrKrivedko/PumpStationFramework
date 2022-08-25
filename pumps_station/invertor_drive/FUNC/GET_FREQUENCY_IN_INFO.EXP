@@ -1,0 +1,9 @@
+FUNCTION get_frequency_in_info : REAL
+VAR_INPUT
+	info_invertor_drive:classInfoInvertorDrive;
+END_VAR
+VAR
+END_VAR
+
+get_frequency_in_info:=info_invertor_drive.frequency;
+END_FUNCTION

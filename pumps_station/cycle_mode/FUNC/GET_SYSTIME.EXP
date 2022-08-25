@@ -1,0 +1,7 @@
+FUNCTION get_systime : TIME
+
+VAR_INPUT
+END_VAR
+
+get_systime:=TIME();
+END_FUNCTION

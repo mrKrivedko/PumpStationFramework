@@ -1,0 +1,51 @@
+FUNCTION_BLOCK MB110_8a
+
+VAR_INPUT
+	ch1_error_code:WORD:=61447;
+	ch1_value:REAL;
+	ch2_error_code:WORD:=61447;
+	ch2_value:REAL;
+	ch3_error_code:WORD:=61447;
+	ch3_value:REAL;
+	ch4_error_code:WORD:=61447;
+	ch4_value:REAL;
+	ch5_error_code:WORD:=61447;
+	ch5_value:REAL;
+	ch6_error_code:WORD:=61447;
+	ch6_value:REAL;
+	ch7_error_code:WORD:=61447;
+	ch7_value:REAL;
+	ch8_error_code:WORD:=61447;
+	ch8_value:REAL;
+	settings:classSetAnalogInputsModule;
+END_VAR
+
+VAR_OUTPUT
+	info:classInfoAnalogInputModule;
+END_VAR
+
+get_info_message;
+
+END_FUNCTION_BLOCK
+
+ACTION	get_info_message:
+
+info.channel1.error_message:=get_error_code(ch1_error_code);
+info.channel2.error_message:=get_error_code(ch2_error_code);
+info.channel3.error_message:=get_error_code(ch3_error_code);
+info.channel4.error_message:=get_error_code(ch4_error_code);
+info.channel5.error_message:=get_error_code(ch5_error_code);
+info.channel6.error_message:=get_error_code(ch6_error_code);
+info.channel7.error_message:=get_error_code(ch7_error_code);
+info.channel8.error_message:=get_error_code(ch8_error_code);
+
+info.channel1.current_value:=get_current_value(ch1_error_code,settings.ch1_set, ch1_value);
+info.channel2.current_value:=get_current_value(ch2_error_code,settings.ch2_set, ch2_value);
+info.channel3.current_value:=get_current_value(ch3_error_code,settings.ch3_set, ch3_value);
+info.channel4.current_value:=get_current_value(ch4_error_code,settings.ch4_set, ch4_value);
+info.channel5.current_value:=get_current_value(ch5_error_code,settings.ch5_set, ch5_value);
+info.channel6.current_value:=get_current_value(ch6_error_code,settings.ch6_set, ch6_value);
+info.channel7.current_value:=get_current_value(ch7_error_code,settings.ch7_set, ch7_value);
+info.channel8.current_value:=get_current_value(ch8_error_code,settings.ch8_set, ch8_value);
+
+END_ACTION

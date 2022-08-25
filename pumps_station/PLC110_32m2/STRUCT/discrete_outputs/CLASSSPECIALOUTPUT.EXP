@@ -1,0 +1,7 @@
+TYPE classSpecialOutput :
+
+STRUCT
+	Bit1:BOOL;
+END_STRUCT
+
+END_TYPE

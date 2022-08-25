@@ -1,0 +1,33 @@
+FUNCTION_BLOCK params_in_set_PID
+
+VAR_INPUT
+	set:classSetPid;
+END_VAR
+
+VAR_OUTPUT
+	actual:REAL;
+	set_point:REAL;
+	P:REAL;
+	I:REAL;
+	D:REAL;
+	Y_manual:REAL;
+	Y_offset:REAL;
+	Y_min:REAL;
+	Y_max:REAL;
+	manual:BOOL;
+	reset:BOOL;
+END_VAR
+
+actual := set.actual;
+set_point := set.set_point;
+P := set.P;
+I := set.I;
+D := set.D;
+Y_manual := set.Y_manual;
+Y_offset := set.Y_offset;
+Y_min := set.Y_min;
+Y_max := set.Y_max;
+manual := set.manual;
+reset := set.reset;
+
+END_FUNCTION_BLOCK

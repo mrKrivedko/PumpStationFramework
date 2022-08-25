@@ -1,0 +1,19 @@
+FUNCTION_BLOCK SetCurrentSensorPressure_4_20
+
+VAR_INPUT
+	min_measure_range:REAL;
+	max_measure_range:REAL;
+	min_current_range:REAL:=4;
+	max_current_range:REAL:=20;
+END_VAR
+
+VAR_OUTPUT
+	sensor_params:classSetPressureSensor4_20;
+END_VAR
+
+sensor_params.min_measure_range := min_measure_range;
+sensor_params.max_measure_range := max_measure_range;
+sensor_params.min_current_range := min_current_range;
+sensor_params.max_current_range := max_current_range;
+
+END_FUNCTION_BLOCK

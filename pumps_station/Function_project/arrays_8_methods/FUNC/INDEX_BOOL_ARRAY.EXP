@@ -1,0 +1,23 @@
+FUNCTION index_bool_array : ARRAY [1..8] OF INT
+
+VAR_INPUT
+	list:ARRAY [1..8] OF BOOL;
+END_VAR
+
+VAR
+	size:INT := 8;
+	i: INT;
+	cnt:INT := 1;
+	index:ARRAY [1..8] OF INT := 8(0);
+END_VAR
+
+FOR i:= 1 TO size DO
+	IF list[i] THEN
+		index[cnt] := i;
+		cnt := cnt + 1;
+	END_IF;
+END_FOR;
+
+index_bool_array := index;
+
+END_FUNCTION

@@ -1,0 +1,17 @@
+FUNCTION get_current_value : REAL
+(* ������� ��������������� ������ � ��� � �������� ���� *)
+
+VAR_INPUT
+	code_error:WORD;
+	ch_set:classSetAnalogInputChannel;
+	ch_value:REAL;
+END_VAR
+
+IF code_error = 0 THEN
+	get_current_value := value_scaling(ch_value, get_set_Ain_value_params(ch_set));
+ELSE
+	(* ���� ������ ������ ������ ������� ������ *)
+	get_current_value := -8;
+END_IF;
+
+END_FUNCTION

@@ -1,0 +1,33 @@
+FUNCTION_BLOCK get_status_outputs
+
+VAR_INPUT
+	fdo1:BOOL:=FALSE;
+	fdo2:BOOL:=FALSE;
+	fdo3:BOOL:=FALSE;
+	fdo4:BOOL:=FALSE;
+	do1:BOOL:=FALSE;
+	do2:BOOL:=FALSE;
+	do3:BOOL:=FALSE;
+	do4:BOOL:=FALSE;
+	do5:BOOL:=FALSE;
+	do6:BOOL:=FALSE;
+	do7:BOOL:=FALSE;
+	do8:BOOL:=FALSE;
+	do9:BOOL:=FALSE;
+	do10:BOOL:=FALSE;
+	do11:BOOL:=FALSE;
+	do12:BOOL:=FALSE;
+	do13:BOOL:=FALSE;
+	do14:BOOL:=FALSE;
+	do15:BOOL:=FALSE;
+	do16:BOOL:=FALSE;
+	sdo:BOOL:=FALSE;
+END_VAR
+
+VAR_OUTPUT
+	get_status_outputs:classPLC32m2StatusOutputs;
+END_VAR
+
+get_status_outputs := get_status_outputs_def(fdo1, fdo2, fdo3, fdo4, do1, do2, do3, do4, do5, do6, do7, do8, do9, do10, do11, do12, do13, do14, do15, do16, sdo);
+
+END_FUNCTION_BLOCK

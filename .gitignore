@@ -69,3 +69,8 @@ __recovery/
 modules/
 
 *.ci
+
+export/
+exprt
+METHODS_ARRAY.EXP
+PUMP_STATION.EXP

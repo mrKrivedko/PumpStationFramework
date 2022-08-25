@@ -1,0 +1,37 @@
+FUNCTION_BLOCK MY110_8u
+
+VAR_INPUT
+	info_current_channel:classAnalogOutputModule;
+END_VAR
+
+VAR_OUTPUT
+	ch1_value:WORD;
+	ch2_value:WORD;
+	ch3_value:WORD;
+	ch4_value:WORD;
+	ch5_value:WORD;
+	ch6_value:WORD;
+	ch7_value:WORD;
+	ch8_value:WORD;
+END_VAR
+
+VAR
+	ch_ain_l: REAL := 4;  (* �������� ������ ������� �������� ��������� *)
+	ch_ain_h: REAL := 20;  (* �������� ������� ������� �������� ��������� *)
+	ch_analog_min_value: REAL :=  0;  (* ������ ������� ��� *)
+	ch_analog_max_value: REAL := 1000;  (* ������� ������� ��� *)
+	set_params:classParamsValueScaling;
+END_VAR
+
+set_params := get_params_value_scaling(ch_ain_l, ch_ain_h, ch_analog_min_value, ch_analog_max_value);
+
+ch1_value := REAL_TO_INT(value_scaling(info_current_channel.channel1.current_value, set_params));
+ch2_value := REAL_TO_INT(value_scaling(info_current_channel.channel2.current_value, set_params));
+ch3_value := REAL_TO_INT(value_scaling(info_current_channel.channel3.current_value, set_params));
+ch4_value := REAL_TO_INT(value_scaling(info_current_channel.channel4.current_value, set_params));
+ch5_value := REAL_TO_INT(value_scaling(info_current_channel.channel5.current_value, set_params));
+ch6_value := REAL_TO_INT(value_scaling(info_current_channel.channel6.current_value, set_params));
+ch7_value := REAL_TO_INT(value_scaling(info_current_channel.channel7.current_value, set_params));
+ch8_value := REAL_TO_INT(value_scaling(info_current_channel.channel8.current_value, set_params));
+
+END_FUNCTION_BLOCK

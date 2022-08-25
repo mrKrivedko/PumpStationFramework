@@ -1,0 +1,9 @@
+TYPE classPLC32m2StatusOutputs :
+
+STRUCT
+	fast_outputs:classFastDiscreteOutputs;
+	discrete_outputs:classDiscreteOutputs;
+	special_output:classSpecialOutput;
+END_STRUCT
+
+END_TYPE

@@ -1,0 +1,50 @@
+FUNCTION_BLOCK Single
+
+VAR_INPUT
+    enable: BOOL; (* Enable single mode *)
+    pivot_pump: INT; (* pivot pump *)
+    info_invertor_drive1: classInfoInvertorDrive;
+    info_invertor_drive2: classInfoInvertorDrive;
+    info_invertor_drive3: classInfoInvertorDrive;
+    info_invertor_drive4: classInfoInvertorDrive;
+    info_invertor_drive5: classInfoInvertorDrive;
+    info_invertor_drive6: classInfoInvertorDrive;
+    info_invertor_drive7: classInfoInvertorDrive;
+    info_invertor_drive8: classInfoInvertorDrive;
+END_VAR
+
+VAR_OUTPUT
+    info_single: classInfoSingle; (* info mode *)
+END_VAR
+
+VAR
+    pumps: ARRAY[1..8] OF BOOL;
+END_VAR
+
+pumps[1] := get_active(info_invertor_drive1);
+pumps[2] := get_active(info_invertor_drive2);
+pumps[3] := get_active(info_invertor_drive3);
+pumps[4] := get_active(info_invertor_drive4);
+pumps[5] := get_active(info_invertor_drive5);
+pumps[6] := get_active(info_invertor_drive6);
+pumps[7] := get_active(info_invertor_drive7);
+pumps[8] := get_active(info_invertor_drive8);
+
+IF enable THEN
+    IF pumps[pivot_pump] THEN
+        info_single.pivot_pump := pivot_pump;
+        info_single.start_pump := pumps[pivot_pump];
+        info_single.message := 'Выбранный насос в работе.';
+    ELSIF pumps[pivot_pump] THEN
+        info_single.pivot_pump := -1;
+        info_single.start_pump := FALSE;
+        info_single.message := 'Выбранный насос не активен!';
+    END_IF;
+      
+ELSE
+    info_single.pivot_pump := -1;
+    info_single.start_pump := FALSE;
+    info_single.message := 'Режим работы одного насоса не активен.';
+END_IF;
+
+END_FUNCTION_BLOCK

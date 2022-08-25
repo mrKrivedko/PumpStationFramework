@@ -1,0 +1,37 @@
+FUNCTION get_di : BOOL
+
+VAR_INPUT
+	input_number:INT;
+	status_inputs:classPLC32m2StatusInputs;
+END_VAR
+
+VAR
+	in_f:classDiscreteInputByte;
+	in_s:classDiscreteInputByte;
+	di_list:ARRAY[1..17] OF BOOL;
+END_VAR
+
+in_f:=status_inputs.discrete_inputs.first_byte;
+in_s:=status_inputs.discrete_inputs.second_byte;
+
+di_list[1]:=in_f.Bit1;
+di_list[2]:=in_f.Bit2;
+di_list[3]:=in_f.Bit3;
+di_list[4]:=in_f.Bit4;
+di_list[5]:=in_f.Bit5;
+di_list[6]:=in_f.Bit6;
+di_list[7]:=in_f.Bit7;
+di_list[8]:=in_f.Bit8;
+
+di_list[9]:=in_s.Bit1;
+di_list[10]:=in_s.Bit2;
+di_list[12]:=in_s.Bit3;
+di_list[13]:=in_s.Bit4;
+di_list[14]:=in_s.Bit5;
+di_list[15]:=in_s.Bit6;
+di_list[16]:=in_s.Bit7;
+di_list[17]:=in_s.Bit8;
+
+get_di:=di_list[input_number];
+
+END_FUNCTION

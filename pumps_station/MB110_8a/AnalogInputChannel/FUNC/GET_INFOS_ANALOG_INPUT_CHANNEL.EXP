@@ -1,0 +1,17 @@
+FUNCTION get_infos_analog_input_channel : classInfoAnalogInputChannel
+
+VAR_INPUT
+	sensor:classSetPressureSensor4_20;
+	channel:classAnalogInputChannel;
+END_VAR
+
+get_infos_analog_input_channel.error_message := get_error_code(channel.error_code);
+
+IF channel.error_code = 0 THEN
+	get_infos_analog_input_channel.current_value := value_scaling(channel.value, channel.set_channel);
+ELSE
+	(* ���� ������ ������ ������ ������� ������ *)
+	get_infos_analog_input_channel.current_value := -8;
+END_IF;
+
+END_FUNCTION

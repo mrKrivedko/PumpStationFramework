@@ -1,0 +1,14 @@
+TYPE classInfoInvertorDrive :
+
+STRUCT
+	active:BOOL;
+	status_run:STRING(79);
+	set_pid:classSetPid;
+	alarm:classAlarmInvertorDrive;
+	frequency:REAL;  (* Hz *)
+	aout_frequency:REAL;  (* mA *)
+	run:BOOL;
+	reset_fault:BOOL;
+END_STRUCT
+
+END_TYPE
