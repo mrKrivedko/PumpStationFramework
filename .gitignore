@@ -68,9 +68,12 @@ __recovery/
 # Boss dependency manager vendor folder https://github.com/HashLoad/boss
 modules/
 
+# codesys systemfiles
 *.ci
+*.SDB
+*.SYM
 
 export/
 exprt
 METHODS_ARRAY.EXP
-PUMP_STATION.EXP
+# PUMP_STATION.EXP

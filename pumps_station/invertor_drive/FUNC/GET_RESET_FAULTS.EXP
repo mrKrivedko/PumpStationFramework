@@ -1,0 +1,9 @@
+FUNCTION get_reset_faults : BOOL
+
+VAR_INPUT
+    info: classInfoInvertorDrive; (* Comment *)
+END_VAR
+
+get_reset_faults := info.reset_fault;
+
+END_FUNCTION
