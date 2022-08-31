@@ -2,13 +2,13 @@ FUNCTION get_auto_in_cascade : BOOL
 
 VAR_INPUT
 	info:classInfoCascade;
-	number_pump:SINT;
+	number_pump:INT;
 END_VAR
 
-IF info.pivot=number_pump THEN
-	get_auto_in_cascade:=TRUE;
+IF info.pivot = number_pump THEN
+	get_auto_in_cascade := TRUE;
 ELSE
-	get_auto_in_cascade:=FALSE;
+	get_auto_in_cascade := FALSE;
 END_IF;
 
 END_FUNCTION

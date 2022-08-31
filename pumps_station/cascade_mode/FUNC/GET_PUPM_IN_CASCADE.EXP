@@ -2,7 +2,7 @@ FUNCTION get_pump_in_cascade : BOOL
 
 VAR_INPUT
 	info:classInfoCascade;
-	number_pump:SINT;
+	number_pump:INT;
 END_VAR
 
 VAR
@@ -12,15 +12,16 @@ END_VAR
 IF info.pivot = number_pump THEN
 	get_pump_in_cascade:=TRUE;
 ELSE
-	pumps[1]:=info.cascade_pump1;
-	pumps[2]:=info.cascade_pump2;
-	pumps[3]:=info.cascade_pump3;
-	pumps[4]:=info.cascade_pump4;
-	pumps[5]:=info.cascade_pump5;
-	pumps[6]:=info.cascade_pump6;
-	pumps[7]:=info.cascade_pump7;
-	pumps[8]:=info.cascade_pump8;
+	pumps[1] := info.cascade_pump1;
+	pumps[2] := info.cascade_pump2;
+	pumps[3] := info.cascade_pump3;
+	pumps[4] := info.cascade_pump4;
+	pumps[5] := info.cascade_pump5;
+	pumps[6] := info.cascade_pump6;
+	pumps[7] := info.cascade_pump7;
+	pumps[8] := info.cascade_pump8;
 
-	get_pump_in_cascade:=pumps[number_pump].cascade_pump;
+	get_pump_in_cascade := pumps[number_pump].cascade_pump;
 END_IF;
+
 END_FUNCTION

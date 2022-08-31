@@ -1,10 +1,11 @@
 FUNCTION_BLOCK SetCurrentSensorPressure_4_20
+(* Settings current sensor. *)
 
 VAR_INPUT
-	min_measure_range:REAL;
-	max_measure_range:REAL;
-	min_current_range:REAL:=4;
-	max_current_range:REAL:=20;
+	min_measure_range:REAL;  (* bar *)
+	max_measure_range:REAL;  (* bar *)
+	min_current_range:REAL := 4; (* mA *)
+	max_current_range:REAL := 20; (* mA *)
 END_VAR
 
 VAR_OUTPUT

@@ -1,7 +1,7 @@
 TYPE classInfoCascade :
 
 STRUCT
-	pivot:SINT;
+	pivot:INT;
 	error_message:STRING(79);
 	cascade_pump1:classInfoCascadePump;
 	cascade_pump2:classInfoCascadePump;
