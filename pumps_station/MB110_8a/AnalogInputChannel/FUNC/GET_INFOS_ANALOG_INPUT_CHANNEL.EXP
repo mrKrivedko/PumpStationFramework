@@ -1,4 +1,5 @@
 FUNCTION get_infos_analog_input_channel : classInfoAnalogInputChannel
+(* Function get information of analog input channel. *)
 
 VAR_INPUT
 	sensor:classSetPressureSensor4_20;
@@ -10,7 +11,7 @@ get_infos_analog_input_channel.error_message := get_error_code(channel.error_cod
 IF channel.error_code = 0 THEN
 	get_infos_analog_input_channel.current_value := value_scaling(channel.value, channel.set_channel);
 ELSE
-	(* ���� ������ ������ ������ ������� ������ *)
+	(* if error, show dick *)
 	get_infos_analog_input_channel.current_value := -8;
 END_IF;
 

@@ -1,4 +1,5 @@
 TYPE classInfoAnalogInputChannel :
+(* class for information analog input channel. *)
 
 STRUCT
 	current_value:REAL;

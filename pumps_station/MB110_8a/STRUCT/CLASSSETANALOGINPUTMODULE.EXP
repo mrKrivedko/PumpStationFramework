@@ -1,14 +1,15 @@
 TYPE classSetAnalogInputsModule :
+(* class for settings analog inputs module. *)
 
 STRUCT
-	ch1_set:classSetAnalogInputChannel;
-	ch2_set:classSetAnalogInputChannel;
-	ch3_set:classSetAnalogInputChannel;
-	ch4_set:classSetAnalogInputChannel;
-	ch5_set:classSetAnalogInputChannel;
-	ch6_set:classSetAnalogInputChannel;
-	ch7_set:classSetAnalogInputChannel;
-	ch8_set:classSetAnalogInputChannel;
+	ch1_set: classSetAnalogInputChannel;
+	ch2_set: classSetAnalogInputChannel;
+	ch3_set: classSetAnalogInputChannel;
+	ch4_set: classSetAnalogInputChannel;
+	ch5_set: classSetAnalogInputChannel;
+	ch6_set: classSetAnalogInputChannel;
+	ch7_set: classSetAnalogInputChannel;
+	ch8_set: classSetAnalogInputChannel;
 END_STRUCT
 
 END_TYPE

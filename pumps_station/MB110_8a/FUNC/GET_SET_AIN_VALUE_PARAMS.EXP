@@ -1,5 +1,5 @@
 FUNCTION get_set_Ain_value_params : classParamsValueScaling
-(* �������������� �� ���� �������� ����� � ��������� ��������������� *)
+(* Function re-package settings analog inputs in parameter value scaling. *)
 
 VAR_INPUT
 	set:classSetAnalogInputChannel;

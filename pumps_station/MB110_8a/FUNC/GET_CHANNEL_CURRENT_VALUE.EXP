@@ -1,13 +1,13 @@
 FUNCTION get_channel_current_value : REAL
-(* ������� ������������� InfoMessage �� AnalogInputsModule  � ������� �� ������� ������ �������� ���� *)
+(* Function unpackage InfoMessage of AnalogInputsModule and return current value for select channel. *)
 
 VAR_INPUT
-	ch_number:INT;
-	Ain_info:classInfoAnalogInputModule;
+	ch_number: INT;
+	Ain_info: classInfoAnalogInputModule;
 END_VAR
 
 VAR
-	list_value : ARRAY [1..8] OF REAL;
+	list_value: ARRAY [1..8] OF REAL;
 END_VAR
 
 list_value[1] := Ain_info.channel1.current_value;

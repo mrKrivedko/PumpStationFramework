@@ -1,5 +1,5 @@
 FUNCTION get_error_code: STRING(79)
-(* ������� �������������� ���� ������ �������� ����������� ������ ������ *)
+(* Function return error message of code error. *)
 
 VAR_INPUT
 	code_error: WORD;
@@ -10,29 +10,29 @@ VAR
 END_VAR
 
 IF code_error=0
-	THEN error_message := '��������� �������';
+	THEN error_message := 'Measure good.'; (* Измерение успешно. *)
 ELSIF code_error = 61440
-	THEN error_message := '�������� �������� �������';
+	THEN error_message := 'Value bad!'; (* Значение заведомо неверно. *)
 ELSIF code_error = 61446
-	THEN error_message := '������ �� ������. ����� ����������� ������� ���������.';
+	THEN error_message := 'Data info not complete! Wait first measuring.'; (* Данные не готовы. Ждите результатов первого измерения. *)
 ELSIF code_error = 61447
-	THEN error_message := '������ ��������.';
+	THEN error_message := 'Sensor off.'; (* Датчик отключен. *)
 ELSIF code_error = 61448
-	THEN error_message := '������ ����������� ��������� ������ ��.';
+	THEN error_message := 'Temperature free ends of termosensor high.'; (* Велика температура свободных концов ТП. *)
 ELSIF code_error = 61449
-	THEN error_message := '���� ����������� ��������� ������ ��.';
+	THEN error_message := 'Temperature free ends of termosensor low.'; (* Мала температура свободных концов ТП. *)
 ELSIF code_error = 61450
-	THEN error_message := '���������� �������� ������� ������.';
+	THEN error_message := 'Measured value too more.'; (* Измеренное значение слишком велико. *)
 ELSIF code_error = 61451
-	THEN error_message := '���������� �������� ������� ����.';
+	THEN error_message := 'Measured value too less.'; (* Измеренное значение слишком мало. *)
 ELSIF code_error = 61452
-	THEN error_message := '�������� ��������� �������.';
+	THEN error_message := 'Short circuit of sensor.'; (* Короткое замыкание датчика. *)
 ELSIF code_error = 61453
-	THEN error_message := '����� �������.';
+	THEN error_message := 'Sensor breaking.'; (* Обрыв датчика. *)
 ELSIF code_error = 61454
-	THEN error_message := '���������� ����� � ���.';
+	THEN error_message := 'Failure connection with DAC.'; (* Отсутствие связи с АЦП. *)
 ELSIF code_error = 61455
-	THEN error_message := '������������ ������������� �����������.';
+	THEN error_message := 'Uncorrect calibrate rate.'; (* Некорректный калибровочный коэффициент. *)
 ELSE
 	error_message := 'Error not Found';
 END_IF

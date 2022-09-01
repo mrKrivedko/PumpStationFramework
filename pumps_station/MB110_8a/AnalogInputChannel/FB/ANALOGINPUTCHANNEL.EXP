@@ -1,21 +1,27 @@
 FUNCTION_BLOCK AnalogInputChannel
+(* Function block implementate analog input channel. *)
 
 VAR_INPUT
-	set_channel:classSetAnalogInputChannel;
-	value:REAL;
-	error_code:WORD;
-	sensor:classSetPressureSensor4_20;
+	set_channel: classSetAnalogInputChannel;
+	value: REAL;
+	error_code: WORD;
+	sensor: classSetPressureSensor4_20;
 END_VAR
 
 VAR_OUTPUT
-	info_message:classInfoAnalogInputChannel;
+	info_message: classInfoAnalogInputChannel;
 END_VAR
 
 VAR
-	channel:classAnalogInputChannel;
+	channel: classAnalogInputChannel;
 END_VAR
 
-channel.set_channel := get_params_value_scaling(set_channel.ain_l, set_channel.ain_h, set_channel.analog_min_value, set_channel.analog_max_value);
+channel.set_channel := get_params_value_scaling(
+	set_channel.ain_l,
+	set_channel.ain_h,
+	set_channel.analog_min_value,
+	set_channel.analog_max_value
+);
 channel.value := value;
 channel.error_code := error_code;
 

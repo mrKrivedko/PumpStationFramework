@@ -1,14 +1,15 @@
 TYPE classInfoAnalogInputModule :
+(* class for information analog input module. *)
 
 STRUCT
-	channel1:classInfoAnalogInputChannel;
-	channel2:classInfoAnalogInputChannel;
-	channel3:classInfoAnalogInputChannel;
-	channel4:classInfoAnalogInputChannel;
-	channel5:classInfoAnalogInputChannel;
-	channel6:classInfoAnalogInputChannel;
-	channel7:classInfoAnalogInputChannel;
-	channel8:classInfoAnalogInputChannel;
+	channel1: classInfoAnalogInputChannel;
+	channel2: classInfoAnalogInputChannel;
+	channel3: classInfoAnalogInputChannel;
+	channel4: classInfoAnalogInputChannel;
+	channel5: classInfoAnalogInputChannel;
+	channel6: classInfoAnalogInputChannel;
+	channel7: classInfoAnalogInputChannel;
+	channel8: classInfoAnalogInputChannel;
 END_STRUCT
 
 END_TYPE

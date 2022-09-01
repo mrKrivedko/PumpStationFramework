@@ -1,12 +1,13 @@
 TYPE classSetAnalogInputChannel :
+(* class for settings analog input channel. *)
 
 STRUCT
-	(* ���������������� ��������� ������ ������. ��. ���������� �������: ����������. ������� �.2 *)
-	(* ������� ��� � �������� �� ���������: ��� ������� 4-20mA  *)
-	ain_l: REAL := 0;  (* �������� Ain.L *)
-	ain_h: REAL := 1000;  (* �������� Ain.H *)
-	analog_min_value: REAL := 4;  (* �������� ������ ������� ������� �������� *)
-	analog_max_value: REAL := 20;  (* �������� ������� ������� ������� �������� *)
+	(* Configuration settings module, see manual: application: table B.2 *)
+	(* Limits DAC and current values: 0-100, 4-20mA  *)
+	ain_l: REAL := 0; (* parameter Ain.L *)
+	ain_h: REAL := 1000; (* parameter Ain.H *)
+	analog_min_value: REAL := 4; (* low range sensor *)
+	analog_max_value: REAL := 20; (* high range sensor *)
 END_STRUCT
 
 END_TYPE
