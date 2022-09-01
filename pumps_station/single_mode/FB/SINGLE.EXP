@@ -18,6 +18,7 @@ VAR_OUTPUT
 END_VAR
 
 VAR
+    pivot: INT;
     pumps: ARRAY[1..8] OF BOOL;
 END_VAR
 
@@ -30,12 +31,17 @@ pumps[6] := get_active(info_invertor_drive6);
 pumps[7] := get_active(info_invertor_drive7);
 pumps[8] := get_active(info_invertor_drive8);
 
+pivot := pivot_pump;
+IF pivot = 0 THEN
+	enable := FALSE;
+END_IF;
+
 IF enable THEN
-    IF pumps[pivot_pump] THEN
+    IF pumps[pivot] THEN
         info_single.pivot_pump := pivot_pump;
         info_single.start_pump := pumps[pivot_pump];
         info_single.message := 'Выбранный насос в работе.';
-    ELSIF pumps[pivot_pump] THEN
+    ELSIF pumps[pivot] THEN
         info_single.pivot_pump := -1;
         info_single.start_pump := FALSE;
         info_single.message := 'Выбранный насос не активен!';
