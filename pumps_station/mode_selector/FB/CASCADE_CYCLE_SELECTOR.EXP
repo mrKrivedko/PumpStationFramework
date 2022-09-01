@@ -1,39 +1,43 @@
 FUNCTION_BLOCK Cascade_Cycle_Selector
+(* Function block implementation working mode selector. *)
+
 VAR_INPUT
-    cascade: BOOL;
-    cycle: BOOL;
-    single: BOOL;
+    cascade: BOOL; (* enable/disable *)
+    cycle: BOOL; (* enable/disable *)
+    single: BOOL; (* enable/disable *)
     info_single: classInfoSingle;
     info_cycle: classInfoCycle;
     info_cascade: classInfoCascade;
 END_VAR
+
 VAR_OUTPUT
-    start_pump1: BOOL := FALSE; (* Comment *)
-    start_pump2: BOOL := FALSE; (* Comment *)
-    start_pump3: BOOL := FALSE; (* Comment *)
-    start_pump4: BOOL := FALSE; (* Comment *)
-    start_pump5: BOOL := FALSE; (* Comment *)
-    start_pump6: BOOL := FALSE; (* Comment *)
-    start_pump7: BOOL := FALSE; (* Comment *)
-    start_pump8: BOOL := FALSE; (* Comment *)
+    start_pump1: BOOL := FALSE;
+    start_pump2: BOOL := FALSE;
+    start_pump3: BOOL := FALSE;
+    start_pump4: BOOL := FALSE;
+    start_pump5: BOOL := FALSE;
+    start_pump6: BOOL := FALSE;
+    start_pump7: BOOL := FALSE;
+    start_pump8: BOOL := FALSE;
 END_VAR
+
 VAR
-    message: STRING(79); (* Comment *)
+    message: STRING(79);
     flag_mode: INT;
 END_VAR
 
 
 IF cascade AND NOT cycle AND NOT single THEN
     flag_mode := 2;
-    message := 'Выбран каскадный режим работы.';
+    message := 'Cascade mode selected'; (* Выбран каскадный режим работы. *)
 ELSIF cycle AND NOT cascade AND NOT single THEN
     flag_mode := 1;
-    message := 'Выбран циклический режим работы.';
+    message := 'Cycle mode selected'; (* Выбран циклический режим работы *)
 ELSIF single AND NOT cycle AND NOT cascade THEN
     flag_mode := 0;
-    message := 'Выбран режим работы одного насоса'; 
+    message := 'Single mode selected'; (* Выбран режим работы одного насоса *) 
 ELSE
-    message := 'Выберите один режим работы!';
+    message := 'Select any one working mode!'; (* Выберите один режим работы! *)
 END_IF;
 
 IF flag_mode = 0 THEN
