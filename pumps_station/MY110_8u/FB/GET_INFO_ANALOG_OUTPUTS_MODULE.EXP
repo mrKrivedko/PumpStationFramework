@@ -1,18 +1,19 @@
 FUNCTION_BLOCK get_info_analog_outputs_module
+(* Function block package current value in channel module. *)
 
 VAR_INPUT
-	ch1_current:REAL;
-	ch2_current:REAL;
-	ch3_current:REAL;
-	ch4_current:REAL;
-	ch5_current:REAL;
-	ch6_current:REAL;
-	ch7_current:REAL;
-	ch8_current:REAL;
+	ch1_current: REAL;
+	ch2_current: REAL;
+	ch3_current: REAL;
+	ch4_current: REAL;
+	ch5_current: REAL;
+	ch6_current: REAL;
+	ch7_current: REAL;
+	ch8_current: REAL;
 END_VAR
 
 VAR_OUTPUT
-	info:classAnalogOutputModule;
+	info: classAnalogOutputModule;
 END_VAR
 
 info.channel1.current_value := ch1_current;

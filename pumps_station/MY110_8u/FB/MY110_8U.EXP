@@ -1,25 +1,29 @@
 FUNCTION_BLOCK MY110_8u
+(* Function block implementation analog outputs module  MB110 8y. *)
 
 VAR_INPUT
-	info_current_channel:classAnalogOutputModule;
+	info_current_channel: classAnalogOutputModule;
+	(* added personal channel settings... later *)
 END_VAR
 
 VAR_OUTPUT
-	ch1_value:WORD;
-	ch2_value:WORD;
-	ch3_value:WORD;
-	ch4_value:WORD;
-	ch5_value:WORD;
-	ch6_value:WORD;
-	ch7_value:WORD;
-	ch8_value:WORD;
+	(* out type of module channel - int16 *)
+	ch1_value: WORD;
+	ch2_value: WORD;
+	ch3_value: WORD;
+	ch4_value: WORD;
+	ch5_value: WORD;
+	ch6_value: WORD;
+	ch7_value: WORD;
+	ch8_value: WORD;
 END_VAR
 
 VAR
-	ch_ain_l: REAL := 4;  (* �������� ������ ������� �������� ��������� *)
-	ch_ain_h: REAL := 20;  (* �������� ������� ������� �������� ��������� *)
-	ch_analog_min_value: REAL :=  0;  (* ������ ������� ��� *)
-	ch_analog_max_value: REAL := 1000;  (* ������� ������� ��� *)
+	(* general settings *)
+	ch_ain_l: REAL := 4;  (* low range output current of channel, mA *)
+	ch_ain_h: REAL := 20;  (* high range output current of channel, mA *)
+	ch_analog_min_value: REAL :=  0;  (* low range output value DAC *)
+	ch_analog_max_value: REAL := 1000;  (* high range output value DAC *)
 	set_params:classParamsValueScaling;
 END_VAR
 

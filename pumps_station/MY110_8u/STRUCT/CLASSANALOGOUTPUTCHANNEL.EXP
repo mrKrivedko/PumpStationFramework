@@ -1,4 +1,5 @@
 TYPE classAnalogOutputChannel :
+(* class for analog output channel. *)
 
 STRUCT
 	current_value: REAL;

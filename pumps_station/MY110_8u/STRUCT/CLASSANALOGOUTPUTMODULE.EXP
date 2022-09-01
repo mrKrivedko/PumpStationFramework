@@ -1,4 +1,5 @@
 TYPE classAnalogOutputModule :
+(* class for analog outputs module. *)
 
 STRUCT
 	channel1:classAnalogOutputChannel;
