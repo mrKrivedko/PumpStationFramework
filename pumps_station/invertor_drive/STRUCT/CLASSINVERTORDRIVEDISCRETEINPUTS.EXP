@@ -1,11 +1,12 @@
 TYPE classInvertorDriveDiscreteInputs :
+(* class discrete inputs of invertor drive. *)
 
 STRUCT
-	start:BOOL;
-	reset_fault:BOOL;
+	start: BOOL;
+	reset_fault: BOOL;
 (* external alarm *)
-	low_pressure_in:BOOL;
-	high_pressure_out:BOOL;
+	low_pressure_in: BOOL;
+	high_pressure_out: BOOL;
 END_STRUCT
 
 END_TYPE

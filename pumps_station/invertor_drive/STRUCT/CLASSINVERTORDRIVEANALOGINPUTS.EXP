@@ -1,7 +1,8 @@
 TYPE classInvertorDriveAnalogInputs :
+(* class analog inputs of invertor drive. *)
 
 STRUCT
-	set_frequency:REAL;
+	set_frequency: REAL;
 END_STRUCT
 
 END_TYPE

@@ -1,4 +1,5 @@
 TYPE classAlarmInvertorDrive :
+(* class implementation alarm messages. *)
 
 STRUCT
 	external_alarm:STRING(79);

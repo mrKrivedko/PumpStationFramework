@@ -1,4 +1,5 @@
 TYPE classInfoInvertorDrive :
+(* class information of invertor drive *)
 
 STRUCT
 	active:BOOL;

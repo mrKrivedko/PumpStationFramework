@@ -1,4 +1,5 @@
 TYPE classSetLimitFrequency :
+(* class settings limit frequency. *)
 
 STRUCT
 	manual:REAL;  (* Hz *)

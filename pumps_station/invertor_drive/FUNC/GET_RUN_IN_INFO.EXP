@@ -1,9 +1,10 @@
 FUNCTION get_run_in_info : BOOL
+(* Function return signal run invertor drive. *)
 
 VAR_INPUT
-	info_invertor_drive:classInfoInvertorDrive;
+	info_invertor_drive: classInfoInvertorDrive;
 END_VAR
 
-get_run_in_info:=info_invertor_drive.run ;
+get_run_in_info := info_invertor_drive.run;
 
 END_FUNCTION

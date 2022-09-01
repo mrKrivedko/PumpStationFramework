@@ -1,15 +1,16 @@
 TYPE classInvertorDrive :
+(* class of invertor drive. *)
 
 STRUCT
-	discrete_inputs:classInvertorDriveDiscreteInputs;
-	discrete_outputs:classInvertorDriveDiscreteOutputs;
-	analog_input:classInvertorDriveAnalogInputs;
-	analog_output:classInvertorDriveAnalogOutputs;
-	set:classSetInvertorDrive;
-	min_frequency:INT;
-	max_frequency:INT;
-	set_frequency:REAL;
-	real_frequency:REAL;(* �������� � ����������� ������ ���������� *)
+	discrete_inputs: classInvertorDriveDiscreteInputs;
+	discrete_outputs: classInvertorDriveDiscreteOutputs;
+	analog_input: classInvertorDriveAnalogInputs;
+	analog_output: classInvertorDriveAnalogOutputs;
+	set: classSetInvertorDrive;
+	min_frequency: INT;
+	max_frequency: INT;
+	set_frequency: REAL;
+	real_frequency: REAL;
 END_STRUCT
 
 END_TYPE

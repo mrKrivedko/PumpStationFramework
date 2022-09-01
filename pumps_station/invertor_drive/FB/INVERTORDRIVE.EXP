@@ -1,62 +1,64 @@
 FUNCTION_BLOCK InvertorDrive
+(* Function block implementation invertor drive. *)
 
 VAR_INPUT
 (* discrete inputs *)
-	start:BOOL:=FALSE;
-	reset_fault:BOOL:=FALSE;
-	low_pressure_in:BOOL;  (* external alarm *)
-	high_pressure_out:BOOL;  (* external alrm *)
+	start: BOOL := FALSE;
+	reset_fault: BOOL := FALSE;
+	low_pressure_in: BOOL;  (* external alarm *)
+	high_pressure_out: BOOL;  (* external alrm *)
 (* discrete outputs *)
-	status_run:BOOL;
-	status_alarm:BOOL;
+	status_run: BOOL;
+	status_alarm: BOOL;
 (* analog inputs *)
-	ain_value:REAL:=0;  (* mA or V *)
+	ain_value: REAL := 0;  (* mA or V *)
 (* analog outputs *)
-	aout_value:REAL:=0;
+	aout_value: REAL := 0;
 (* PID settings *)
-	auto:BOOL:=FALSE;
-	direct_logic:BOOL:=TRUE;  (* ���� �������/��������� ����������; ��� �������� ���������� ���� �������� �������������� �������� ���� �������, �������� ������� �����������, � ��������*)
-	set_point:REAL:=0;  (* �������, �������� � �������� ��������� �������������� �������� *)
-	(* value:REAL;  ������� �������� �������������� ��������, ���������� � ������� *)
-	P:REAL:=2;  (* ���������������� ����������� ����������, ��� ���������� ����� ���������� ���������� �������*)
-	I:INT:=10;  (* ������������ ����������� ����������, ����� � �������� *)
-	D:INT:=0;  (* ���������������� ����������� ����������, ����� � �������� *)
+	auto: BOOL := FALSE;
+	direct_logic: BOOL := TRUE;  (* flag forward/reverse control, reverse control: if input value less set point, output value to less. forward control: if input value less set point, output value to more. *)
+	set_point: REAL := 0;  (* set point, measure system in input value control. *)
+	P: REAL := 2;  (* proporcional value of PID, if more, out value fasted. *)
+	I: INT := 10;  (* integral value of PID, seconds *)
+	D:INT := 0;  (* differential value PID, seconds *)
 
 (* limit work frequency *)
-	manual:REAL:=0;(*Hz*)
-	min_range:REAL:=15;  (*Hz*)
-	max_range:REAL:=50;  (*Hz*)
+	manual: REAL := 0; (*  set output value in manual mode, Hz*)
+	min_range: REAL := 15;  (* min value in manual mode, Hz*)
+	max_range: REAL := 50;  (* max value in manual mode, Hz*)
 
-(* ������ � ������/�� � ������ *)
-	active:BOOL:=FALSE;
+(* status invertor in work *)
+	active: BOOL := FALSE;  (* statis active invertor drive. *)
 END_VAR
 
 VAR_OUTPUT
-	info:classInfoInvertorDrive;
-	settings_pid:classSetPid;
+	info: classInfoInvertorDrive;
+	settings_pid: classSetPid;
 END_VAR
 
 VAR
-	invertor_drive:classInvertorDrive;
-    set_auto:classSetAutoInvertorDrive;
+	invertor_drive: classInvertorDrive;
+    set_auto: classSetAutoInvertorDrive;
 	set_frequency: classSetLimitFrequency;
-	set_pid:classSetPid;
+	set_pid: classSetPid;
 
 	discrete_inputs: classInvertorDriveDiscreteInputs;
 	discrete_outputs: classInvertorDriveDiscreteOutputs;
 	analog_inputs: classInvertorDriveAnalogInputs;
-	analog_outputs:classInvertorDriveAnalogOutputs;
+	analog_outputs: classInvertorDriveAnalogOutputs;
 
-	overflow:BOOL := FALSE;
+	overflow: BOOL := FALSE; (* overflow integral value of PID *)
 
-	external_alarm:STRING(79);
+	external_alarm:STRING(79); (* message of external alarm. *)
 
 	info_alarm: classAlarmInvertorDrive;
 END_VAR
 
 init;
 
-info_alarm.external_alarm:= get_external_alarm(discrete_inputs.low_pressure_in, discrete_inputs.high_pressure_out);  (* ��������� �������� �� ����� � ������ *)
+info_alarm.external_alarm := get_external_alarm(
+	discrete_inputs.low_pressure_in, discrete_inputs.high_pressure_out
+);
 
 get_PID_set;
 
@@ -64,36 +66,34 @@ get_infomessage;
 END_FUNCTION_BLOCK
 
 ACTION	get_infoMessage:
-info.active:=active;
-info.set_pid:=set_pid;
-info.alarm.external_alarm:=info_alarm.external_alarm;
+info.active := active;
+info.set_pid := set_pid;
+info.alarm.external_alarm := info_alarm.external_alarm;
 
 IF discrete_outputs.status_alarm THEN
-	info_alarm.fault_invertor_drive:='������ ���������� ���������������!';
-	analog_outputs.out_frequency:=0;
+	info_alarm.fault_invertor_drive := 'Alarm invertor drive!';
+	analog_outputs.out_frequency := 0;
 ELSE
-	info_alarm.fault_invertor_drive:='������ ���';
+	info_alarm.fault_invertor_drive := 'No alarm';
 END_IF;
 
-info.alarm.fault_invertor_drive:=info_alarm.fault_invertor_drive;
+info.alarm.fault_invertor_drive := info_alarm.fault_invertor_drive;
 
 IF discrete_outputs.status_run THEN
-	info.status_run:='�������';
+	info.status_run := 'Run';
 
 ELSE
-	info.status_run:='����������';
-	analog_outputs.out_frequency:=0;
+	info.status_run := 'Stopped';
+	analog_outputs.out_frequency := 0;
 END_IF;
 
-(* �������� ������� �� ������ *)
-info.frequency:=analog_outputs.out_frequency;
-(* �������� �������� ������� �� ���������� ������ 4-20�� *)
-info.aout_frequency:=value_scaling(analog_outputs.out_frequency, get_params_value_scaling(0, 50, 4, 20));
+(* converted frequency in current value of 4-20 mA *)
+info.frequency := analog_outputs.out_frequency;
+info.aout_frequency := value_scaling(analog_outputs.out_frequency, get_params_value_scaling(0, 50, 4, 20));
 
-(*  ���� ��� ������ ��� ������ ��������� ��������� *)
 IF info.alarm.external_alarm  <> 'GOOD' THEN
 	discrete_inputs.start:=FALSE;
-ELSIF info.alarm.fault_invertor_drive <> '������ ���' THEN
+ELSIF info.alarm.fault_invertor_drive <> 'No alarm' THEN
 	discrete_inputs.start:=FALSE;
 ELSE
 	discrete_inputs.start:=invertor_drive.discrete_inputs.start;
@@ -107,45 +107,60 @@ END_ACTION
 
 ACTION	get_PID_set:
 
-analog_inputs:=invertor_drive.analog_input;
-set_auto:=invertor_drive.set.set_auto;
-set_frequency:=invertor_drive.set.set_frequency;
+analog_inputs := invertor_drive.analog_input;
+set_auto := invertor_drive.set.set_auto;
+set_frequency := invertor_drive.set.set_frequency;
 
-overflow:=FALSE; (* ���� ���������� ������ ����� *)
+overflow := FALSE; (* this place for realise reset integral value of PID *) 
 
-set_pid:=get_set_pid(set_auto.direct_logic,	set_auto.value, set_auto.set_point, set_auto.P, set_auto.I, set_auto.D, set_frequency.manual, 0, set_frequency.min_range, set_frequency.max_range, NOT set_auto.auto, overflow);
+set_pid := get_set_pid(
+	set_auto.direct_logic,
+	set_auto.value,
+	set_auto.set_point,
+	set_auto.P,
+	set_auto.I,
+	set_auto.D,
+	set_frequency.manual,
+	0,
+	set_frequency.min_range,
+	set_frequency.max_range,
+	NOT set_auto.auto,
+	overflow
+);
 
-settings_pid:=set_pid;
+settings_pid := set_pid;
+
 END_ACTION
 
 ACTION	init:
-invertor_drive.analog_input.set_frequency:=ain_value;
-invertor_drive.analog_output.out_frequency:=aout_value;
+invertor_drive.analog_input.set_frequency := ain_value;
+invertor_drive.analog_output.out_frequency := aout_value;
 
-invertor_drive.discrete_inputs.start:=start;
-invertor_drive.discrete_inputs.reset_fault:=reset_fault;
-invertor_drive.discrete_inputs.low_pressure_in:=low_pressure_in;
-invertor_drive.discrete_inputs.high_pressure_out:=high_pressure_out;
+invertor_drive.discrete_inputs.start := start;
+invertor_drive.discrete_inputs.reset_fault := reset_fault;
+invertor_drive.discrete_inputs.low_pressure_in := low_pressure_in;
+invertor_drive.discrete_inputs.high_pressure_out := high_pressure_out;
 
-invertor_drive.discrete_outputs.status_run:=status_run;
-invertor_drive.discrete_outputs.status_alarm:=status_alarm;
+invertor_drive.discrete_outputs.status_run := status_run;
+invertor_drive.discrete_outputs.status_alarm := status_alarm;
 
-invertor_drive.set.set_frequency.min_range:=min_range;
-invertor_drive.set.set_frequency.max_range:=max_range;
+invertor_drive.set.set_frequency.min_range := min_range;
+invertor_drive.set.set_frequency.max_range := max_range;
 
-invertor_drive.set.set_auto.auto:=auto;
-invertor_drive.set.set_auto.direct_logic:=direct_logic;
-invertor_drive.set.set_auto.set_point:=set_point;
-invertor_drive.set.set_auto.value:=ain_value;
-invertor_drive.set.set_auto.P:=P;
-invertor_drive.set.set_auto.I:=I;
-invertor_drive.set.set_auto.D:=D;
+invertor_drive.set.set_auto.auto := auto;
+invertor_drive.set.set_auto.direct_logic := direct_logic;
+invertor_drive.set.set_auto.set_point := set_point;
+invertor_drive.set.set_auto.value := ain_value;
+invertor_drive.set.set_auto.P := P;
+invertor_drive.set.set_auto.I := I;
+invertor_drive.set.set_auto.D := D;
 
-invertor_drive.set.set_frequency.manual:=manual;
-invertor_drive.set.set_frequency.min_range:=min_range;
-invertor_drive.set.set_frequency.max_range:=max_range;
+invertor_drive.set.set_frequency.manual := manual;
+invertor_drive.set.set_frequency.min_range := min_range;
+invertor_drive.set.set_frequency.max_range := max_range;
 
-discrete_inputs:=invertor_drive.discrete_inputs;
-discrete_outputs:=invertor_drive.discrete_outputs;
-analog_outputs:=invertor_drive.analog_output;
+discrete_inputs := invertor_drive.discrete_inputs;
+discrete_outputs := invertor_drive.discrete_outputs;
+analog_outputs := invertor_drive.analog_output;
+
 END_ACTION

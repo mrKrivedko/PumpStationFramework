@@ -1,8 +1,10 @@
 FUNCTION get_aout_current_in_info : REAL
+(* Functin return frequency is analog output value current 4-20mA *)
 
 VAR_INPUT
-	info_invertor_drive:classInfoInvertorDrive;
+	info_invertor_drive: classInfoInvertorDrive;
 END_VAR
 
-get_aout_current_in_info:=info_invertor_drive.aout_frequency;
+get_aout_current_in_info := info_invertor_drive.aout_frequency;
+
 END_FUNCTION

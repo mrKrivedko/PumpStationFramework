@@ -1,8 +1,10 @@
 FUNCTION get_active : BOOL
+(* Function return status active invertor drive. *)
 
 VAR_INPUT
-	info_invertor_drive:classInfoInvertorDrive;
+	info_invertor_drive: classInfoInvertorDrive;
 END_VAR
 
-get_active:=info_invertor_drive.active;
+get_active := info_invertor_drive.active;
+
 END_FUNCTION

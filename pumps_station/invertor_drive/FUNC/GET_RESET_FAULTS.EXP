@@ -1,7 +1,8 @@
 FUNCTION get_reset_faults : BOOL
+(* Function return status reset fault invertor drive. *)
 
 VAR_INPUT
-    info: classInfoInvertorDrive; (* Comment *)
+    info: classInfoInvertorDrive;
 END_VAR
 
 get_reset_faults := info.reset_fault;
