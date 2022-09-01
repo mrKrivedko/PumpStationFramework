@@ -1,9 +1,10 @@
 TYPE classPLC32m2StatusInputs :
+(* class for pack status inputs PLC *)
 
 STRUCT
-	fast_inputs:classFastDiscreteInputs;
-	discrete_inputs:classDiscreteInputs;
-	special_input:classSpecialInput;
+	fast_inputs: classFastDiscreteInputs;
+	discrete_inputs: classDiscreteInputs;
+	special_input: classSpecialInput;
 END_STRUCT
 
 END_TYPE

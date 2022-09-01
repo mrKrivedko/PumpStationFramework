@@ -1,17 +1,18 @@
 FUNCTION get_fdi : BOOL
-(* ������������� �� ������� ������ ������ ��������� FDI *)
+(* Function get status select fast discrete input. *)
+
 VAR_INPUT
-	num:INT;
-	status_inputs:classPLC32m2StatusInputs;
+	num: INT;
+	status_inputs: classPLC32m2StatusInputs;
 END_VAR
 
 VAR
-	fdi_list:ARRAY [1..2] OF BOOL;
+	fdi_list: ARRAY [1..2] OF BOOL;
 END_VAR
 
-fdi_list[1]:=status_inputs.fast_inputs.Bit1;
-fdi_list[2]:=status_inputs.fast_inputs.Bit2;
+fdi_list[1] := status_inputs.fast_inputs.Bit1;
+fdi_list[2] := status_inputs.fast_inputs.Bit2;
 
-get_fdi:=fdi_list[num];
+get_fdi := fdi_list[num];
 
 END_FUNCTION

@@ -1,4 +1,5 @@
 TYPE classDiscreteInputs :
+(* class for discrete inputs. *)
 
 STRUCT
 	first_byte:classDiscreteInputByte;

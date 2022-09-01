@@ -1,8 +1,9 @@
 TYPE classDiscreteOutputs :
+(* class for discrete outputs. *)
 
 STRUCT
-	first_byte:classDiscreteOutputByte;
-	second_byte:classDiscreteOutputByte;
+	first_byte: classDiscreteOutputByte;
+	second_byte: classDiscreteOutputByte;
 END_STRUCT
 
 END_TYPE

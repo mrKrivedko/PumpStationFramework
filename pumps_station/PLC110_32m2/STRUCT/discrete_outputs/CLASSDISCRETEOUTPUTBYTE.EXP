@@ -1,14 +1,15 @@
 TYPE classDiscreteOutputByte :
+(* class for discrete outputs byte. *)
 
 STRUCT
-	Bit1:BOOL;
-	Bit2:BOOL;
-	Bit3:BOOL;
-	Bit4:BOOL;
-	Bit5:BOOL;
-	Bit6:BOOL;
-	Bit7:BOOL;
-	Bit8:BOOL;
+	Bit1: BOOL;
+	Bit2: BOOL;
+	Bit3: BOOL;
+	Bit4: BOOL;
+	Bit5: BOOL;
+	Bit6: BOOL;
+	Bit7: BOOL;
+	Bit8: BOOL;
 END_STRUCT
 
 END_TYPE
