@@ -1,21 +1,22 @@
 FUNCTION_BLOCK params_in_set_PID
+(* Function block unpackaged class setting PID in personal parameters for PID from util.lib*)
 
 VAR_INPUT
-	set:classSetPid;
+	set: classSetPid;
 END_VAR
 
 VAR_OUTPUT
-	actual:REAL;
-	set_point:REAL;
-	P:REAL;
-	I:REAL;
-	D:REAL;
-	Y_manual:REAL;
-	Y_offset:REAL;
-	Y_min:REAL;
-	Y_max:REAL;
-	manual:BOOL;
-	reset:BOOL;
+	actual: REAL;
+	set_point: REAL; (* set point, measure system in input value control. *)
+	P: REAL; (* proporcional value of PID, if more, out value fasted. *)
+	I: REAL; (* integral value of PID, seconds *)
+	D: REAL; (* differential value PID, seconds *)
+	Y_manual: REAL; (* set output value in manual mode, Hz*)
+	Y_offset: REAL;
+	Y_min: REAL; (* min value in manual mode, Hz*)
+	Y_max: REAL; (* max value in manual mode, Hz*)
+	manual: BOOL; (* manual mode PID *)
+	reset: BOOL; (* reset integral value *)
 END_VAR
 
 actual := set.actual;

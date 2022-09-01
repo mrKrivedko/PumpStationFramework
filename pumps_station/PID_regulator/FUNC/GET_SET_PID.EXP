@@ -1,18 +1,19 @@
 FUNCTION get_set_pid : classSetPid
+(* Function packaged PID settings in class. *)
 
 VAR_INPUT
-	direct_logic:BOOL:=TRUE;
-	actual:REAL;
-	set_point:REAL;
-	P:REAL:=2;  (* ���������������� ����������� ����������, ��� ���������� ����� ���������� ���������� �������*)
-	I:INT:=10;  (* ������������ ����������� ����������, ����� � �������� *)
-	D:INT:=0;  (* ���������������� ����������� ����������, ����� � �������� *)
-	Y_manual:REAL:=0;  (* Hz *)
-	Y_offset:REAL:=0;
-	Y_min:REAL;
-	Y_max:REAL;
-	manual:BOOL:=TRUE;  (* ����������� �������� ������ ����� *)
-	reset:BOOL:=FALSE;
+	direct_logic: BOOL := TRUE; (* flag forward/reverse control, reverse control: if input value less set point, output value to less. forward control: if input value less set point, output value to more. *)
+	actual: REAL; 
+	set_point: REAL; (* set point, measure system in input value control. *)
+	P: REAL := 2; (* proporcional value of PID, if more, out value fasted. *)
+	I: INT := 10; (* integral value of PID, seconds *)
+	D: INT := 0; (* differential value PID, seconds *)
+	Y_manual: REAL := 0; (* set output value in manual mode, Hz*)
+	Y_offset: REAL := 0;
+	Y_min: REAL; (* min value in manual mode, Hz*)
+	Y_max: REAL; (* max value in manual mode, Hz*)
+	manual: BOOL := TRUE; (* manual mode PID *)
+	reset:BOOL := FALSE; (* reset integral value *)
 END_VAR
 
 IF direct_logic = TRUE THEN

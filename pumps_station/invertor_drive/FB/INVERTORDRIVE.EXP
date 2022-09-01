@@ -23,7 +23,7 @@ VAR_INPUT
 	D:INT := 0;  (* differential value PID, seconds *)
 
 (* limit work frequency *)
-	manual: REAL := 0; (*  set output value in manual mode, Hz*)
+	manual: REAL := 0; (* set output value in manual mode, Hz*)
 	min_range: REAL := 15;  (* min value in manual mode, Hz*)
 	max_range: REAL := 50;  (* max value in manual mode, Hz*)
 
@@ -162,5 +162,4 @@ invertor_drive.set.set_frequency.max_range := max_range;
 discrete_inputs := invertor_drive.discrete_inputs;
 discrete_outputs := invertor_drive.discrete_outputs;
 analog_outputs := invertor_drive.analog_output;
-
 END_ACTION
