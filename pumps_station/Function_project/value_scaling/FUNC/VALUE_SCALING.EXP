@@ -1,9 +1,9 @@
 FUNCTION value_scaling : REAL
-(* ������� ��������������� ����� *)
+(* Function scaling input value in value is other measure system. *)
 
 VAR_INPUT
 	input_value: REAL;
-	params_scales:classParamsValueScaling;
+	params_scales: classParamsValueScaling;
 END_VAR
 
 VAR
@@ -11,8 +11,13 @@ VAR
 	B: REAL;
 END_VAR
 
-A := (params_scales.out_max - params_scales.out_min) / (params_scales.in_max - params_scales.in_min);
-B := ((params_scales.out_min * params_scales.in_max) - (params_scales.out_max * params_scales.in_min)) / (params_scales.in_max - params_scales.in_min);
+A := (params_scales.out_max - params_scales.out_min)
+    / (params_scales.in_max - params_scales.in_min);
+
+B := (
+	(params_scales.out_min * params_scales.in_max)
+	- (params_scales.out_max * params_scales.in_min)
+	) / (params_scales.in_max - params_scales.in_min);
 
 value_scaling := A * input_value + B;
 

@@ -1,14 +1,15 @@
-FUNCTION get_pump_in_cycle : BOOL (*������� ������������ ���� ������ ���������� ������ *)
+FUNCTION get_pump_in_cycle : BOOL
+(* get status select pump in cycle. *)
 
 VAR_INPUT
 	info_cycle:classInfoCycle;
-	pump_number:SINT;
+	pump_number:INT;
 END_VAR
 
-IF pump_number=info_cycle.pump_number THEN
-	get_pump_in_cycle:=info_cycle.run_timer;
+IF pump_number = info_cycle.pump_number THEN
+	get_pump_in_cycle := info_cycle.run_timer;
 ELSE
-	get_pump_in_cycle:=FALSE;
+	get_pump_in_cycle := FALSE;
 END_IF;
 
 END_FUNCTION

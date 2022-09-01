@@ -1,4 +1,5 @@
 FUNCTION len_bool_array : INT
+(* Function return len array type of BOOL. *)
 
 VAR_INPUT
 	list: ARRAY [1..8] OF BOOL;

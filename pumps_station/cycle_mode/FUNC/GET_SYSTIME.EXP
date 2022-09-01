@@ -1,7 +1,5 @@
 FUNCTION get_systime : TIME
+(* get system time *)
 
-VAR_INPUT
-END_VAR
-
-get_systime:=TIME();
+get_systime := TIME();
 END_FUNCTION
