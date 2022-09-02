@@ -35,10 +35,8 @@ VAR
 	i: INT:=1;
 	start_delay:TON;
 	error_message: STRING(79);
-	Q: BOOL;
 	start_time: TIME:=t#0s;
 	work_time: TIME;
-	j:INT:=1;
 	len_pumps: INT;
 	index_active_pumps:ARRAY [1..8] OF INT;
 	len_active_pumps: INT;
@@ -46,7 +44,11 @@ VAR
 END_VAR
 
 (* @END_DECLARATION := '0' *)
-pivot:=pivot_pump;
+pivot := pivot_pump;
+
+IF pivot = 0 THEN
+	pivot := 1;
+END_IF;
 
 pumps[1] := get_active(info_invertor_drive1);
 pumps[2] := get_active(info_invertor_drive2);
@@ -148,25 +150,6 @@ ELSE
 	info_cascade.cascade_pump8:=cascade_pumps[8];
 END_IF;
 END_ACTION
-
-ACTION	working:
-cascade_pumps[pivot].cascade_pump:=TRUE;
-
-IF in_pressure < set_pressure THEN
-	start_delay(IN:=TRUE, PT:=t#15s);
-	IF start_delay.Q THEN
-		cascade_pumps[i].cascade_pump:=TRUE;
-		i:=i+1;
-	END_IF;
-ELSIF in_pressure > set_pressure THEN
-	start_delay(IN:=TRUE, PT:=t#15s);
-	IF start_delay.Q THEN
-		cascade_pumps[i].cascade_pump:=FALSE;
-		i:=i-1;
-	END_IF;
-END_IF;
-END_ACTION
-
 
 
 
@@ -819,7 +802,20 @@ set_frequency:=invertor_drive.set.set_frequency;
 
 overflow:=FALSE; (* ���� ���������� ������ ����� *)
 
-set_pid:=get_set_pid(set_auto.direct_logic,	set_auto.value, set_auto.set_point, set_auto.P, set_auto.I, set_auto.D, set_frequency.manual, 0, set_frequency.min_range, set_frequency.max_range, NOT set_auto.auto, overflow);
+set_pid:=get_set_pid(
+set_auto.direct_logic,
+set_auto.value,
+set_auto.set_point,
+set_auto.P,
+set_auto.I,
+set_auto.D,
+set_frequency.manual,
+0,
+set_frequency.min_range,
+set_frequency.max_range,
+NOT set_auto.auto,
+overflow
+);
 
 settings_pid:=set_pid;
 END_ACTION
@@ -1756,10 +1752,11 @@ END_FUNCTION_BLOCK
 (* @OBJECTFLAGS := '0, 8' *)
 (* @SYMFILEFLAGS := '2048' *)
 FUNCTION get_pump_in_single : BOOL
+(* Function get status pump in information single mode *)
 
 VAR_INPUT
-    info_single: classInfoSingle; (* Comment *)
-    pump_number: SINT;
+    info_single: classInfoSingle;
+    pump_number: INT;
 END_VAR
 
 (* @END_DECLARATION := '0' *)
@@ -1776,6 +1773,7 @@ END_FUNCTION
 (* @OBJECTFLAGS := '0, 8' *)
 (* @SYMFILEFLAGS := '2048' *)
 FUNCTION_BLOCK Single
+(* Function block implementation single mode. *)
 
 VAR_INPUT
     enable: BOOL; (* Enable single mode *)
@@ -1796,6 +1794,7 @@ END_VAR
 
 VAR
     pumps: ARRAY[1..8] OF BOOL;
+    pivot: INT;
 END_VAR
 
 (* @END_DECLARATION := '0' *)
@@ -1808,12 +1807,17 @@ pumps[6] := get_active(info_invertor_drive6);
 pumps[7] := get_active(info_invertor_drive7);
 pumps[8] := get_active(info_invertor_drive8);
 
+pivot := pivot_pump;
+IF pivot = 0 THEN
+	enable := FALSE;
+END_IF;
+
 IF enable THEN
-    IF pumps[pivot_pump] THEN
+    IF pumps[pivot] THEN
         info_single.pump_number := pivot_pump;
-        info_single.start_pump := pumps[pivot_pump];
+        info_single.start_pump := pumps[pivot];
         info_single.message := 'Select pump in work.';
-    ELSIF pumps[pivot_pump] THEN
+    ELSE
         info_single.pump_number := -1;
         info_single.start_pump := FALSE;
         info_single.message := 'Select pump is not active!';
