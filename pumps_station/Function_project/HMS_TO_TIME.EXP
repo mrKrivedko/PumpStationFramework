@@ -1,4 +1,6 @@
 FUNCTION hms_to_time : TIME
+(* Function packaged hours, minites and seconds in type TIME. *)
+
 VAR_INPUT
 	hours: WORD;
 	minutes: WORD;
@@ -15,4 +17,5 @@ hms_to_time := DWORD_TO_TIME(
     + (WORD_TO_DWORD(minutes) * MILLISECONDS_IN_MINUTE)
     + (WORD_TO_DWORD(seconds) * MILLISECONDS_IN_SECOND)
 );
+
 END_FUNCTION

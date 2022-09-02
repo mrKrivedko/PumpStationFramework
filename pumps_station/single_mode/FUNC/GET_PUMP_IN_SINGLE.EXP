@@ -1,8 +1,9 @@
 FUNCTION get_pump_in_single : BOOL
+(* Function get status pump in information single mode *)
 
 VAR_INPUT
-    info_single: classInfoSingle; (* Comment *)
-    pump_number: SINT;
+    info_single: classInfoSingle;
+    pump_number: INT;
 END_VAR
 
 IF pump_number = info_single.pump_number THEN
