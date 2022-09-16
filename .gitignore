@@ -69,6 +69,7 @@ __recovery/
 modules/
 
 # codesys systemfiles
+*.ri
 *.ci
 *.SDB
 *.SYM

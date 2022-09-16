@@ -37,6 +37,7 @@ ELSIF single AND NOT cycle AND NOT cascade THEN
     flag_mode := 0;
     message := 'Single mode selected'; (* Выбран режим работы одного насоса *) 
 ELSE
+    flag_mode := -1;
     message := 'Select any one working mode!'; (* Выберите один режим работы! *)
 END_IF;
 
