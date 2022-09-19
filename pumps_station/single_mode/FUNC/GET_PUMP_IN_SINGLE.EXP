@@ -6,7 +6,7 @@ VAR_INPUT
     pump_number: INT;
 END_VAR
 
-IF pump_number = info_single.pump_number THEN
+IF pump_number = info_single.pivot_pump THEN
     get_pump_in_single := info.start_pump;
 ELSE
     get_pump_in_single := FALSE;

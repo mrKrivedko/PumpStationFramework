@@ -75,4 +75,5 @@ ELSE
 	info_cycle.pump_number := 1;
 	start_timer := t#0s;
 END_IF;
+info_cycle.error_code := 0;
 END_FUNCTION_BLOCK

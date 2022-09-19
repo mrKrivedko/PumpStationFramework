@@ -93,16 +93,18 @@ info.frequency := analog_outputs.out_frequency;
 info.aout_frequency := value_scaling(analog_outputs.out_frequency, get_params_value_scaling(0, 50, 4, 20));
 
 IF info.alarm.external_alarm  <> 'GOOD' THEN
-	discrete_inputs.start:=FALSE;
+	discrete_inputs.start := FALSE;
 ELSIF info.alarm.fault_invertor_drive <> 'No alarm' THEN
-	discrete_inputs.start:=FALSE;
+	discrete_inputs.start := FALSE;
+ELSIF system_alarm <> 0 THEN
+	discrete_inputs.start := FALSE;
 ELSE
-	discrete_inputs.start:=invertor_drive.discrete_inputs.start;
+	discrete_inputs.start := invertor_drive.discrete_inputs.start;
 END_IF;
 
-info.reset_fault:=discrete_inputs.reset_fault;
+info.reset_fault := discrete_inputs.reset_fault;
 
-info.run:=discrete_inputs.start;
+info.run := discrete_inputs.start;
 
 END_ACTION
 

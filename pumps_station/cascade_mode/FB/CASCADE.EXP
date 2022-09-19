@@ -35,6 +35,7 @@ VAR
 	len_active_pumps: INT;
 	index_pivot: INT;
 	histeresys: REAL := 0.2 (* histeresys set pressure *);
+	error_code:WORD;
 END_VAR
 
 pivot := pivot_pump;
@@ -45,18 +46,25 @@ ELSE
     check_active_pumps;
 END_IF;
 
-IF len_active_pumps > 1 THEN
+IF len_active_pumps > 1  AND index_pivot <> 0 THEN
     cascade_on;
-ELSE
+ELSIF len_active_pumps = 1 AND index_pivot <> 0 THEN
     i := index_pivot;
+	error_code := 4;
     error_message := 'cascade mode excpected more one active pumps, but got less';
+ELSIF index_pivot = 0 THEN
+	error_code := 5;
+	error_message := 'pivot pump not active';
 END_IF;
 
 get_info_message;
 END_FUNCTION_BLOCK
 
 ACTION check_pivot:
-error_message := 'pivot pump not excpect int more 0.'
+
+error_code := 3;
+error_message := 'pivot pump not excpect int more 0.';
+
 END_ACTION
 
 ACTION check_active_pumps:
@@ -79,6 +87,7 @@ index_pivot := index_element_in_int_array(pivot, index_active_pumps); (* get ind
 END_ACTION
 
 ACTION cascade_on:
+error_code := 0;
 error_message := 'GOOD';
 
 (* inspect bounds array. *)
@@ -140,8 +149,10 @@ IF enable AND error_message = 'GOOD' THEN
 	info_cascade.cascade_pump6 := cascade_pumps[6];
 	info_cascade.cascade_pump7 := cascade_pumps[7];
 	info_cascade.cascade_pump8 := cascade_pumps[8];
+	info_cascade.error_code := error_code;
 ELSE
-	info_cascade.pivot := 1;
+	info_cascade.pivot := index_pivot;
+	info_cascade.error_code := error_code;
 	info_cascade.error_message := error_message;
 	cascade_pumps[1].cascade_pump := FALSE;
 	cascade_pumps[2].cascade_pump := FALSE;

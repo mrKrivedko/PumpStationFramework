@@ -25,6 +25,7 @@ END_VAR
 VAR
     message: STRING(79);
     flag_mode: INT;
+    error_code:  WORD;
 END_VAR
 
 
@@ -39,6 +40,7 @@ ELSIF single AND NOT cycle AND NOT cascade THEN
     message := 'Single mode selected'; (* Выбран режим работы одного насоса *) 
 ELSE
     flag_mode := -1;
+    error_code := 6;
     message := 'Select any one working mode!'; (* Выберите один режим работы! *)
 END_IF;
 
@@ -51,7 +53,7 @@ IF flag_mode = 0 THEN
     start_pump6 := get_pump_in_single(info_single, 6);
     start_pump7 := get_pump_in_single(info_single, 7);
     start_pump8 := get_pump_in_single(info_single, 8);
-    mode_selector_error := 0;
+    mode_selector_error := info_single.error_code;
 ELSIF flag_mode = 1 THEN
     start_pump1 := get_pump_in_cycle(info_cycle, 1);
     start_pump2 := get_pump_in_cycle(info_cycle, 2);
@@ -61,7 +63,7 @@ ELSIF flag_mode = 1 THEN
     start_pump6 := get_pump_in_cycle(info_cycle, 6);
     start_pump7 := get_pump_in_cycle(info_cycle, 7);
     start_pump8 := get_pump_in_cycle(info_cycle, 8);
-    mode_selector_error := 0;
+    mode_selector_error := info_cycle.error_code;
 ELSIF flag_mode = 2 THEN
     start_pump1 := get_pump_in_cascade(info_cascade, 1);
     start_pump2 := get_pump_in_cascade(info_cascade, 2);
@@ -71,7 +73,7 @@ ELSIF flag_mode = 2 THEN
     start_pump6 := get_pump_in_cascade(info_cascade, 6);
     start_pump7 := get_pump_in_cascade(info_cascade, 7);
     start_pump8 := get_pump_in_cascade(info_cascade, 8);
-    mode_selector_error := 0;
+    mode_selector_error := info_cascade.error_code;
 ELSE
     start_pump1 := FALSE;
     start_pump2 := FALSE;
@@ -81,7 +83,7 @@ ELSE
     start_pump6 := FALSE;
     start_pump7 := FALSE;
     start_pump8 := FALSE;
-    mode_selector_error: = 3;
+    mode_selector_error: = error_code;
 END_IF;
 
 END_FUNCTION_BLOCK

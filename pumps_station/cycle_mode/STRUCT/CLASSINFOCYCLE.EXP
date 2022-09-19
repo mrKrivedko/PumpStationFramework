@@ -4,6 +4,7 @@ STRUCT
 	run_timer: BOOL; (* status work *)
 	working_time: TIME; (* pump working time  *)
 	pump_number: INT;  (* number working pump *)
+	error_code:  WORD;
 END_STRUCT
 
 END_TYPE

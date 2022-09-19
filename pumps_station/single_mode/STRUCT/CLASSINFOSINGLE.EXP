@@ -5,6 +5,7 @@ STRUCT
     pivot_pump : INT;
     start_pump : BOOL;
     message: STRING(79);
+    error_code: WORD;
 END_STRUCT
 
 END_TYPE

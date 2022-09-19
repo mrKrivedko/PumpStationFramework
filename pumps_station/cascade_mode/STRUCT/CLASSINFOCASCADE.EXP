@@ -3,6 +3,7 @@ TYPE classInfoCascade :
 STRUCT
 	pivot:INT;
 	error_message:STRING(79);
+	error_code: WORD;
 	cascade_pump1:classInfoCascadePump;
 	cascade_pump2:classInfoCascadePump;
 	cascade_pump3:classInfoCascadePump;
