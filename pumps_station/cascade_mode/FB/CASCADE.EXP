@@ -27,21 +27,39 @@ VAR
 	cascade_pumps: ARRAY [1..8] OF classInfoCascadePump;
 	pivot: INT;
 	i: INT:=1;
-	error_message: STRING(79);
+	error_message: STRING(79):= 'NOT GOOD';
 	start_time: TIME:=t#0s;
 	work_time: TIME;
 	len_pumps: INT;
 	index_active_pumps:ARRAY [1..8] OF INT;
 	len_active_pumps: INT;
 	index_pivot: INT;
-	histeresys: REAL := 0.2 (* histeresys set pressure *)
+	histeresys: REAL := 0.2 (* histeresys set pressure *);
 END_VAR
 
 pivot := pivot_pump;
 
 IF pivot = 0 THEN
-	pivot := 1;
+	check_pivot;
+ELSE
+    check_active_pumps;
 END_IF;
+
+IF len_active_pumps > 1 THEN
+    cascade_on;
+ELSE
+    i := index_pivot;
+    error_message := 'cascade mode excpected more one active pumps, but got less';
+END_IF;
+
+get_info_message;
+END_FUNCTION_BLOCK
+
+ACTION check_pivot:
+error_message := 'pivot pump not excpect int more 0.'
+END_ACTION
+
+ACTION check_active_pumps:
 
 pumps[1] := get_active(info_invertor_drive1);
 pumps[2] := get_active(info_invertor_drive2);
@@ -52,19 +70,20 @@ pumps[6] := get_active(info_invertor_drive6);
 pumps[7] := get_active(info_invertor_drive7);
 pumps[8] := get_active(info_invertor_drive8);
 
-error_message := 'GOOD';
-
 len_pumps := len_bool_array(pumps);  (* get en input pumps array. *)
 index_active_pumps := index_bool_array(pumps);  (* get indexes active pumps. *)
 len_active_pumps := len_int_array(index_active_pumps);  (* get len active pumps. *)
 
 index_pivot := index_element_in_int_array(pivot, index_active_pumps); (* get index pivot.*)
 
+END_ACTION
+
+ACTION cascade_on:
+error_message := 'GOOD';
+
 (* inspect bounds array. *)
-IF len_active_pumps = 1 THEN
-	i := index_pivot;
-	error_message := 'cascade mode excpected more one pumps, but got less';
-ELSIF i = 1 AND i = index_pivot THEN
+
+IF i = 1 AND i = index_pivot THEN
 	i := pivot + 1;
 ELSIF i = len_active_pumps AND  i = index_pivot THEN
 	i := len_active_pumps - 1;
@@ -107,9 +126,7 @@ IF i > len_active_pumps  THEN
 ELSIF i < 1 THEN
 	i := 1;
 END_IF;
-
-get_info_message;
-END_FUNCTION_BLOCK
+END_ACTION
 
 ACTION	get_info_message:
 IF enable AND error_message = 'GOOD' THEN
@@ -124,7 +141,7 @@ IF enable AND error_message = 'GOOD' THEN
 	info_cascade.cascade_pump7 := cascade_pumps[7];
 	info_cascade.cascade_pump8 := cascade_pumps[8];
 ELSE
-	info_cascade.pivot := pivot;
+	info_cascade.pivot := 1;
 	info_cascade.error_message := error_message;
 	cascade_pumps[1].cascade_pump := FALSE;
 	cascade_pumps[2].cascade_pump := FALSE;

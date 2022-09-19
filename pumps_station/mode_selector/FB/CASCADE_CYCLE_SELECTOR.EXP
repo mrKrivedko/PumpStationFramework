@@ -11,6 +11,7 @@ VAR_INPUT
 END_VAR
 
 VAR_OUTPUT
+    mode_selector_error: WORD;
     start_pump1: BOOL := FALSE;
     start_pump2: BOOL := FALSE;
     start_pump3: BOOL := FALSE;
@@ -50,6 +51,7 @@ IF flag_mode = 0 THEN
     start_pump6 := get_pump_in_single(info_single, 6);
     start_pump7 := get_pump_in_single(info_single, 7);
     start_pump8 := get_pump_in_single(info_single, 8);
+    mode_selector_error := 0;
 ELSIF flag_mode = 1 THEN
     start_pump1 := get_pump_in_cycle(info_cycle, 1);
     start_pump2 := get_pump_in_cycle(info_cycle, 2);
@@ -59,6 +61,7 @@ ELSIF flag_mode = 1 THEN
     start_pump6 := get_pump_in_cycle(info_cycle, 6);
     start_pump7 := get_pump_in_cycle(info_cycle, 7);
     start_pump8 := get_pump_in_cycle(info_cycle, 8);
+    mode_selector_error := 0;
 ELSIF flag_mode = 2 THEN
     start_pump1 := get_pump_in_cascade(info_cascade, 1);
     start_pump2 := get_pump_in_cascade(info_cascade, 2);
@@ -68,6 +71,7 @@ ELSIF flag_mode = 2 THEN
     start_pump6 := get_pump_in_cascade(info_cascade, 6);
     start_pump7 := get_pump_in_cascade(info_cascade, 7);
     start_pump8 := get_pump_in_cascade(info_cascade, 8);
+    mode_selector_error := 0;
 ELSE
     start_pump1 := FALSE;
     start_pump2 := FALSE;
@@ -77,6 +81,7 @@ ELSE
     start_pump6 := FALSE;
     start_pump7 := FALSE;
     start_pump8 := FALSE;
+    mode_selector_error: = 3;
 END_IF;
 
 END_FUNCTION_BLOCK

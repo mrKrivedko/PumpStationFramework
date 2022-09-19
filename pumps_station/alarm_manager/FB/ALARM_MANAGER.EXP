@@ -1,0 +1,38 @@
+FUNCTION_BLOCK ALARM_MANAGER
+(* Function block handle alarm. *)
+
+VAR_INPUT
+    low_pressure_input: BOOL;
+    high_pressure_out: BOOL;
+    input_pressure_error_code: WORD;
+    out_pressure_error_code: WORD;
+    mode_selector_error: WORD;
+END_VAR
+
+VAR_OUTPUT
+    alarm_on: BOOL := TRUE;
+    error_code_alarm: WORD;
+    error_message: STRING(79);
+END_VAR
+
+IF low_pressure_in THEN
+    error_code_alarm := 1;
+ELSIF high_pressure_out THEN
+    error_code_alarm := 2;
+ELSIF input_pressure_error_code > 0 THEN
+    error_code_alarm := input_pressure_error_code;
+ELSIF out_pressure_error_code > 0 THEN
+    error_code_alarm := input_pressure_error_code;
+ELSIF mode_selector_error > 0 THEN
+    error_code_alarm := mode_selector_error;
+ELSE
+    error_code_alarm := 0;
+END_IF;
+
+IF error_code_alarm <> 0 THEN
+    alarm_on := TRUE;
+ELSE
+    alarm_on := FALSE;
+END_IF;
+
+END_FUNCTION_BLOCK

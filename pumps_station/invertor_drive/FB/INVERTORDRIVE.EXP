@@ -29,6 +29,7 @@ VAR_INPUT
 
 (* status invertor in work *)
 	active: BOOL := FALSE;  (* statis active invertor drive. *)
+	system_alarm: BOOL; (* alarm manager alarm_on *)
 END_VAR
 
 VAR_OUTPUT
