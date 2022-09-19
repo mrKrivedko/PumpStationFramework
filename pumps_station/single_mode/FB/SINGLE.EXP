@@ -34,6 +34,7 @@ pumps[8] := get_active(info_invertor_drive8);
 
 pivot := pivot_pump;
 IF pivot = 0 THEN
+    info_single.error_code:= '8'
 	enable := FALSE;
 END_IF;
 
@@ -53,7 +54,7 @@ IF enable THEN
 ELSE
     info_single.pivot_pump := -8;
     info_single.start_pump := FALSE;
-    info_single.error_code := 0;
+    info_single.error_code := 8;
     info_single.message := 'Single mode is not activate'; (* Режим работы одного насоса не активен. *)
 END_IF;
 
