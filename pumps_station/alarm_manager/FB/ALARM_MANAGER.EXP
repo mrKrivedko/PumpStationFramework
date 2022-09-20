@@ -31,6 +31,7 @@ END_IF;
 
 IF error_code_alarm <> 0 THEN
     alarm_on := TRUE;
+    error_message := get_alarm_message(error_code_alarm);
 ELSE
     alarm_on := FALSE;
 END_IF;

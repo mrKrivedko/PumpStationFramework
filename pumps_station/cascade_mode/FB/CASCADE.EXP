@@ -54,7 +54,7 @@ ELSIF len_active_pumps = 1 AND index_pivot <> 0 THEN
     error_message := 'cascade mode excpected more one active pumps, but got less';
 ELSIF index_pivot = 0 THEN
 	error_code := 5;
-	error_message := 'pivot pump not active';
+	error_message := ' cascade pivot pump not active';
 END_IF;
 
 get_info_message;

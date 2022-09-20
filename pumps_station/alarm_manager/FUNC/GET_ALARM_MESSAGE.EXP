@@ -1,0 +1,56 @@
+FUNCTION get_alarm_message : STRING*(20)
+(* Function return message alarm of error_code *)
+
+VAR_INPUT
+    code_error: WORD;
+END_VAR
+
+VAR
+    error_message: STRING(79);
+END_VAR
+
+IF code_error = 0
+	THEN error_message := 'Measure good.'; (* Измерение успешно. *)
+ELSIF code_error = 1
+    THEN error_message := 'low input pressure!'; (* Низкое давление на выходе. *)
+ELSIF code_error = 2 
+    THEN error_message := 'high output pressure!'; (* Превышение давления на выходе. *)
+ELSIF code_error = 3
+    THEN error_message := 'Pivot cascade pump not expected int more 0!'; (* Опорный насос не может быть 0 *)
+ELSIF code_error = 4
+    THEN error_message := 'Cascade mode excpected more one active pumps, but got less!'; (* В каскадном режиме должно быть больше одного активного насоса. *)
+ELSIF code_error = 5
+    THEN error_message := 'Cascade pivot pump not active!'; (* Опорный насос в каскадном режиме не активен. *)
+ELSIF code_error = 6
+    THEN error_message := 'Single mode select pump is not active!'; (* Опорный насос в одиночном режиме на активен *)
+ELSIF code_error = 7
+    THEN error_message := 'Select any one working mode!'; (* Выберите только один режим работы станции. *)
+ELSIF code_error = 61440
+	THEN error_message := 'Value bad!'; (* Значение заведомо неверно. *)
+ELSIF code_error = 61446
+	THEN error_message := 'Data info not complete! Wait first measuring.'; (* Данные не готовы. Ждите результатов первого измерения. *)
+ELSIF code_error = 61447
+	THEN error_message := 'Sensor off.'; (* Датчик отключен. *)
+ELSIF code_error = 61448
+	THEN error_message := 'Temperature free ends of termosensor high.'; (* Велика температура свободных концов ТП. *)
+ELSIF code_error = 61449
+	THEN error_message := 'Temperature free ends of termosensor low.'; (* Мала температура свободных концов ТП. *)
+ELSIF code_error = 61450
+	THEN error_message := 'Measured value too more.'; (* Измеренное значение слишком велико. *)
+ELSIF code_error = 61451
+	THEN error_message := 'Measured value too less.'; (* Измеренное значение слишком мало. *)
+ELSIF code_error = 61452
+	THEN error_message := 'Short circuit of sensor.'; (* Короткое замыкание датчика. *)
+ELSIF code_error = 61453
+	THEN error_message := 'Sensor breaking.'; (* Обрыв датчика. *)
+ELSIF code_error = 61454
+	THEN error_message := 'Failure connection with DAC.'; (* Отсутствие связи с АЦП. *)
+ELSIF code_error = 61455
+	THEN error_message := 'Uncorrect calibrate rate.'; (* Некорректный калибровочный коэффициент. *)
+ELSE
+	error_message := 'Error not Found';
+END_IF
+
+get_alarm_message := error_message;
+    
+END_FUNCTION
