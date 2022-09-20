@@ -1,19 +1,127 @@
 
 
 (* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/Alarm_manager_error' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION_BLOCK ALARM_MANAGER
+(* Function block handle alarm. *)
+
+VAR_INPUT
+    low_pressure_input: BOOL;
+    high_pressure_out: BOOL;
+    input_pressure_error_code: WORD;
+    out_pressure_error_code: WORD;
+    mode_selector_error: WORD;
+END_VAR
+
+VAR_OUTPUT
+    alarm_on: BOOL := TRUE;
+    error_code_alarm: WORD;
+    error_message: STRING(79);
+END_VAR
+
+(* @END_DECLARATION := '0' *)
+IF low_pressure_input THEN
+    error_code_alarm := 1;
+ELSIF high_pressure_out THEN
+    error_code_alarm := 2;
+ELSIF input_pressure_error_code > 0 THEN
+    error_code_alarm := input_pressure_error_code;
+ELSIF out_pressure_error_code > 0 THEN
+    error_code_alarm := input_pressure_error_code;
+ELSIF mode_selector_error > 0 THEN
+    error_code_alarm := mode_selector_error;
+ELSE
+    error_code_alarm := 0;
+END_IF;
+
+IF error_code_alarm <> 0 THEN
+    alarm_on := TRUE;
+    error_message := get_alarm_message(error_code_alarm);
+ELSE
+    alarm_on := FALSE;
+END_IF;
+END_FUNCTION_BLOCK
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/Alarm_manager_error' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION get_alarm_message : STRING(20)
+(* Function return message alarm of error_code *)
+
+VAR_INPUT
+    code_error: WORD;
+END_VAR
+
+VAR
+    error_message: STRING(79);
+END_VAR
+
+(* @END_DECLARATION := '0' *)
+IF code_error = 0
+	THEN error_message := 'Measure good.'; (* Измерение успешно. *)
+ELSIF code_error = 1
+    THEN error_message := 'low input pressure!'; (* Низкое давление на выходе. *)
+ELSIF code_error = 2 
+    THEN error_message := 'high output pressure!'; (* Превышение давления на выходе. *)
+ELSIF code_error = 3
+    THEN error_message := 'Pivot cascade pump not expected int more 0!'; (* Опорный насос не может быть 0 *)
+ELSIF code_error = 4
+    THEN error_message := 'Cascade mode excpected more one active pumps, but got less!'; (* В каскадном режиме должно быть больше одного активного насоса. *)
+ELSIF code_error = 5
+    THEN error_message := 'Cascade pivot pump not active!'; (* Опорный насос в каскадном режиме не активен. *)
+ELSIF code_error = 6
+    THEN error_message := 'Single mode select pump is not active!'; (* Опорный насос в одиночном режиме на активен *)
+ELSIF code_error = 7
+    THEN error_message := 'Select any one working mode!'; (* Выберите только один режим работы станции. *)
+ELSIF code_error = 61440
+	THEN error_message := 'Value bad!'; (* Значение заведомо неверно. *)
+ELSIF code_error = 61446
+	THEN error_message := 'Data info not complete! Wait first measuring.'; (* Данные не готовы. Ждите результатов первого измерения. *)
+ELSIF code_error = 61447
+	THEN error_message := 'Sensor off.'; (* Датчик отключен. *)
+ELSIF code_error = 61448
+	THEN error_message := 'Temperature free ends of termosensor high.'; (* Велика температура свободных концов ТП. *)
+ELSIF code_error = 61449
+	THEN error_message := 'Temperature free ends of termosensor low.'; (* Мала температура свободных концов ТП. *)
+ELSIF code_error = 61450
+	THEN error_message := 'Measured value too more.'; (* Измеренное значение слишком велико. *)
+ELSIF code_error = 61451
+	THEN error_message := 'Measured value too less.'; (* Измеренное значение слишком мало. *)
+ELSIF code_error = 61452
+	THEN error_message := 'Short circuit of sensor.'; (* Короткое замыкание датчика. *)
+ELSIF code_error = 61453
+	THEN error_message := 'Sensor breaking.'; (* Обрыв датчика. *)
+ELSIF code_error = 61454
+	THEN error_message := 'Failure connection with DAC.'; (* Отсутствие связи с АЦП. *)
+ELSIF code_error = 61455
+	THEN error_message := 'Uncorrect calibrate rate.'; (* Некорректный калибровочный коэффициент. *)
+ELSE
+	error_message := 'Error not Found';
+END_IF
+
+get_alarm_message := error_message;
+    
+END_FUNCTION
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
 (* @PATH := '\/cascade_mode' *)
 (* @OBJECTFLAGS := '0, 8' *)
 (* @SYMFILEFLAGS := '2048' *)
 FUNCTION_BLOCK cascade
-(*������� ���������� ������.*)
+(* Functional block implementation cascade mode. *)
 VAR_INPUT
-	enable:BOOL;  (*��������� ���������� ������*)
-	set_pressure:REAL;  (*������� �� ��������*)
-	in_pressure: REAL;  (*������� ��������*)
-	pivot_pump: INT;  (*����� �������� ������ � ������*) (* ���� pivot pump = 0 , �� ������ ������� *)
-	delay_on:TIME:=t#30s;
-	delay_off:TIME:=t#30s;
-       (*�������� ������*)
+	enable:BOOL;
+	set_pressure:REAL;
+	in_pressure: REAL;
+	pivot_pump: INT;
+	delay_on:TIME := t#30s;
+	delay_off:TIME := t#30s;
+    
 	info_invertor_drive1: classInfoInvertorDrive;
     info_invertor_drive2: classInfoInvertorDrive;
     info_invertor_drive3: classInfoInvertorDrive;
@@ -33,23 +141,91 @@ VAR
 	cascade_pumps: ARRAY [1..8] OF classInfoCascadePump;
 	pivot: INT;
 	i: INT:=1;
-	start_delay:TON;
-	error_message: STRING(79);
+	error_message: STRING(79):= 'NOT GOOD';
 	start_time: TIME:=t#0s;
 	work_time: TIME;
 	len_pumps: INT;
 	index_active_pumps:ARRAY [1..8] OF INT;
 	len_active_pumps: INT;
 	index_pivot: INT;
+	histeresys: REAL := 0.2 (* histeresys set pressure *);
+	error_code:WORD;
 END_VAR
 
 (* @END_DECLARATION := '0' *)
 pivot := pivot_pump;
 
 IF pivot = 0 THEN
-	pivot := 1;
+	check_pivot;
+ELSE
+    check_active_pumps;
 END_IF;
 
+IF len_active_pumps > 1  AND index_pivot <> 0 THEN
+    cascade_on;
+ELSIF len_active_pumps = 1 AND index_pivot <> 0 THEN
+    i := index_pivot;
+	error_code := 4;
+    error_message := 'cascade mode excpected more one active pumps, but got less';
+ELSIF index_pivot = 0 THEN
+	error_code := 5;
+	error_message := 'pivot pump not active';
+END_IF;
+
+get_info_message;
+END_FUNCTION_BLOCK
+ACTION	cascade_on:
+error_code := 0;
+error_message := 'GOOD';
+
+(* inspect bounds array. *)
+
+IF i = 1 AND i = index_pivot THEN
+	i := pivot + 1;
+ELSIF i = len_active_pumps AND  i = index_pivot THEN
+	i := len_active_pumps - 1;
+END_IF;
+
+(* start pivot pump. *)
+IF INT_TO_BOOL(index_pivot) THEN
+	cascade_pumps[pivot].cascade_pump := TRUE;
+END_IF;
+
+IF start_time = t#0s THEN
+	start_time := TIME();
+END_IF;
+
+
+IF in_pressure < (set_pressure - histeresys) THEN
+	work_time := TIME() - start_time;
+	IF work_time >= delay_on THEN
+		IF i = index_pivot AND index_pivot < len_active_pumps THEN
+			i := i + 1;
+		END_IF;
+		cascade_pumps[index_active_pumps[i]].cascade_pump := TRUE;
+		i := i + 1;
+		start_time := t#0s;
+	END_IF;
+ELSIF in_pressure > (set_pressure + histeresys) THEN
+	work_time := TIME() - start_time;
+	IF work_time >= delay_off THEN
+		IF i = index_pivot AND index_pivot > 1 THEN
+			i := i - 1;
+		END_IF;
+		cascade_pumps[index_active_pumps[i]].cascade_pump := FALSE;
+		i := i - 1;
+		start_time := t#0s;
+	END_IF;
+END_IF;
+
+IF i > len_active_pumps  THEN
+	i := len_active_pumps;
+ELSIF i < 1 THEN
+	i := 1;
+END_IF;
+END_ACTION
+
+ACTION	check_active_pumps:
 pumps[1] := get_active(info_invertor_drive1);
 pumps[2] := get_active(info_invertor_drive2);
 pumps[3] := get_active(info_invertor_drive3);
@@ -59,97 +235,56 @@ pumps[6] := get_active(info_invertor_drive6);
 pumps[7] := get_active(info_invertor_drive7);
 pumps[8] := get_active(info_invertor_drive8);
 
-error_message:='������ ���!';
+len_pumps := len_bool_array(pumps);  (* get en input pumps array. *)
+index_active_pumps := index_bool_array(pumps);  (* get indexes active pumps. *)
+len_active_pumps := len_int_array(index_active_pumps);  (* get len active pumps. *)
 
-len_pumps:=len_bool_array(pumps);  (*������ ��������� �������.*)
-index_active_pumps:=index_bool_array(pumps);  (*������� �������� �������.*)
-len_active_pumps:=len_int_array(index_active_pumps);  (*������ ������� �������� �������.*)
+index_pivot := index_element_in_int_array(pivot, index_active_pumps); (* get index pivot.*)
+END_ACTION
 
-index_pivot:=index_element_in_int_array(pivot, index_active_pumps); (*������ �������� ������ � ������ �������� �������.*)
+ACTION	check_pivot:
+error_code := 3;
+error_message := 'pivot pump not excpect int more 0.';
+END_ACTION
 
-(*���� pivot ���������� �� ������� �������, �� �������� �������.*)
-IF len_active_pumps = 1 THEN
-	i:=index_pivot;
-	error_message:='��� ���������� ������ ���������� ������� 2 ������';
-ELSIF i = 1 AND i = index_pivot THEN
-	i:=pivot + 1;
-ELSIF i = len_active_pumps AND  i = index_pivot THEN
-	i:=len_active_pumps - 1;
-END_IF;
-
-(*���� ������� ����� �������, �� �� �����������.*)
-IF INT_TO_BOOL(index_pivot) THEN
-	cascade_pumps[pivot].cascade_pump:=TRUE;
-END_IF;
-
-(*���� ����� ������ 0, �� ���������� ������� ��������� �����.*)
-IF start_time = t#0s THEN
-	start_time:=TIME();
-END_IF;
-
-IF in_pressure < set_pressure THEN
-	work_time:=TIME() - start_time;
-	IF work_time >= delay_on THEN
-		IF i = index_pivot AND index_pivot < len_active_pumps THEN
-			i:=i + 1;
-		END_IF;
-		cascade_pumps[index_active_pumps[i]].cascade_pump:=TRUE;
-		i:=i + 1;
-		start_time:=t#0s;
-	END_IF;
-ELSIF in_pressure > set_pressure THEN
-	work_time:=TIME() - start_time;
-	IF work_time >= delay_off THEN
-		IF i = index_pivot AND index_pivot > 1 THEN
-			i:=i - 1;
-		END_IF;
-		cascade_pumps[index_active_pumps[i]].cascade_pump:=FALSE;
-		i:=i - 1;
-		start_time:=t#0s;
-	END_IF;
-END_IF;
-
-IF i > len_active_pumps  THEN
-	i:= len_active_pumps;
-ELSIF i < 1 THEN
-	i:=1;
-END_IF;
-
-get_info_message;
-END_FUNCTION_BLOCK
 ACTION	get_info_message:
-IF enable AND error_message = '������ ���!' THEN
-	info_cascade.pivot:=pivot;
-	info_cascade.error_message:=error_message;
-	info_cascade.cascade_pump1:=cascade_pumps[1];
-	info_cascade.cascade_pump2:=cascade_pumps[2];
-	info_cascade.cascade_pump3:=cascade_pumps[3];
-	info_cascade.cascade_pump4:=cascade_pumps[4];
-	info_cascade.cascade_pump5:=cascade_pumps[5];
-	info_cascade.cascade_pump6:=cascade_pumps[6];
-	info_cascade.cascade_pump7:=cascade_pumps[7];
-	info_cascade.cascade_pump8:=cascade_pumps[8];
+IF enable AND error_message = 'GOOD' THEN
+	info_cascade.pivot := pivot;
+	info_cascade.error_message := error_message;
+	info_cascade.cascade_pump1 := cascade_pumps[1];
+	info_cascade.cascade_pump2 := cascade_pumps[2];
+	info_cascade.cascade_pump3 := cascade_pumps[3];
+	info_cascade.cascade_pump4 := cascade_pumps[4];
+	info_cascade.cascade_pump5 := cascade_pumps[5];
+	info_cascade.cascade_pump6 := cascade_pumps[6];
+	info_cascade.cascade_pump7 := cascade_pumps[7];
+	info_cascade.cascade_pump8 := cascade_pumps[8];
+	info_cascade.error_code := error_code;
 ELSE
-	info_cascade.pivot:=pivot;
-	info_cascade.error_message:=error_message;
-	cascade_pumps[1].cascade_pump:=FALSE;
-	cascade_pumps[2].cascade_pump:=FALSE;
-	cascade_pumps[3].cascade_pump:=FALSE;
-	cascade_pumps[4].cascade_pump:=FALSE;
-	cascade_pumps[5].cascade_pump:=FALSE;
-	cascade_pumps[6].cascade_pump:=FALSE;
-	cascade_pumps[7].cascade_pump:=FALSE;
-	cascade_pumps[8].cascade_pump:=FALSE;
-	info_cascade.cascade_pump1:=cascade_pumps[1];
-	info_cascade.cascade_pump2:=cascade_pumps[2];
-	info_cascade.cascade_pump3:=cascade_pumps[3];
-	info_cascade.cascade_pump4:=cascade_pumps[4];
-	info_cascade.cascade_pump5:=cascade_pumps[5];
-	info_cascade.cascade_pump6:=cascade_pumps[6];
-	info_cascade.cascade_pump7:=cascade_pumps[7];
-	info_cascade.cascade_pump8:=cascade_pumps[8];
+	info_cascade.pivot := index_pivot;
+	info_cascade.error_code := error_code;
+	info_cascade.error_message := error_message;
+	cascade_pumps[1].cascade_pump := FALSE;
+	cascade_pumps[2].cascade_pump := FALSE;
+	cascade_pumps[3].cascade_pump := FALSE;
+	cascade_pumps[4].cascade_pump := FALSE;
+	cascade_pumps[5].cascade_pump := FALSE;
+	cascade_pumps[6].cascade_pump := FALSE;
+	cascade_pumps[7].cascade_pump := FALSE;
+	cascade_pumps[8].cascade_pump := FALSE;
+	info_cascade.cascade_pump1 := cascade_pumps[1];
+	info_cascade.cascade_pump2 := cascade_pumps[2];
+	info_cascade.cascade_pump3 := cascade_pumps[3];
+	info_cascade.cascade_pump4 := cascade_pumps[4];
+	info_cascade.cascade_pump5 := cascade_pumps[5];
+	info_cascade.cascade_pump6 := cascade_pumps[6];
+	info_cascade.cascade_pump7 := cascade_pumps[7];
+	info_cascade.cascade_pump8 := cascade_pumps[8];
 END_IF;
 END_ACTION
+
+
+
 
 
 
@@ -212,10 +347,11 @@ END_FUNCTION
 (* @OBJECTFLAGS := '0, 8' *)
 (* @SYMFILEFLAGS := '2048' *)
 FUNCTION_BLOCK cycle
+(* Function block implementation cycle mode. *)
 
 VAR_INPUT
-	enable:BOOL; (* enable cycle mode *)
-	set_timer:TIME; (* set cycle timer *)
+	enable:BOOL;
+	set_timer:TIME;
 	info_invertor_drive1: classInfoInvertorDrive;
     info_invertor_drive2: classInfoInvertorDrive;
     info_invertor_drive3: classInfoInvertorDrive;
@@ -231,64 +367,64 @@ VAR_OUTPUT
 END_VAR
 VAR
 	pumps: ARRAY [1..8] OF BOOL;
-	i: SINT:=8;
+	i: INT := 8;
 	start_timer: TIME:=t#0ms;
 	start_delay:TON;
 	in: BOOL;
 
 	working_time:TIME;
 	Q:BOOL;
-	n: SINT;
+	n: INT;
 END_VAR
 
 (* @END_DECLARATION := '0' *)
-pumps[1]:=get_active(info_invertor_drive1);
-pumps[2]:=get_active(info_invertor_drive2);
-pumps[3]:=get_active(info_invertor_drive3);
-pumps[4]:=get_active(info_invertor_drive4);
-pumps[5]:=get_active(info_invertor_drive5);
-pumps[6]:=get_active(info_invertor_drive6);
-pumps[7]:=get_active(info_invertor_drive7);
-pumps[8]:=get_active(info_invertor_drive8);
+pumps[1] := get_active(info_invertor_drive1);
+pumps[2] := get_active(info_invertor_drive2);
+pumps[3] := get_active(info_invertor_drive3);
+pumps[4] := get_active(info_invertor_drive4);
+pumps[5] := get_active(info_invertor_drive5);
+pumps[6] := get_active(info_invertor_drive6);
+pumps[7] := get_active(info_invertor_drive7);
+pumps[8] := get_active(info_invertor_drive8);
 
 n:=i;
 
-IF pumps[i]=FALSE THEN
-	i:=i+1;
+IF pumps[i] = FALSE THEN
+	i := i + 1;
 END_IF;
 
-(* ���������� ��������� ����� *)
-IF  start_timer=t#0ms THEN
-	start_timer:=get_systime();
-	in:=TRUE;
+IF  start_timer = t#0ms THEN
+	start_timer := get_systime();
+	in := TRUE;
 END_IF;
 
-working_time:=work_time(start_timer);
+working_time := work_time(start_timer);
 
 
-IF working_time>=set_timer THEN
-	in:=FALSE;
-	i:=i+1;
-	start_timer:=t#0ms;
+IF working_time >= set_timer THEN
+	in := FALSE;
+	i := i + 1;
+	start_timer := t#0ms;
 END_IF;
 
 start_delay(IN:=in, PT:=t#3s);
-Q:=start_delay.Q;
+Q := start_delay.Q;
 
-IF i>8 THEN
-	i:=1;
+IF i > 8 THEN
+	i := 1;
 END_IF;
 
 IF enable THEN
-	info_cycle.working_time:=working_time;
-	info_cycle.run_timer:=Q;
-	info_cycle.pump_number:=n;
+	info_cycle.working_time := working_time;
+	info_cycle.run_timer := Q;
+	info_cycle.pump_number := n;
 ELSE
-	info_cycle.working_time:=T#0s;
-	info_cycle.run_timer:=FALSE;
-	info_cycle.pump_number:=1;
-	start_timer:=t#0s;
+	info_cycle.working_time := T#0s;
+	info_cycle.run_timer := FALSE;
+	info_cycle.pump_number := 1;
+	start_timer := t#0s;
 END_IF;
+info_cycle.error_code := 0;
 END_FUNCTION_BLOCK
 
 
@@ -690,57 +826,58 @@ END_FUNCTION
 (* @OBJECTFLAGS := '0, 8' *)
 (* @SYMFILEFLAGS := '2048' *)
 FUNCTION_BLOCK InvertorDrive
+(* Function block implementation invertor drive. *)
 
 VAR_INPUT
 (* discrete inputs *)
-	start:BOOL:=FALSE;
-	reset_fault:BOOL:=FALSE;
-	low_pressure_in:BOOL;  (* external alarm *)
-	high_pressure_out:BOOL;  (* external alrm *)
+	start: BOOL := FALSE;
+	reset_fault: BOOL := FALSE;
+	low_pressure_in: BOOL;  (* external alarm *)
+	high_pressure_out: BOOL;  (* external alrm *)
 (* discrete outputs *)
-	status_run:BOOL;
-	status_alarm:BOOL;
+	status_run: BOOL;
+	status_alarm: BOOL;
 (* analog inputs *)
-	ain_value:REAL:=0;  (* mA or V *)
+	ain_value: REAL := 0;  (* mA or V *)
 (* analog outputs *)
-	aout_value:REAL:=0;
+	aout_value: REAL := 0;
 (* PID settings *)
-	auto:BOOL:=FALSE;
-	direct_logic:BOOL:=TRUE;  (* ���� �������/��������� ����������; ��� �������� ���������� ���� �������� �������������� �������� ���� �������, �������� ������� �����������, � ��������*)
-	set_point:REAL:=0;  (* �������, �������� � �������� ��������� �������������� �������� *)
-	(* value:REAL;  ������� �������� �������������� ��������, ���������� � ������� *)
-	P:REAL:=2;  (* ���������������� ����������� ����������, ��� ���������� ����� ���������� ���������� �������*)
-	I:INT:=10;  (* ������������ ����������� ����������, ����� � �������� *)
-	D:INT:=0;  (* ���������������� ����������� ����������, ����� � �������� *)
+	auto: BOOL := FALSE;
+	direct_logic: BOOL := TRUE;  (* flag forward/reverse control, reverse control: if input value less set point, output value to less. forward control: if input value less set point, output value to more. *)
+	set_point: REAL := 0;  (* set point, measure system in input value control. *)
+	P: REAL := 2;  (* proporcional value of PID, if more, out value fasted. *)
+	I: INT := 10;  (* integral value of PID, seconds *)
+	D:INT := 0;  (* differential value PID, seconds *)
 
 (* limit work frequency *)
-	manual:REAL:=0;(*Hz*)
-	min_range:REAL:=15;  (*Hz*)
-	max_range:REAL:=50;  (*Hz*)
+	manual: REAL := 0; (* set output value in manual mode, Hz*)
+	min_range: REAL := 15;  (* min value in manual mode, Hz*)
+	max_range: REAL := 50;  (* max value in manual mode, Hz*)
 
-(* ������ � ������/�� � ������ *)
-	active:BOOL:=FALSE;
+(* status invertor in work *)
+	active: BOOL := FALSE;  (* statis active invertor drive. *)
+	system_alarm: BOOL; (* alarm manager alarm_on *)
 END_VAR
 
 VAR_OUTPUT
-	info:classInfoInvertorDrive;
-	settings_pid:classSetPid;
+	info: classInfoInvertorDrive;
+	settings_pid: classSetPid;
 END_VAR
 
 VAR
-	invertor_drive:classInvertorDrive;
-    set_auto:classSetAutoInvertorDrive;
+	invertor_drive: classInvertorDrive;
+    set_auto: classSetAutoInvertorDrive;
 	set_frequency: classSetLimitFrequency;
-	set_pid:classSetPid;
+	set_pid: classSetPid;
 
 	discrete_inputs: classInvertorDriveDiscreteInputs;
 	discrete_outputs: classInvertorDriveDiscreteOutputs;
 	analog_inputs: classInvertorDriveAnalogInputs;
-	analog_outputs:classInvertorDriveAnalogOutputs;
+	analog_outputs: classInvertorDriveAnalogOutputs;
 
-	overflow:BOOL := FALSE;
+	overflow: BOOL := FALSE; (* overflow integral value of PID *)
 
-	external_alarm:STRING(79);
+	external_alarm:STRING(79); (* message of external alarm. *)
 
 	info_alarm: classAlarmInvertorDrive;
 END_VAR
@@ -748,108 +885,110 @@ END_VAR
 (* @END_DECLARATION := '0' *)
 init;
 
-info_alarm.external_alarm:= get_external_alarm(discrete_inputs.low_pressure_in, discrete_inputs.high_pressure_out);  (* ��������� �������� �� ����� � ������ *)
+info_alarm.external_alarm := get_external_alarm(
+	discrete_inputs.low_pressure_in, discrete_inputs.high_pressure_out
+);
 
 get_PID_set;
 
 get_infomessage;
 END_FUNCTION_BLOCK
 ACTION	get_infoMessage:
-info.active:=active;
-info.set_pid:=set_pid;
-info.alarm.external_alarm:=info_alarm.external_alarm;
+info.active := active;
+info.set_pid := set_pid;
+info.alarm.external_alarm := info_alarm.external_alarm;
 
 IF discrete_outputs.status_alarm THEN
-	info_alarm.fault_invertor_drive:='������ ���������� ���������������!';
-	analog_outputs.out_frequency:=0;
+	info_alarm.fault_invertor_drive := 'Alarm invertor drive!';
+	analog_outputs.out_frequency := 0;
 ELSE
-	info_alarm.fault_invertor_drive:='������ ���';
+	info_alarm.fault_invertor_drive := 'No alarm';
 END_IF;
 
-info.alarm.fault_invertor_drive:=info_alarm.fault_invertor_drive;
+info.alarm.fault_invertor_drive := info_alarm.fault_invertor_drive;
 
 IF discrete_outputs.status_run THEN
-	info.status_run:='�������';
+	info.status_run := 'Run';
 
 ELSE
-	info.status_run:='����������';
-	analog_outputs.out_frequency:=0;
+	info.status_run := 'Stopped';
+	analog_outputs.out_frequency := 0;
 END_IF;
 
-(* �������� ������� �� ������ *)
-info.frequency:=analog_outputs.out_frequency;
-(* �������� �������� ������� �� ���������� ������ 4-20�� *)
-info.aout_frequency:=value_scaling(analog_outputs.out_frequency, get_params_value_scaling(0, 50, 4, 20));
+(* converted frequency in current value of 4-20 mA *)
+info.frequency := analog_outputs.out_frequency;
+info.aout_frequency := value_scaling(analog_outputs.out_frequency, get_params_value_scaling(0, 50, 4, 20));
 
-(*  ���� ��� ������ ��� ������ ��������� ��������� *)
 IF info.alarm.external_alarm  <> 'GOOD' THEN
-	discrete_inputs.start:=FALSE;
-ELSIF info.alarm.fault_invertor_drive <> '������ ���' THEN
-	discrete_inputs.start:=FALSE;
+	discrete_inputs.start := FALSE;
+ELSIF info.alarm.fault_invertor_drive <> 'No alarm' THEN
+	discrete_inputs.start := FALSE;
+ELSIF system_alarm <> 0 THEN
+	discrete_inputs.start := FALSE;
 ELSE
-	discrete_inputs.start:=invertor_drive.discrete_inputs.start;
+	discrete_inputs.start := invertor_drive.discrete_inputs.start;
 END_IF;
 
-info.reset_fault:=discrete_inputs.reset_fault;
+info.reset_fault := discrete_inputs.reset_fault;
 
-info.run:=discrete_inputs.start;
+info.run := discrete_inputs.start;
 END_ACTION
 
 ACTION	get_PID_set:
-analog_inputs:=invertor_drive.analog_input;
-set_auto:=invertor_drive.set.set_auto;
-set_frequency:=invertor_drive.set.set_frequency;
+analog_inputs := invertor_drive.analog_input;
+set_auto := invertor_drive.set.set_auto;
+set_frequency := invertor_drive.set.set_frequency;
 
-overflow:=FALSE; (* ���� ���������� ������ ����� *)
+overflow := FALSE; (* this place for realise reset integral value of PID *) 
 
-set_pid:=get_set_pid(
-set_auto.direct_logic,
-set_auto.value,
-set_auto.set_point,
-set_auto.P,
-set_auto.I,
-set_auto.D,
-set_frequency.manual,
-0,
-set_frequency.min_range,
-set_frequency.max_range,
-NOT set_auto.auto,
-overflow
+set_pid := get_set_pid(
+	set_auto.direct_logic,
+	set_auto.value,
+	set_auto.set_point,
+	set_auto.P,
+	set_auto.I,
+	set_auto.D,
+	set_frequency.manual,
+	0,
+	set_frequency.min_range,
+	set_frequency.max_range,
+	NOT set_auto.auto,
+	overflow
 );
 
-settings_pid:=set_pid;
+settings_pid := set_pid;
 END_ACTION
 
 ACTION	init:
-invertor_drive.analog_input.set_frequency:=ain_value;
-invertor_drive.analog_output.out_frequency:=aout_value;
+invertor_drive.analog_input.set_frequency := ain_value;
+invertor_drive.analog_output.out_frequency := aout_value;
 
-invertor_drive.discrete_inputs.start:=start;
-invertor_drive.discrete_inputs.reset_fault:=reset_fault;
-invertor_drive.discrete_inputs.low_pressure_in:=low_pressure_in;
-invertor_drive.discrete_inputs.high_pressure_out:=high_pressure_out;
+invertor_drive.discrete_inputs.start := start;
+invertor_drive.discrete_inputs.reset_fault := reset_fault;
+invertor_drive.discrete_inputs.low_pressure_in := low_pressure_in;
+invertor_drive.discrete_inputs.high_pressure_out := high_pressure_out;
 
-invertor_drive.discrete_outputs.status_run:=status_run;
-invertor_drive.discrete_outputs.status_alarm:=status_alarm;
+invertor_drive.discrete_outputs.status_run := status_run;
+invertor_drive.discrete_outputs.status_alarm := status_alarm;
 
-invertor_drive.set.set_frequency.min_range:=min_range;
-invertor_drive.set.set_frequency.max_range:=max_range;
+invertor_drive.set.set_frequency.min_range := min_range;
+invertor_drive.set.set_frequency.max_range := max_range;
 
-invertor_drive.set.set_auto.auto:=auto;
-invertor_drive.set.set_auto.direct_logic:=direct_logic;
-invertor_drive.set.set_auto.set_point:=set_point;
-invertor_drive.set.set_auto.value:=ain_value;
-invertor_drive.set.set_auto.P:=P;
-invertor_drive.set.set_auto.I:=I;
-invertor_drive.set.set_auto.D:=D;
+invertor_drive.set.set_auto.auto := auto;
+invertor_drive.set.set_auto.direct_logic := direct_logic;
+invertor_drive.set.set_auto.set_point := set_point;
+invertor_drive.set.set_auto.value := ain_value;
+invertor_drive.set.set_auto.P := P;
+invertor_drive.set.set_auto.I := I;
+invertor_drive.set.set_auto.D := D;
 
-invertor_drive.set.set_frequency.manual:=manual;
-invertor_drive.set.set_frequency.min_range:=min_range;
-invertor_drive.set.set_frequency.max_range:=max_range;
+invertor_drive.set.set_frequency.manual := manual;
+invertor_drive.set.set_frequency.min_range := min_range;
+invertor_drive.set.set_frequency.max_range := max_range;
 
-discrete_inputs:=invertor_drive.discrete_inputs;
-discrete_outputs:=invertor_drive.discrete_outputs;
-analog_outputs:=invertor_drive.analog_output;
+discrete_inputs := invertor_drive.discrete_inputs;
+discrete_outputs := invertor_drive.discrete_outputs;
+analog_outputs := invertor_drive.analog_output;
 END_ACTION
 
 
@@ -1208,41 +1347,49 @@ END_FUNCTION_BLOCK
 (* @OBJECTFLAGS := '0, 8' *)
 (* @SYMFILEFLAGS := '2048' *)
 FUNCTION_BLOCK Cascade_Cycle_Selector
+(* Function block implementation working mode selector. *)
+
 VAR_INPUT
-    cascade: BOOL;
-    cycle: BOOL;
-    single: BOOL;
+    cascade: BOOL; (* enable/disable *)
+    cycle: BOOL; (* enable/disable *)
+    single: BOOL; (* enable/disable *)
     info_single: classInfoSingle;
     info_cycle: classInfoCycle;
     info_cascade: classInfoCascade;
 END_VAR
+
 VAR_OUTPUT
-    start_pump1: BOOL := FALSE; (* Comment *)
-    start_pump2: BOOL := FALSE; (* Comment *)
-    start_pump3: BOOL := FALSE; (* Comment *)
-    start_pump4: BOOL := FALSE; (* Comment *)
-    start_pump5: BOOL := FALSE; (* Comment *)
-    start_pump6: BOOL := FALSE; (* Comment *)
-    start_pump7: BOOL := FALSE; (* Comment *)
-    start_pump8: BOOL := FALSE; (* Comment *)
+    mode_selector_error: WORD;
+    start_pump1: BOOL := FALSE;
+    start_pump2: BOOL := FALSE;
+    start_pump3: BOOL := FALSE;
+    start_pump4: BOOL := FALSE;
+    start_pump5: BOOL := FALSE;
+    start_pump6: BOOL := FALSE;
+    start_pump7: BOOL := FALSE;
+    start_pump8: BOOL := FALSE;
 END_VAR
+
 VAR
-    message: STRING(79); (* Comment *)
+    message: STRING(79);
     flag_mode: INT;
+	error_code: WORD;
 END_VAR
 
 (* @END_DECLARATION := '0' *)
 IF cascade AND NOT cycle AND NOT single THEN
     flag_mode := 2;
-    message := 'Выбран каскадный режим работы.';
+    message := 'Cascade mode selected'; (* Выбран каскадный режим работы. *)
 ELSIF cycle AND NOT cascade AND NOT single THEN
     flag_mode := 1;
-    message := 'Выбран циклический режим работы.';
+    message := 'Cycle mode selected'; (* Выбран циклический режим работы *)
 ELSIF single AND NOT cycle AND NOT cascade THEN
     flag_mode := 0;
-    message := 'Выбран режим работы одного насоса'; 
+    message := 'Single mode selected'; (* Выбран режим работы одного насоса *) 
 ELSE
-    message := 'Выберите один режим работы!';
+    flag_mode := -1;
+    error_code := 7;
+    message := 'Select any one working mode!'; (* Выберите один режим работы! *)
 END_IF;
 
 IF flag_mode = 0 THEN
@@ -1254,6 +1401,7 @@ IF flag_mode = 0 THEN
     start_pump6 := get_pump_in_single(info_single, 6);
     start_pump7 := get_pump_in_single(info_single, 7);
     start_pump8 := get_pump_in_single(info_single, 8);
+    mode_selector_error := info_single.error_code;
 ELSIF flag_mode = 1 THEN
     start_pump1 := get_pump_in_cycle(info_cycle, 1);
     start_pump2 := get_pump_in_cycle(info_cycle, 2);
@@ -1263,6 +1411,7 @@ ELSIF flag_mode = 1 THEN
     start_pump6 := get_pump_in_cycle(info_cycle, 6);
     start_pump7 := get_pump_in_cycle(info_cycle, 7);
     start_pump8 := get_pump_in_cycle(info_cycle, 8);
+    mode_selector_error := info_cycle.error_code;
 ELSIF flag_mode = 2 THEN
     start_pump1 := get_pump_in_cascade(info_cascade, 1);
     start_pump2 := get_pump_in_cascade(info_cascade, 2);
@@ -1272,6 +1421,7 @@ ELSIF flag_mode = 2 THEN
     start_pump6 := get_pump_in_cascade(info_cascade, 6);
     start_pump7 := get_pump_in_cascade(info_cascade, 7);
     start_pump8 := get_pump_in_cascade(info_cascade, 8);
+    mode_selector_error := info_cascade.error_code;
 ELSE
     start_pump1 := FALSE;
     start_pump2 := FALSE;
@@ -1281,6 +1431,7 @@ ELSE
     start_pump6 := FALSE;
     start_pump7 := FALSE;
     start_pump8 := FALSE;
+    mode_selector_error := error_code;
 END_IF;
 END_FUNCTION_BLOCK
 
@@ -1729,8 +1880,8 @@ END_FUNCTION
 FUNCTION_BLOCK SetCurrentSensorPressure_4_20
 
 VAR_INPUT
-	min_measure_range:REAL;
-	max_measure_range:REAL;
+	min_measure_range:REAL:=0;
+	max_measure_range:REAL:=16;
 	min_current_range:REAL:=4;
 	max_current_range:REAL:=20;
 END_VAR
@@ -1760,7 +1911,7 @@ VAR_INPUT
 END_VAR
 
 (* @END_DECLARATION := '0' *)
-IF pump_number = info_single.pump_number THEN
+IF pump_number = info_single.pivot_pump THEN
     get_pump_in_single := info_single.start_pump;
 ELSE
     get_pump_in_single := FALSE;
@@ -1793,8 +1944,8 @@ VAR_OUTPUT
 END_VAR
 
 VAR
-    pumps: ARRAY[1..8] OF BOOL;
     pivot: INT;
+    pumps: ARRAY[1..8] OF BOOL;
 END_VAR
 
 (* @END_DECLARATION := '0' *)
@@ -1810,23 +1961,27 @@ pumps[8] := get_active(info_invertor_drive8);
 pivot := pivot_pump;
 IF pivot = 0 THEN
 	enable := FALSE;
+    info_single.error_code:=8;
 END_IF;
 
 IF enable THEN
     IF pumps[pivot] THEN
-        info_single.pump_number := pivot_pump;
+        info_single.pivot_pump := pivot;
         info_single.start_pump := pumps[pivot];
-        info_single.message := 'Select pump in work.';
+        info_single.error_code := 0;
+        info_single.message := 'Select pump in work'; (* Выбранный насос в работе. *)
     ELSE
-        info_single.pump_number := -1;
+        info_single.pivot_pump := -8;
         info_single.start_pump := FALSE;
-        info_single.message := 'Select pump is not active!';
+        info_single.error_code := 6;
+        info_single.message := 'Select pump is not active!'; (* Выбранный насос не активен! *)
     END_IF;
       
 ELSE
-    info_single.pump_number := -1;
+    info_single.pivot_pump := -8;
     info_single.start_pump := FALSE;
-    info_single.message := 'Single mode is not activate.';
+    info_single.error_code := 8;
+    info_single.message := 'Single mode is not activate'; (* Режим работы одного насоса не активен. *)
 END_IF;
 END_FUNCTION_BLOCK
 
@@ -1846,10 +2001,10 @@ VAR
 	hw_output: CurrentSensorPressure_4_20;
 	ws_input: CurrentSensorPressure_4_20;
 	ws_output: CurrentSensorPressure_4_20;
-	hw_settings_pressure_input: SetCurrentSensorPressure_4_20;
+	(*hw_settings_pressure_input: SetCurrentSensorPressure_4_20;
 	hw_settings_pressure_output: SetCurrentSensorPressure_4_20;
 	ws_settings_pressure_input: SetCurrentSensorPressure_4_20;
-	ws_settings_pressure_output: SetCurrentSensorPressure_4_20;
+	ws_settings_pressure_output: SetCurrentSensorPressure_4_20;*)
 	hw_invertor_drive_1: InvertorDrive;
 	hw_invertor_drive_2: InvertorDrive;
 	ws_invertor_drive_1: InvertorDrive;
@@ -1862,14 +2017,14 @@ VAR
 	pid2: PID;
 	pid3: PID;
 	pid4: PID;
-	hw_frequency_id_1: REAL;
+	 hw_frequency_id_1: REAL;
 	hw_frequency_id_2: REAL;
 	ws_frequency_id_1: REAL;
 	ws_frequency_id_2: REAL;
-	hw_input_pressure_bar: REAL;
+	(* hw_input_pressure_bar: REAL;
 	hw_output_pressure_bar: REAL;
 	ws_input_pressure_bar: REAL;
-	ws_output_pressure_bar: REAL;
+	ws_output_pressure_bar: REAL; *)
 	hw_single_mode: Single;
 	hw_cycle_mode: cycle;
 	hw_cascade_mode: cascade;
@@ -1894,6 +2049,22 @@ VAR
 	ws_start_id_1: BOOL;
 	ws_start_id_2: BOOL;
 	PLC_110_32_outputs: get_status_outputs;
+	out_set_frequency: classParamsValueScaling;
+	hw_mode_error: WORD;
+	hw_alarm_manager: ALARM_MANAGER;
+	(*hw_alarm_on: BOOL;
+	ws_alarm_on: BOOL;*)
+	ws_mode_error: WORD;
+       hw_alarm_message AT %QW8.51.0: STRING(79);
+       ws_alarm_message AT %QW8.91.0: STRING(79);
+
+END_VAR
+
+VAR RETAIN
+	hw_settings_pressure_input: SetCurrentSensorPressure_4_20;
+	hw_settings_pressure_output: SetCurrentSensorPressure_4_20;
+	ws_settings_pressure_input: SetCurrentSensorPressure_4_20;
+	ws_settings_pressure_output: SetCurrentSensorPressure_4_20;
 END_VAR
 (* @END_DECLARATION := '0' *)
 _CFC_BODY
@@ -2789,6 +2960,108 @@ _NEGATE: 0
 _CONNECTOR: 
 _END
 _ELEMENT
+_ID: 274
+_MACROID: -1
+_POS: 62, 40
+_TYPE: _INPUT
+_TEXT: hw_output_value_id1
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 276
+_MACROID: -1
+_POS: 62, 38
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: value_scaling
+_ENENO: 0
+_INPUTS: 2
+_IN
+_INPUTID: 274
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 283
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 275
+_MACROID: -1
+_POS: 77, 40
+_TYPE: _OUTPUT
+_TEXT: hw_frequency_id1
+_INPUTID: 276
+_INPUTIDX: 0
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 278
+_MACROID: -1
+_POS: 119, 16
+_TYPE: _INPUT
+_TEXT: 0
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 277
+_MACROID: -1
+_POS: 122, 14
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_params_value_scaling
+_ENENO: 0
+_INPUTS: 4
+_IN
+_INPUTID: 278
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 279
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 280
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 281
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 283
+_MACROID: -1
+_POS: 61, 41
+_TYPE: _INPUT
+_TEXT: out_set_frequency
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
 _ID: 4
 _MACROID: -1
 _POS: 7, 47
@@ -3037,7 +3310,7 @@ _INPUTIDX: 0
 _NEGATE: 0
 _END
 _IN
-_INPUTID: 12
+_INPUTID: 0
 _INPUTIDX: 0
 _NEGATE: 0
 _END
@@ -3166,7 +3439,7 @@ _INPUTIDX: 0
 _NEGATE: 0
 _END
 _IN
-_INPUTID: 13
+_INPUTID: 0
 _INPUTIDX: 0
 _NEGATE: 0
 _END
@@ -3202,7 +3475,7 @@ _INPUTIDX: 0
 _NEGATE: 0
 _END
 _IN
-_INPUTID: 14
+_INPUTID: 0
 _INPUTIDX: 0
 _NEGATE: 0
 _END
@@ -3238,7 +3511,7 @@ _INPUTIDX: 0
 _NEGATE: 0
 _END
 _IN
-_INPUTID: 15
+_INPUTID: 0
 _INPUTIDX: 0
 _NEGATE: 0
 _END
@@ -3449,7 +3722,7 @@ _END
 _ELEMENT
 _ID: 119
 _MACROID: -1
-_POS: 8, 129
+_POS: 6, 128
 _TYPE: _INPUT
 _TEXT: plc_inputs
 _NEGATE: 0
@@ -3458,7 +3731,7 @@ _END
 _ELEMENT
 _ID: 208
 _MACROID: -1
-_POS: 45, 95
+_POS: 42, 96
 _TYPE: _INPUT
 _TEXT: hw_id1_auto
 _NEGATE: 0
@@ -3467,7 +3740,7 @@ _END
 _ELEMENT
 _ID: 121
 _MACROID: -1
-_POS: 15, 99
+_POS: 13, 99
 _TYPE: _INPUT
 _TEXT: 1
 _NEGATE: 0
@@ -3476,7 +3749,7 @@ _END
 _ELEMENT
 _ID: 118
 _MACROID: -1
-_POS: 15, 97
+_POS: 13, 97
 _TYPE: _BOX
 _INSTANCE: 0
 _INSTANCENAME: 
@@ -3510,6 +3783,28 @@ _NEGATE: 0
 _CONNECTOR: 
 _END
 _ELEMENT
+_ID: 257
+_MACROID: -1
+_POS: 32, 81
+_TYPE: _OUTPUT
+_TEXT: hw_status_run_id1_sp
+_INPUTID: 124
+_INPUTIDX: 0
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 261
+_MACROID: -1
+_POS: 35, 82
+_TYPE: _OUTPUT
+_TEXT: hw_input_low_pressure_alarm
+_INPUTID: 75
+_INPUTIDX: 1
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
 _ID: 58
 _MACROID: -1
 _POS: 45, 87
@@ -3521,13 +3816,13 @@ _END
 _ELEMENT
 _ID: 17
 _MACROID: -1
-_POS: 47, 85
+_POS: 47, 86
 _TYPE: _BOX
 _INSTANCE: 1
 _INSTANCENAME: hw_invertor_drive_1
 _TYPENAME: InvertorDrive
 _ENENO: 0
-_INPUTS: 18
+_INPUTS: 19
 _IN
 _INPUTID: 58
 _INPUTIDX: 0
@@ -3599,7 +3894,7 @@ _INPUTIDX: 0
 _NEGATE: 0
 _END
 _IN
-_INPUTID: 0
+_INPUTID: 328
 _INPUTIDX: 0
 _NEGATE: 0
 _END
@@ -3615,6 +3910,11 @@ _NEGATE: 0
 _END
 _IN
 _INPUTID: 200
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 309
 _INPUTIDX: 0
 _NEGATE: 0
 _END
@@ -3794,9 +4094,18 @@ _NEGATE: 0
 _SETRESET: _NONE
 _END
 _ELEMENT
+_ID: 328
+_MACROID: -1
+_POS: 47, 102
+_TYPE: _INPUT
+_TEXT: hw_manual_set_frequency_id1
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
 _ID: 122
 _MACROID: -1
-_POS: 15, 103
+_POS: 13, 103
 _TYPE: _INPUT
 _TEXT: 2
 _NEGATE: 0
@@ -3805,7 +4114,7 @@ _END
 _ELEMENT
 _ID: 120
 _MACROID: -1
-_POS: 15, 101
+_POS: 13, 101
 _TYPE: _BOX
 _INSTANCE: 0
 _INSTANCENAME: 
@@ -3832,7 +4141,7 @@ _END
 _ELEMENT
 _ID: 42
 _MACROID: -1
-_POS: 45, 93
+_POS: 42, 94
 _TYPE: _INPUT
 _TEXT: hw_output_pressure_bar
 _NEGATE: 0
@@ -3841,7 +4150,7 @@ _END
 _ELEMENT
 _ID: 34
 _MACROID: -1
-_POS: 45, 94
+_POS: 42, 95
 _TYPE: _INPUT
 _TEXT: hw_frequency_id_1
 _NEGATE: 0
@@ -3850,16 +4159,25 @@ _END
 _ELEMENT
 _ID: 200
 _MACROID: -1
-_POS: 45, 104
+_POS: 45, 105
 _TYPE: _INPUT
 _TEXT: hw_id1_active
 _NEGATE: 0
 _CONNECTOR: 
 _END
 _ELEMENT
+_ID: 309
+_MACROID: -1
+_POS: 45, 106
+_TYPE: _INPUT
+_TEXT: hw_alarm_on
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
 _ID: 127
 _MACROID: -1
-_POS: 15, 107
+_POS: 13, 107
 _TYPE: _INPUT
 _TEXT: 5
 _NEGATE: 0
@@ -3868,7 +4186,7 @@ _END
 _ELEMENT
 _ID: 123
 _MACROID: -1
-_POS: 15, 105
+_POS: 13, 105
 _TYPE: _BOX
 _INSTANCE: 0
 _INSTANCENAME: 
@@ -3895,7 +4213,7 @@ _END
 _ELEMENT
 _ID: 59
 _MACROID: -1
-_POS: 45, 107
+_POS: 45, 108
 _TYPE: _INPUT
 _TEXT: hw_start_id_2
 _NEGATE: 0
@@ -3904,13 +4222,13 @@ _END
 _ELEMENT
 _ID: 20
 _MACROID: -1
-_POS: 47, 105
+_POS: 47, 107
 _TYPE: _BOX
 _INSTANCE: 1
 _INSTANCENAME: hw_invertor_drive_2
 _TYPENAME: InvertorDrive
 _ENENO: 0
-_INPUTS: 18
+_INPUTS: 19
 _IN
 _INPUTID: 59
 _INPUTIDX: 0
@@ -3982,7 +4300,7 @@ _INPUTIDX: 0
 _NEGATE: 0
 _END
 _IN
-_INPUTID: 0
+_INPUTID: 329
 _INPUTIDX: 0
 _NEGATE: 0
 _END
@@ -3998,6 +4316,11 @@ _NEGATE: 0
 _END
 _IN
 _INPUTID: 201
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 310
 _INPUTIDX: 0
 _NEGATE: 0
 _END
@@ -4168,7 +4491,7 @@ _END
 _ELEMENT
 _ID: 43
 _MACROID: -1
-_POS: 44, 113
+_POS: 42, 115
 _TYPE: _INPUT
 _TEXT: hw_output_pressure_bar
 _NEGATE: 0
@@ -4177,7 +4500,7 @@ _END
 _ELEMENT
 _ID: 35
 _MACROID: -1
-_POS: 44, 114
+_POS: 42, 116
 _TYPE: _INPUT
 _TEXT: hw_frequency_id_2
 _NEGATE: 0
@@ -4186,7 +4509,7 @@ _END
 _ELEMENT
 _ID: 210
 _MACROID: -1
-_POS: 45, 135
+_POS: 44, 138
 _TYPE: _INPUT
 _TEXT: ws_id1_auto
 _NEGATE: 0
@@ -4195,7 +4518,7 @@ _END
 _ELEMENT
 _ID: 137
 _MACROID: -1
-_POS: 15, 140
+_POS: 11, 140
 _TYPE: _INPUT
 _TEXT: 3
 _NEGATE: 0
@@ -4204,7 +4527,7 @@ _END
 _ELEMENT
 _ID: 131
 _MACROID: -1
-_POS: 15, 138
+_POS: 11, 138
 _TYPE: _BOX
 _INSTANCE: 0
 _INSTANCENAME: 
@@ -4231,7 +4554,7 @@ _END
 _ELEMENT
 _ID: 241
 _MACROID: -1
-_POS: 25, 128
+_POS: 23, 128
 _TYPE: _INPUT
 _TEXT: hw_set_point_pressure
 _NEGATE: 0
@@ -4240,25 +4563,54 @@ _END
 _ELEMENT
 _ID: 242
 _MACROID: -1
-_POS: 25, 130
+_POS: 23, 130
 _TYPE: _INPUT
 _TEXT: ws_set_point_pressure
 _NEGATE: 0
 _CONNECTOR: 
 _END
 _ELEMENT
+_ID: 258
+_MACROID: -1
+_POS: 31, 121
+_TYPE: _OUTPUT
+_TEXT: hw_status_run_id2_sp
+_INPUTID: 126
+_INPUTIDX: 0
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 329
+_MACROID: -1
+_POS: 44, 123
+_TYPE: _INPUT
+_TEXT: hw_manual_set_frequency_id2
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
 _ID: 201
 _MACROID: -1
-_POS: 45, 124
+_POS: 44, 126
 _TYPE: _INPUT
 _TEXT: hw_id2_active
 _NEGATE: 0
 _CONNECTOR: 
 _END
 _ELEMENT
+_ID: 310
+_MACROID: -1
+_POS: 42, 127
+_TYPE: _INPUT
+_TEXT: hw_alarm_on
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
 _ID: 116
 _MACROID: -1
-_POS: 45, 127
+_POS: 44, 129
 _TYPE: _INPUT
 _TEXT: ws_start_id_1
 _NEGATE: 0
@@ -4267,13 +4619,13 @@ _END
 _ELEMENT
 _ID: 23
 _MACROID: -1
-_POS: 47, 125
+_POS: 47, 128
 _TYPE: _BOX
 _INSTANCE: 1
 _INSTANCENAME: ws_invertor_drive_1
 _TYPENAME: InvertorDrive
 _ENENO: 0
-_INPUTS: 18
+_INPUTS: 19
 _IN
 _INPUTID: 116
 _INPUTIDX: 0
@@ -4345,7 +4697,7 @@ _INPUTIDX: 0
 _NEGATE: 0
 _END
 _IN
-_INPUTID: 0
+_INPUTID: 330
 _INPUTIDX: 0
 _NEGATE: 0
 _END
@@ -4361,6 +4713,11 @@ _NEGATE: 0
 _END
 _IN
 _INPUTID: 202
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 344
 _INPUTIDX: 0
 _NEGATE: 0
 _END
@@ -4542,7 +4899,7 @@ _END
 _ELEMENT
 _ID: 44
 _MACROID: -1
-_POS: 45, 133
+_POS: 44, 136
 _TYPE: _INPUT
 _TEXT: ws_output_pressure_bar
 _NEGATE: 0
@@ -4551,7 +4908,7 @@ _END
 _ELEMENT
 _ID: 36
 _MACROID: -1
-_POS: 45, 134
+_POS: 44, 137
 _TYPE: _INPUT
 _TEXT: ws_frequency_id_1
 _NEGATE: 0
@@ -4584,9 +4941,18 @@ _END
 _PARAMETERS: 0
 _END
 _ELEMENT
+_ID: 330
+_MACROID: -1
+_POS: 46, 144
+_TYPE: _INPUT
+_TEXT: ws_manual_set_frequency_id1
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
 _ID: 202
 _MACROID: -1
-_POS: 45, 144
+_POS: 45, 146
 _TYPE: _INPUT
 _TEXT: ws_id1_active
 _NEGATE: 0
@@ -4595,7 +4961,7 @@ _END
 _ELEMENT
 _ID: 117
 _MACROID: -1
-_POS: 45, 147
+_POS: 46, 151
 _TYPE: _INPUT
 _TEXT: ws_start_id_2
 _NEGATE: 0
@@ -4604,13 +4970,13 @@ _END
 _ELEMENT
 _ID: 26
 _MACROID: -1
-_POS: 47, 145
+_POS: 47, 149
 _TYPE: _BOX
 _INSTANCE: 1
 _INSTANCENAME: ws_invertor_drive_2
 _TYPENAME: InvertorDrive
 _ENENO: 0
-_INPUTS: 18
+_INPUTS: 19
 _IN
 _INPUTID: 117
 _INPUTIDX: 0
@@ -4682,7 +5048,7 @@ _INPUTIDX: 0
 _NEGATE: 0
 _END
 _IN
-_INPUTID: 0
+_INPUTID: 331
 _INPUTIDX: 0
 _NEGATE: 0
 _END
@@ -4698,6 +5064,11 @@ _NEGATE: 0
 _END
 _IN
 _INPUTID: 203
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 343
 _INPUTIDX: 0
 _NEGATE: 0
 _END
@@ -4804,6 +5175,15 @@ _NEGATE: 0
 _SETRESET: _NONE
 _END
 _ELEMENT
+_ID: 344
+_MACROID: -1
+_POS: 47, 148
+_TYPE: _INPUT
+_TEXT: ws_alarm_on
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
 _ID: 28
 _MACROID: -1
 _POS: 71, 146
@@ -4879,7 +5259,7 @@ _END
 _ELEMENT
 _ID: 45
 _MACROID: -1
-_POS: 44, 153
+_POS: 44, 154
 _TYPE: _INPUT
 _TEXT: ws_output_pressure_bar
 _NEGATE: 0
@@ -4888,7 +5268,7 @@ _END
 _ELEMENT
 _ID: 37
 _MACROID: -1
-_POS: 44, 154
+_POS: 43, 158
 _TYPE: _INPUT
 _TEXT: ws_frequency_id_2
 _NEGATE: 0
@@ -4931,6 +5311,15 @@ _NEGATE: 0
 _CONNECTOR: 
 _END
 _ELEMENT
+_ID: 331
+_MACROID: -1
+_POS: 44, 166
+_TYPE: _INPUT
+_TEXT: ws_manual_set_frequency_id2
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
 _ID: 203
 _MACROID: -1
 _POS: 45, 164
@@ -4938,6 +5327,17 @@ _TYPE: _INPUT
 _TEXT: ws_id2_active
 _NEGATE: 0
 _CONNECTOR: 
+_END
+_ELEMENT
+_ID: 259
+_MACROID: -1
+_POS: 23, 169
+_TYPE: _OUTPUT
+_TEXT: ws_status_run_id1_sp
+_INPUTID: 134
+_INPUTIDX: 0
+_NEGATE: 0
+_SETRESET: _NONE
 _END
 _ELEMENT
 _ID: 212
@@ -5082,7 +5482,11 @@ _INPUTID: 48
 _INPUTIDX: 0
 _NEGATE: 0
 _END
-_OUTPUTS: 8
+_OUTPUTS: 9
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
 _OUT
 _NEGATE: 0
 _CONNECTOR: 
@@ -5120,11 +5524,11 @@ _END
 _ELEMENT
 _ID: 50
 _MACROID: -1
-_POS: 94, 179
+_POS: 102, 180
 _TYPE: _OUTPUT
 _TEXT: hw_start_id_1
 _INPUTID: 49
-_INPUTIDX: 0
+_INPUTIDX: 1
 _NEGATE: 0
 _SETRESET: _NONE
 _END
@@ -5398,11 +5802,11 @@ _END
 _ELEMENT
 _ID: 51
 _MACROID: -1
-_POS: 94, 180
+_POS: 102, 181
 _TYPE: _OUTPUT
 _TEXT: hw_start_id_2
 _INPUTID: 49
-_INPUTIDX: 1
+_INPUTIDX: 2
 _NEGATE: 0
 _SETRESET: _NONE
 _END
@@ -5574,7 +5978,7 @@ _END
 _ELEMENT
 _ID: 197
 _MACROID: -1
-_POS: 45, 108
+_POS: 45, 109
 _TYPE: _INPUT
 _TEXT: hw_id2_reset_faults
 _NEGATE: 0
@@ -5634,7 +6038,7 @@ _END
 _ELEMENT
 _ID: 198
 _MACROID: -1
-_POS: 45, 128
+_POS: 44, 130
 _TYPE: _INPUT
 _TEXT: ws_id1_reset_faults
 _NEGATE: 0
@@ -5663,7 +6067,7 @@ _END
 _ELEMENT
 _ID: 199
 _MACROID: -1
-_POS: 45, 148
+_POS: 46, 152
 _TYPE: _INPUT
 _TEXT: ws_id2_reset_faults
 _NEGATE: 0
@@ -6017,7 +6421,11 @@ _INPUTID: 110
 _INPUTIDX: 0
 _NEGATE: 0
 _END
-_OUTPUTS: 8
+_OUTPUTS: 9
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
 _OUT
 _NEGATE: 0
 _CONNECTOR: 
@@ -6055,10 +6463,21 @@ _END
 _ELEMENT
 _ID: 107
 _MACROID: -1
-_POS: 186, 179
+_POS: 192, 180
 _TYPE: _OUTPUT
 _TEXT: ws_start_id_1
 _INPUTID: 106
+_INPUTIDX: 1
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 305
+_MACROID: -1
+_POS: 102, 179
+_TYPE: _OUTPUT
+_TEXT: hw_mode_error
+_INPUTID: 49
 _INPUTIDX: 0
 _NEGATE: 0
 _SETRESET: _NONE
@@ -6286,6 +6705,17 @@ _END
 _PARAMETERS: 0
 _END
 _ELEMENT
+_ID: 346
+_MACROID: -1
+_POS: 192, 179
+_TYPE: _OUTPUT
+_TEXT: ws_mode_error
+_INPUTID: 106
+_INPUTIDX: 0
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
 _ID: 231
 _MACROID: -1
 _POS: 125, 180
@@ -6297,11 +6727,11 @@ _END
 _ELEMENT
 _ID: 111
 _MACROID: -1
-_POS: 186, 180
+_POS: 192, 181
 _TYPE: _OUTPUT
 _TEXT: ws_start_id_2
 _INPUTID: 106
-_INPUTIDX: 1
+_INPUTIDX: 2
 _NEGATE: 0
 _SETRESET: _NONE
 _END
@@ -6408,7 +6838,7 @@ _END
 _ELEMENT
 _ID: 128
 _MACROID: -1
-_POS: 15, 111
+_POS: 13, 111
 _TYPE: _INPUT
 _TEXT: 9
 _NEGATE: 0
@@ -6417,7 +6847,7 @@ _END
 _ELEMENT
 _ID: 124
 _MACROID: -1
-_POS: 15, 109
+_POS: 13, 109
 _TYPE: _BOX
 _INSTANCE: 0
 _INSTANCENAME: 
@@ -6444,7 +6874,7 @@ _END
 _ELEMENT
 _ID: 129
 _MACROID: -1
-_POS: 15, 115
+_POS: 13, 115
 _TYPE: _INPUT
 _TEXT: 6
 _NEGATE: 0
@@ -6453,7 +6883,7 @@ _END
 _ELEMENT
 _ID: 125
 _MACROID: -1
-_POS: 15, 113
+_POS: 13, 113
 _TYPE: _BOX
 _INSTANCE: 0
 _INSTANCENAME: 
@@ -6480,7 +6910,7 @@ _END
 _ELEMENT
 _ID: 209
 _MACROID: -1
-_POS: 44, 115
+_POS: 42, 117
 _TYPE: _INPUT
 _TEXT: hw_id2_auto
 _NEGATE: 0
@@ -6489,7 +6919,7 @@ _END
 _ELEMENT
 _ID: 130
 _MACROID: -1
-_POS: 15, 119
+_POS: 13, 119
 _TYPE: _INPUT
 _TEXT: 10
 _NEGATE: 0
@@ -6498,7 +6928,7 @@ _END
 _ELEMENT
 _ID: 126
 _MACROID: -1
-_POS: 15, 117
+_POS: 13, 117
 _TYPE: _BOX
 _INSTANCE: 0
 _INSTANCENAME: 
@@ -6525,7 +6955,7 @@ _END
 _ELEMENT
 _ID: 138
 _MACROID: -1
-_POS: 15, 144
+_POS: 11, 144
 _TYPE: _INPUT
 _TEXT: 4
 _NEGATE: 0
@@ -6534,7 +6964,7 @@ _END
 _ELEMENT
 _ID: 132
 _MACROID: -1
-_POS: 15, 142
+_POS: 11, 142
 _TYPE: _BOX
 _INSTANCE: 0
 _INSTANCENAME: 
@@ -6561,7 +6991,7 @@ _END
 _ELEMENT
 _ID: 140
 _MACROID: -1
-_POS: 15, 148
+_POS: 11, 148
 _TYPE: _INPUT
 _TEXT: 7
 _NEGATE: 0
@@ -6570,7 +7000,7 @@ _END
 _ELEMENT
 _ID: 133
 _MACROID: -1
-_POS: 15, 146
+_POS: 11, 146
 _TYPE: _BOX
 _INSTANCE: 0
 _INSTANCENAME: 
@@ -6597,7 +7027,7 @@ _END
 _ELEMENT
 _ID: 139
 _MACROID: -1
-_POS: 15, 152
+_POS: 11, 152
 _TYPE: _INPUT
 _TEXT: 11
 _NEGATE: 0
@@ -6606,7 +7036,7 @@ _END
 _ELEMENT
 _ID: 134
 _MACROID: -1
-_POS: 15, 150
+_POS: 11, 150
 _TYPE: _BOX
 _INSTANCE: 0
 _INSTANCENAME: 
@@ -6633,7 +7063,7 @@ _END
 _ELEMENT
 _ID: 211
 _MACROID: -1
-_POS: 44, 155
+_POS: 43, 159
 _TYPE: _INPUT
 _TEXT: ws_id2_auto
 _NEGATE: 0
@@ -6642,7 +7072,7 @@ _END
 _ELEMENT
 _ID: 141
 _MACROID: -1
-_POS: 15, 156
+_POS: 11, 156
 _TYPE: _INPUT
 _TEXT: 8
 _NEGATE: 0
@@ -6651,7 +7081,7 @@ _END
 _ELEMENT
 _ID: 135
 _MACROID: -1
-_POS: 15, 154
+_POS: 11, 154
 _TYPE: _BOX
 _INSTANCE: 0
 _INSTANCENAME: 
@@ -6676,9 +7106,20 @@ _END
 _PARAMETERS: 0
 _END
 _ELEMENT
+_ID: 263
+_MACROID: -1
+_POS: 29, 162
+_TYPE: _OUTPUT
+_TEXT: ws_input_low_pressure_alarm
+_INPUTID: 77
+_INPUTIDX: 1
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
 _ID: 142
 _MACROID: -1
-_POS: 15, 160
+_POS: 11, 160
 _TYPE: _INPUT
 _TEXT: 12
 _NEGATE: 0
@@ -6687,7 +7128,7 @@ _END
 _ELEMENT
 _ID: 136
 _MACROID: -1
-_POS: 15, 158
+_POS: 11, 158
 _TYPE: _BOX
 _INSTANCE: 0
 _INSTANCENAME: 
@@ -6784,6 +7225,26 @@ _END
 _PARAMETERS: 0
 _END
 _ELEMENT
+_ID: 282
+_MACROID: -1
+_POS: 144, 16
+_TYPE: _OUTPUT
+_TEXT: out_set_frequency
+_INPUTID: 277
+_INPUTIDX: 0
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 279
+_MACROID: -1
+_POS: 119, 17
+_TYPE: _INPUT
+_TEXT: 1000
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
 _ID: 205
 _MACROID: -1
 _POS: 55, 16
@@ -6804,6 +7265,24 @@ _NEGATE: 0
 _CONNECTOR: 
 _END
 _PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 280
+_MACROID: -1
+_POS: 119, 18
+_TYPE: _INPUT
+_TEXT: 0
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 281
+_MACROID: -1
+_POS: 119, 19
+_TYPE: _INPUT
+_TEXT: 50
+_NEGATE: 0
+_CONNECTOR: 
 _END
 _ELEMENT
 _ID: 206
@@ -6894,6 +7373,589 @@ _TEXT: ws_cascade_delay_off_seconds
 _NEGATE: 0
 _CONNECTOR: 
 _END
+_ELEMENT
+_ID: 343
+_MACROID: -1
+_POS: 47, 169
+_TYPE: _INPUT
+_TEXT: ws_alarm_on
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 260
+_MACROID: -1
+_POS: 23, 171
+_TYPE: _OUTPUT
+_TEXT: ws_status_run_id2_sp
+_INPUTID: 136
+_INPUTIDX: 0
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 262
+_MACROID: -1
+_POS: 35, 83
+_TYPE: _OUTPUT
+_TEXT: hw_out_high_pressure_alarm
+_INPUTID: 76
+_INPUTIDX: 1
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 264
+_MACROID: -1
+_POS: 29, 163
+_TYPE: _OUTPUT
+_TEXT: ws_input_low_pressure_alarm
+_INPUTID: 78
+_INPUTIDX: 1
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 284
+_MACROID: -1
+_POS: 62, 45
+_TYPE: _INPUT
+_TEXT: hw_output_value_id2
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 285
+_MACROID: -1
+_POS: 62, 43
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: value_scaling
+_ENENO: 0
+_INPUTS: 2
+_IN
+_INPUTID: 284
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 287
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 286
+_MACROID: -1
+_POS: 77, 45
+_TYPE: _OUTPUT
+_TEXT: hw_frequency_id2
+_INPUTID: 285
+_INPUTIDX: 0
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 287
+_MACROID: -1
+_POS: 61, 46
+_TYPE: _INPUT
+_TEXT: out_set_frequency
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 288
+_MACROID: -1
+_POS: 99, 40
+_TYPE: _INPUT
+_TEXT: ws_output_value_id1
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 289
+_MACROID: -1
+_POS: 99, 38
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: value_scaling
+_ENENO: 0
+_INPUTS: 2
+_IN
+_INPUTID: 288
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 291
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 290
+_MACROID: -1
+_POS: 114, 40
+_TYPE: _OUTPUT
+_TEXT: ws_frequency_id1
+_INPUTID: 289
+_INPUTIDX: 0
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 291
+_MACROID: -1
+_POS: 98, 41
+_TYPE: _INPUT
+_TEXT: out_set_frequency
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 292
+_MACROID: -1
+_POS: 99, 45
+_TYPE: _INPUT
+_TEXT: ws_output_value_id2
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 293
+_MACROID: -1
+_POS: 99, 43
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: value_scaling
+_ENENO: 0
+_INPUTS: 2
+_IN
+_INPUTID: 292
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 295
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 294
+_MACROID: -1
+_POS: 114, 45
+_TYPE: _OUTPUT
+_TEXT: ws_frequency_id2
+_INPUTID: 293
+_INPUTIDX: 0
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 295
+_MACROID: -1
+_POS: 98, 46
+_TYPE: _INPUT
+_TEXT: out_set_frequency
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 312
+_MACROID: -1
+_POS: 20, 214
+_TYPE: _INPUT
+_TEXT: 1
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 300
+_MACROID: -1
+_POS: 20, 212
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_di
+_ENENO: 0
+_INPUTS: 2
+_IN
+_INPUTID: 312
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 299
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 299
+_MACROID: -1
+_POS: 6, 219
+_TYPE: _INPUT
+_TEXT: plc_inputs
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 313
+_MACROID: -1
+_POS: 20, 218
+_TYPE: _INPUT
+_TEXT: 2
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 301
+_MACROID: -1
+_POS: 20, 216
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_di
+_ENENO: 0
+_INPUTS: 2
+_IN
+_INPUTID: 313
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 299
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 298
+_MACROID: -1
+_POS: 39, 218
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: hw_alarm_manager
+_TYPENAME: ALARM_MANAGER
+_ENENO: 0
+_INPUTS: 5
+_IN
+_INPUTID: 300
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 301
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 303
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 304
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 306
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 3
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 308
+_MACROID: -1
+_POS: 61, 220
+_TYPE: _OUTPUT
+_TEXT: hw_alarm_on
+_INPUTID: 298
+_INPUTIDX: 0
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 307
+_MACROID: -1
+_POS: 61, 221
+_TYPE: _OUTPUT
+_TEXT: hw_alarm_error_code
+_INPUTID: 298
+_INPUTIDX: 1
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 303
+_MACROID: -1
+_POS: 39, 222
+_TYPE: _INPUT
+_TEXT: hw_error_input_pressure
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 347
+_MACROID: -1
+_POS: 61, 222
+_TYPE: _OUTPUT
+_TEXT: hw_alarm_message
+_INPUTID: 298
+_INPUTIDX: 2
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 304
+_MACROID: -1
+_POS: 39, 223
+_TYPE: _INPUT
+_TEXT: hw_error_output_pressure
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 306
+_MACROID: -1
+_POS: 39, 224
+_TYPE: _INPUT
+_TEXT: hw_mode_error
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 333
+_MACROID: -1
+_POS: 20, 230
+_TYPE: _INPUT
+_TEXT: 3
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 334
+_MACROID: -1
+_POS: 20, 228
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_di
+_ENENO: 0
+_INPUTS: 2
+_IN
+_INPUTID: 333
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 299
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 335
+_MACROID: -1
+_POS: 20, 234
+_TYPE: _INPUT
+_TEXT: 4
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 336
+_MACROID: -1
+_POS: 20, 232
+_TYPE: _BOX
+_INSTANCE: 0
+_INSTANCENAME: 
+_TYPENAME: get_di
+_ENENO: 0
+_INPUTS: 2
+_IN
+_INPUTID: 335
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 299
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 337
+_MACROID: -1
+_POS: 39, 234
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: hw_alarm_manager
+_TYPENAME: ALARM_MANAGER
+_ENENO: 0
+_INPUTS: 5
+_IN
+_INPUTID: 334
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 336
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 340
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 341
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 342
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 3
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 338
+_MACROID: -1
+_POS: 61, 236
+_TYPE: _OUTPUT
+_TEXT: ws_alarm_on
+_INPUTID: 337
+_INPUTIDX: 0
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 339
+_MACROID: -1
+_POS: 61, 237
+_TYPE: _OUTPUT
+_TEXT: ws_alarm_error_code
+_INPUTID: 337
+_INPUTIDX: 1
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 340
+_MACROID: -1
+_POS: 39, 238
+_TYPE: _INPUT
+_TEXT: ws_error_input_pressure
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 373
+_MACROID: -1
+_POS: 61, 238
+_TYPE: _OUTPUT
+_TEXT: ws_alarm_message
+_INPUTID: 337
+_INPUTIDX: 2
+_NEGATE: 0
+_SETRESET: _NONE
+_END
+_ELEMENT
+_ID: 341
+_MACROID: -1
+_POS: 39, 239
+_TYPE: _INPUT
+_TEXT: ws_error_output_pressure
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 342
+_MACROID: -1
+_POS: 39, 240
+_TYPE: _INPUT
+_TEXT: ws_mode_error
+_NEGATE: 0
+_CONNECTOR: 
+_END
 
 END_PROGRAM
 
@@ -6905,6 +7967,7 @@ TYPE classInfoCascade :
 STRUCT
 	pivot:INT;
 	error_message:STRING(79);
+	error_code: WORD;
 	cascade_pump1:classInfoCascadePump;
 	cascade_pump2:classInfoCascadePump;
 	cascade_pump3:classInfoCascadePump;
@@ -6937,9 +8000,10 @@ END_TYPE
 TYPE classInfoCycle :
 
 STRUCT
-	run_timer: BOOL; (* ������ ������ ������� *)
-	working_time: TIME; (*  ����� ������ ������� *)
-	pump_number: SINT;  (* ����� ������ � ������ *)
+	run_timer: BOOL; (* status work *)
+	working_time: TIME; (* pump working time  *)
+	pump_number: INT;  (* number working pump *)
+	error_code:  WORD;
 END_STRUCT
 
 END_TYPE
@@ -7384,8 +8448,8 @@ END_TYPE
 TYPE classSetPressureSensor4_20 :
 
 STRUCT
-	min_measure_range:REAL;
-	max_measure_range:REAL;
+	min_measure_range:REAL:=0;
+	max_measure_range:REAL:=16;
 	min_current_range:REAL:=4;
 	max_current_range:REAL:=20;
 END_STRUCT
@@ -7396,11 +8460,16 @@ END_TYPE
 (* @NESTEDCOMMENTS := 'Yes' *)
 (* @PATH := '\/SingleMode' *)
 (* @OBJECTFLAGS := '0, 8' *)
-TYPE classInfoSingle : STRUCT
-        pump_number : INT; (* Comment *)
-        start_pump : BOOL; (* Comment *)
-        message: STRING(79);
-    END_STRUCT
+TYPE classInfoSingle :
+(* class for information single mode. *)
+
+STRUCT
+    pivot_pump : INT;
+    start_pump : BOOL;
+    message: STRING(79);
+    error_code: WORD;
+END_STRUCT
+
 END_TYPE
 (* @END_DECLARATION := '0' *)
 
@@ -7426,8 +8495,12 @@ END_TYPE
 (* @OBJECTFLAGS := '0, 8' *)
 (* @SYMFILEFLAGS := '2048' *)
 VAR_GLOBAL
+
 END_VAR
 
+(* VAR_GLOBAL RETAIN
+    hw_id1_active AT %QX8.1.0.4: BOOL;
+END_VAR *)
 (* @OBJECT_END := 'Global_Variables' *)
 (* @CONNECTIONS := Global_Variables
 FILENAME : ''
@@ -8214,7 +9287,7 @@ _PARAM 3: 0, 'NO PARITY CHECK'
 _PARAM 4: 0, '8 bits'
 _PARAM 5: 0, 'One stop bit'
 _PARAM 6: 0, 'RS485'
-_PARAM 7: 0, 'ASCII'
+_PARAM 7: 0, 'RTU'
 _PARAM 8: 0, '0'
 _PARAM 9: 0, 'No'
 _END_PARAMETER
@@ -8238,7 +9311,7 @@ _PARAM 2: 0, '10:0:0:223'
 _PARAM 3: 0, '150'
 _PARAM 4: 0, '502'
 _PARAM 5: 0, 'Serial'
-_PARAM 6: 0, '1'
+_PARAM 6: 0, '32'
 _PARAM 7: 0, 'By poll time'
 _PARAM 8: 0, '100'
 _PARAM 9: 0, 'No'
@@ -8274,7 +9347,7 @@ _COMMENT: 'Output frequency hot water invertor drive1'
 _PARAMETER
 _PARAM 1: 0, 'Register'
 _PARAM 2: 0, '0'
-_PARAM 3: 0, 'Preset singl register (0x06)'
+_PARAM 3: 0, 'Write multiple registers(0x10)'
 _PARAM 8: 0, 'No'
 _END_PARAMETER
 
@@ -8306,8 +9379,8 @@ _COMMENT: 'Output frequency hot water invertor drive2'
 
 _PARAMETER
 _PARAM 1: 0, 'Register'
-_PARAM 2: 0, '0'
-_PARAM 3: 0, 'Preset singl register (0x06)'
+_PARAM 2: 0, '1'
+_PARAM 3: 0, 'Write multiple registers(0x10)'
 _PARAM 8: 0, 'No'
 _END_PARAMETER
 
@@ -8339,8 +9412,8 @@ _COMMENT: 'Output frequensy water supply invertor drive1'
 
 _PARAMETER
 _PARAM 1: 0, 'Register'
-_PARAM 2: 0, '0'
-_PARAM 3: 0, 'Preset singl register (0x06)'
+_PARAM 2: 0, '2'
+_PARAM 3: 0, 'Write multiple registers(0x10)'
 _PARAM 8: 0, 'No'
 _END_PARAMETER
 
@@ -8372,8 +9445,8 @@ _COMMENT: 'Output frequency water supply invertor drive2'
 
 _PARAMETER
 _PARAM 1: 0, 'Register'
-_PARAM 2: 0, '0'
-_PARAM 3: 0, 'Preset singl register (0x06)'
+_PARAM 2: 0, '3'
+_PARAM 3: 0, 'Write multiple registers(0x10)'
 _PARAM 8: 0, 'No'
 _END_PARAMETER
 
@@ -8405,8 +9478,8 @@ _COMMENT: ''
 
 _PARAMETER
 _PARAM 1: 0, 'Register'
-_PARAM 2: 0, '0'
-_PARAM 3: 0, 'Preset singl register (0x06)'
+_PARAM 2: 0, '4'
+_PARAM 3: 0, 'Write multiple registers(0x10)'
 _PARAM 8: 0, 'No'
 _END_PARAMETER
 
@@ -8438,8 +9511,8 @@ _COMMENT: ''
 
 _PARAMETER
 _PARAM 1: 0, 'Register'
-_PARAM 2: 0, '0'
-_PARAM 3: 0, 'Preset singl register (0x06)'
+_PARAM 2: 0, '5'
+_PARAM 3: 0, 'Write multiple registers(0x10)'
 _PARAM 8: 0, 'No'
 _END_PARAMETER
 
@@ -8471,8 +9544,8 @@ _COMMENT: ''
 
 _PARAMETER
 _PARAM 1: 0, 'Register'
-_PARAM 2: 0, '0'
-_PARAM 3: 0, 'Preset singl register (0x06)'
+_PARAM 2: 0, '6'
+_PARAM 3: 0, 'Write multiple registers(0x10)'
 _PARAM 8: 0, 'No'
 _END_PARAMETER
 
@@ -8504,8 +9577,8 @@ _COMMENT: ''
 
 _PARAMETER
 _PARAM 1: 0, 'Register'
-_PARAM 2: 0, '0'
-_PARAM 3: 0, 'Preset singl register (0x06)'
+_PARAM 2: 0, '7'
+_PARAM 3: 0, 'Write multiple registers(0x10)'
 _PARAM 8: 0, 'No'
 _END_PARAMETER
 
@@ -8577,7 +9650,7 @@ _PARAM 3: 0, 'NO PARITY CHECK'
 _PARAM 4: 0, '8 bits'
 _PARAM 5: 0, 'One stop bit'
 _PARAM 6: 0, 'RS232'
-_PARAM 7: 0, 'ASCII'
+_PARAM 7: 0, 'RTU'
 _PARAM 8: 0, '0'
 _PARAM 9: 0, 'No'
 _END_PARAMETER
@@ -8653,10 +9726,10 @@ _BIT 0: %QX8.2.0.0 'hw_id1_auto' 'Bit 0'
 _BIT 1: %QX8.2.0.1 'hw_id2_auto' 'Bit 1'
 _BIT 2: %QX8.2.0.2 'ws_id1_auto' 'Bit 2'
 _BIT 3: %QX8.2.0.3 'ws_id2_auto' 'Bit 3'
-_BIT 4: %QX8.2.0.4 '' 'Bit 4'
-_BIT 5: %QX8.2.0.5 '' 'Bit 5'
-_BIT 6: %QX8.2.0.6 '' 'Bit 6'
-_BIT 7: %QX8.2.0.7 '' 'Bit 7'
+_BIT 4: %QX8.2.0.4 'hw_input_low_pressure_alarm' 'Bit 4'
+_BIT 5: %QX8.2.0.5 'hw_out_high_pressure_alarm' 'Bit 5'
+_BIT 6: %QX8.2.0.6 'ws_input_low_pressure_alarm' 'Bit 6'
+_BIT 7: %QX8.2.0.7 'ws_out_high_pressure_alarm' 'Bit 7'
 _END_CHANNEL
 _END_MODULE
 
@@ -8693,8 +9766,46 @@ _BIT 2: %QX8.3.0.2 'hw_cascade_enable' 'Bit 2'
 _BIT 3: %QX8.3.0.3 'ws_single_enable' 'Bit 3'
 _BIT 4: %QX8.3.0.4 'ws_cycle_enable' 'Bit 4'
 _BIT 5: %QX8.3.0.5 'ws_cascade_enable' 'Bit 5'
-_BIT 6: %QX8.3.0.6 '' 'Bit 6'
-_BIT 7: %QX8.3.0.7 '' 'Bit 7'
+_BIT 6: %QX8.3.0.6 'hw_alarm_on' 'Bit 6'
+_BIT 7: %QX8.3.0.7 'ws_alarm_on' 'Bit 7'
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: '8Bit'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '8 bits'
+_NODE_ID: 4
+_IECIN: %IB8.4
+_IECOUT: %QB8.4
+_IECDIAG: %MB8.4
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'hw and ws statuses'
+
+_PARAMETER
+_PARAM 1: 0, '8 bit'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'ByteOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QB8.4.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_BIT 0: %QX8.4.0.0 'hw_status_run_id1_sp' 'Bit 0'
+_BIT 1: %QX8.4.0.1 'hw_status_run_id2_sp' 'Bit 1'
+_BIT 2: %QX8.4.0.2 'ws_status_run_id1_sp' 'Bit 2'
+_BIT 3: %QX8.4.0.3 'ws_status_run_id2_sp' 'Bit 3'
+_BIT 4: %QX8.4.0.4 '' 'Bit 4'
+_BIT 5: %QX8.4.0.5 '' 'Bit 5'
+_BIT 6: %QX8.4.0.6 '' 'Bit 6'
+_BIT 7: %QX8.4.0.7 '' 'Bit 7'
 _END_CHANNEL
 _END_MODULE
 
@@ -8702,10 +9813,10 @@ _MODULE: '3S'
 _SECTION_NAME: 'Register'
 _INDEX_IN_PARENT: '3'
 _MODULE_NAME: '2 byte'
-_NODE_ID: 4
-_IECIN: %IB8.4
-_IECOUT: %QB8.4
-_IECDIAG: %MB8.4
+_NODE_ID: 5
+_IECIN: %IB8.5
+_IECOUT: %QB8.5
+_IECDIAG: %MB8.5
 _DOWNLOAD: 1
 _EXCLUDEFROMAUTOADR: 0
 _COMMENT: 'hw pivot single mode'
@@ -8720,7 +9831,7 @@ _INDEX_IN_PARENT: '1'
 _SYMBOLIC_NAME: 'hw_pivot_single'
 _COMMENT: ''
 _CHANNEL_MODE: 'Q'
-_IECADR: %QW8.4.0
+_IECADR: %QW8.5.0
 
 _PARAMETER
 _PARAM 1: 0, 'Enter name'
@@ -8732,10 +9843,10 @@ _MODULE: '3S'
 _SECTION_NAME: 'Register'
 _INDEX_IN_PARENT: '3'
 _MODULE_NAME: '2 byte'
-_NODE_ID: 5
-_IECIN: %IB8.5
-_IECOUT: %QB8.5
-_IECDIAG: %MB8.5
+_NODE_ID: 6
+_IECIN: %IB8.6
+_IECOUT: %QB8.6
+_IECDIAG: %MB8.6
 _DOWNLOAD: 1
 _EXCLUDEFROMAUTOADR: 0
 _COMMENT: 'hw pivot cascade mode'
@@ -8750,7 +9861,7 @@ _INDEX_IN_PARENT: '1'
 _SYMBOLIC_NAME: 'hw_pivot_cascade'
 _COMMENT: ''
 _CHANNEL_MODE: 'Q'
-_IECADR: %QW8.5.0
+_IECADR: %QW8.6.0
 
 _PARAMETER
 _PARAM 1: 0, 'Enter name'
@@ -8759,344 +9870,242 @@ _END_CHANNEL
 _END_MODULE
 
 _MODULE: '3S'
-_SECTION_NAME: '8Bit'
+_SECTION_NAME: 'Register'
 _INDEX_IN_PARENT: '3'
-_MODULE_NAME: '8 bits'
-_NODE_ID: 6
-_IECIN: %IB8.6
-_IECOUT: %QB8.6
-_IECDIAG: %MB8.6
-_DOWNLOAD: 1
-_EXCLUDEFROMAUTOADR: 0
-_COMMENT: 'hw cycle set hours'
-
-_PARAMETER
-_PARAM 1: 0, '8 bit'
-_END_PARAMETER
-
-_CHANNEL
-_SECTION_NAME: 'ByteOutput'
-_INDEX_IN_PARENT: '1'
-_SYMBOLIC_NAME: 'hw_cycle_set_hours'
-_COMMENT: ''
-_CHANNEL_MODE: 'Q'
-_IECADR: %QB8.6.0
-
-_PARAMETER
-_PARAM 1: 0, 'Enter name'
-_END_PARAMETER
-_BIT 0: %QX8.6.0.0 '' 'Bit 0'
-_BIT 1: %QX8.6.0.1 '' 'Bit 1'
-_BIT 2: %QX8.6.0.2 '' 'Bit 2'
-_BIT 3: %QX8.6.0.3 '' 'Bit 3'
-_BIT 4: %QX8.6.0.4 '' 'Bit 4'
-_BIT 5: %QX8.6.0.5 '' 'Bit 5'
-_BIT 6: %QX8.6.0.6 '' 'Bit 6'
-_BIT 7: %QX8.6.0.7 '' 'Bit 7'
-_END_CHANNEL
-_END_MODULE
-
-_MODULE: '3S'
-_SECTION_NAME: '8Bit'
-_INDEX_IN_PARENT: '3'
-_MODULE_NAME: '8 bits'
+_MODULE_NAME: '2 byte'
 _NODE_ID: 7
 _IECIN: %IB8.7
 _IECOUT: %QB8.7
 _IECDIAG: %MB8.7
 _DOWNLOAD: 1
 _EXCLUDEFROMAUTOADR: 0
-_COMMENT: 'hw cycle set minutes'
+_COMMENT: 'hw cycle set hours'
 
 _PARAMETER
-_PARAM 1: 0, '8 bit'
+_PARAM 1: 0, '2 byte'
 _END_PARAMETER
 
 _CHANNEL
-_SECTION_NAME: 'ByteOutput'
+_SECTION_NAME: 'WordOutput'
 _INDEX_IN_PARENT: '1'
-_SYMBOLIC_NAME: 'hw_cycle_set_minutes'
+_SYMBOLIC_NAME: 'hw_cycle_set_hours'
 _COMMENT: ''
 _CHANNEL_MODE: 'Q'
-_IECADR: %QB8.7.0
+_IECADR: %QW8.7.0
 
 _PARAMETER
 _PARAM 1: 0, 'Enter name'
 _END_PARAMETER
-_BIT 0: %QX8.7.0.0 '' 'Bit 0'
-_BIT 1: %QX8.7.0.1 '' 'Bit 1'
-_BIT 2: %QX8.7.0.2 '' 'Bit 2'
-_BIT 3: %QX8.7.0.3 '' 'Bit 3'
-_BIT 4: %QX8.7.0.4 '' 'Bit 4'
-_BIT 5: %QX8.7.0.5 '' 'Bit 5'
-_BIT 6: %QX8.7.0.6 '' 'Bit 6'
-_BIT 7: %QX8.7.0.7 '' 'Bit 7'
 _END_CHANNEL
 _END_MODULE
 
 _MODULE: '3S'
-_SECTION_NAME: '8Bit'
+_SECTION_NAME: 'Register'
 _INDEX_IN_PARENT: '3'
-_MODULE_NAME: '8 bits'
+_MODULE_NAME: '2 byte'
 _NODE_ID: 8
 _IECIN: %IB8.8
 _IECOUT: %QB8.8
 _IECDIAG: %MB8.8
 _DOWNLOAD: 1
 _EXCLUDEFROMAUTOADR: 0
-_COMMENT: 'hw cycle set seconds'
+_COMMENT: 'hw cycle set minutes'
 
 _PARAMETER
-_PARAM 1: 0, '8 bit'
+_PARAM 1: 0, '2 byte'
 _END_PARAMETER
 
 _CHANNEL
-_SECTION_NAME: 'ByteOutput'
+_SECTION_NAME: 'WordOutput'
 _INDEX_IN_PARENT: '1'
-_SYMBOLIC_NAME: 'hw_cycle_set_seconds'
+_SYMBOLIC_NAME: 'hw_cycle_set_minutes'
 _COMMENT: ''
 _CHANNEL_MODE: 'Q'
-_IECADR: %QB8.8.0
+_IECADR: %QW8.8.0
 
 _PARAMETER
 _PARAM 1: 0, 'Enter name'
 _END_PARAMETER
-_BIT 0: %QX8.8.0.0 '' 'Bit 0'
-_BIT 1: %QX8.8.0.1 '' 'Bit 1'
-_BIT 2: %QX8.8.0.2 '' 'Bit 2'
-_BIT 3: %QX8.8.0.3 '' 'Bit 3'
-_BIT 4: %QX8.8.0.4 '' 'Bit 4'
-_BIT 5: %QX8.8.0.5 '' 'Bit 5'
-_BIT 6: %QX8.8.0.6 '' 'Bit 6'
-_BIT 7: %QX8.8.0.7 '' 'Bit 7'
 _END_CHANNEL
 _END_MODULE
 
 _MODULE: '3S'
-_SECTION_NAME: '8Bit'
+_SECTION_NAME: 'Register'
 _INDEX_IN_PARENT: '3'
-_MODULE_NAME: '8 bits'
+_MODULE_NAME: '2 byte'
 _NODE_ID: 9
 _IECIN: %IB8.9
 _IECOUT: %QB8.9
 _IECDIAG: %MB8.9
 _DOWNLOAD: 1
 _EXCLUDEFROMAUTOADR: 0
-_COMMENT: 'hw cascade delay on hours'
+_COMMENT: 'hw cycle set seconds'
 
 _PARAMETER
-_PARAM 1: 0, '8 bit'
+_PARAM 1: 0, '2 byte'
 _END_PARAMETER
 
 _CHANNEL
-_SECTION_NAME: 'ByteOutput'
+_SECTION_NAME: 'WordOutput'
 _INDEX_IN_PARENT: '1'
-_SYMBOLIC_NAME: 'hw_cascade_delay_on_hours'
+_SYMBOLIC_NAME: 'hw_cycle_set_seconds'
 _COMMENT: ''
 _CHANNEL_MODE: 'Q'
-_IECADR: %QB8.9.0
+_IECADR: %QW8.9.0
 
 _PARAMETER
 _PARAM 1: 0, 'Enter name'
 _END_PARAMETER
-_BIT 0: %QX8.9.0.0 '' 'Bit 0'
-_BIT 1: %QX8.9.0.1 '' 'Bit 1'
-_BIT 2: %QX8.9.0.2 '' 'Bit 2'
-_BIT 3: %QX8.9.0.3 '' 'Bit 3'
-_BIT 4: %QX8.9.0.4 '' 'Bit 4'
-_BIT 5: %QX8.9.0.5 '' 'Bit 5'
-_BIT 6: %QX8.9.0.6 '' 'Bit 6'
-_BIT 7: %QX8.9.0.7 '' 'Bit 7'
 _END_CHANNEL
 _END_MODULE
 
 _MODULE: '3S'
-_SECTION_NAME: '8Bit'
+_SECTION_NAME: 'Register'
 _INDEX_IN_PARENT: '3'
-_MODULE_NAME: '8 bits'
+_MODULE_NAME: '2 byte'
 _NODE_ID: 10
 _IECIN: %IB8.10
 _IECOUT: %QB8.10
 _IECDIAG: %MB8.10
 _DOWNLOAD: 1
 _EXCLUDEFROMAUTOADR: 0
-_COMMENT: 'hw cascade delay on minutes'
+_COMMENT: 'hw cascade delay on hours'
 
 _PARAMETER
-_PARAM 1: 0, '8 bit'
+_PARAM 1: 0, '2 byte'
 _END_PARAMETER
 
 _CHANNEL
-_SECTION_NAME: 'ByteOutput'
+_SECTION_NAME: 'WordOutput'
 _INDEX_IN_PARENT: '1'
-_SYMBOLIC_NAME: 'hw_cascade_delay_on_minutes'
+_SYMBOLIC_NAME: 'hw_cascade_delay_on_hours'
 _COMMENT: ''
 _CHANNEL_MODE: 'Q'
-_IECADR: %QB8.10.0
+_IECADR: %QW8.10.0
 
 _PARAMETER
 _PARAM 1: 0, 'Enter name'
 _END_PARAMETER
-_BIT 0: %QX8.10.0.0 '' 'Bit 0'
-_BIT 1: %QX8.10.0.1 '' 'Bit 1'
-_BIT 2: %QX8.10.0.2 '' 'Bit 2'
-_BIT 3: %QX8.10.0.3 '' 'Bit 3'
-_BIT 4: %QX8.10.0.4 '' 'Bit 4'
-_BIT 5: %QX8.10.0.5 '' 'Bit 5'
-_BIT 6: %QX8.10.0.6 '' 'Bit 6'
-_BIT 7: %QX8.10.0.7 '' 'Bit 7'
 _END_CHANNEL
 _END_MODULE
 
 _MODULE: '3S'
-_SECTION_NAME: '8Bit'
+_SECTION_NAME: 'Register'
 _INDEX_IN_PARENT: '3'
-_MODULE_NAME: '8 bits'
+_MODULE_NAME: '2 byte'
 _NODE_ID: 11
 _IECIN: %IB8.11
 _IECOUT: %QB8.11
 _IECDIAG: %MB8.11
 _DOWNLOAD: 1
 _EXCLUDEFROMAUTOADR: 0
-_COMMENT: 'hw cascade delay on seconds '
+_COMMENT: 'hw cascade delay on minutes'
 
 _PARAMETER
-_PARAM 1: 0, '8 bit'
+_PARAM 1: 0, '2 byte'
 _END_PARAMETER
 
 _CHANNEL
-_SECTION_NAME: 'ByteOutput'
+_SECTION_NAME: 'WordOutput'
 _INDEX_IN_PARENT: '1'
-_SYMBOLIC_NAME: 'hw_cascade_delay_on_seconds'
+_SYMBOLIC_NAME: 'hw_cascade_delay_on_minutes'
 _COMMENT: ''
 _CHANNEL_MODE: 'Q'
-_IECADR: %QB8.11.0
+_IECADR: %QW8.11.0
 
 _PARAMETER
 _PARAM 1: 0, 'Enter name'
 _END_PARAMETER
-_BIT 0: %QX8.11.0.0 '' 'Bit 0'
-_BIT 1: %QX8.11.0.1 '' 'Bit 1'
-_BIT 2: %QX8.11.0.2 '' 'Bit 2'
-_BIT 3: %QX8.11.0.3 '' 'Bit 3'
-_BIT 4: %QX8.11.0.4 '' 'Bit 4'
-_BIT 5: %QX8.11.0.5 '' 'Bit 5'
-_BIT 6: %QX8.11.0.6 '' 'Bit 6'
-_BIT 7: %QX8.11.0.7 '' 'Bit 7'
 _END_CHANNEL
 _END_MODULE
 
 _MODULE: '3S'
-_SECTION_NAME: '8Bit'
+_SECTION_NAME: 'Register'
 _INDEX_IN_PARENT: '3'
-_MODULE_NAME: '8 bits'
+_MODULE_NAME: '2 byte'
 _NODE_ID: 12
 _IECIN: %IB8.12
 _IECOUT: %QB8.12
 _IECDIAG: %MB8.12
 _DOWNLOAD: 1
 _EXCLUDEFROMAUTOADR: 0
-_COMMENT: 'hw cascade delay off hours'
+_COMMENT: 'hw cascade delay on seconds '
 
 _PARAMETER
-_PARAM 1: 0, '8 bit'
+_PARAM 1: 0, '2 byte'
 _END_PARAMETER
 
 _CHANNEL
-_SECTION_NAME: 'ByteOutput'
+_SECTION_NAME: 'WordOutput'
 _INDEX_IN_PARENT: '1'
-_SYMBOLIC_NAME: 'hw_cascade_delay_off_hours'
+_SYMBOLIC_NAME: 'hw_cascade_delay_on_seconds'
 _COMMENT: ''
 _CHANNEL_MODE: 'Q'
-_IECADR: %QB8.12.0
+_IECADR: %QW8.12.0
 
 _PARAMETER
 _PARAM 1: 0, 'Enter name'
 _END_PARAMETER
-_BIT 0: %QX8.12.0.0 '' 'Bit 0'
-_BIT 1: %QX8.12.0.1 '' 'Bit 1'
-_BIT 2: %QX8.12.0.2 '' 'Bit 2'
-_BIT 3: %QX8.12.0.3 '' 'Bit 3'
-_BIT 4: %QX8.12.0.4 '' 'Bit 4'
-_BIT 5: %QX8.12.0.5 '' 'Bit 5'
-_BIT 6: %QX8.12.0.6 '' 'Bit 6'
-_BIT 7: %QX8.12.0.7 '' 'Bit 7'
 _END_CHANNEL
 _END_MODULE
 
 _MODULE: '3S'
-_SECTION_NAME: '8Bit'
+_SECTION_NAME: 'Register'
 _INDEX_IN_PARENT: '3'
-_MODULE_NAME: '8 bits'
+_MODULE_NAME: '2 byte'
 _NODE_ID: 13
 _IECIN: %IB8.13
 _IECOUT: %QB8.13
 _IECDIAG: %MB8.13
 _DOWNLOAD: 1
 _EXCLUDEFROMAUTOADR: 0
-_COMMENT: 'hw cascade delay off minutes'
+_COMMENT: 'hw cascade delay off hours'
 
 _PARAMETER
-_PARAM 1: 0, '8 bit'
+_PARAM 1: 0, '2 byte'
 _END_PARAMETER
 
 _CHANNEL
-_SECTION_NAME: 'ByteOutput'
+_SECTION_NAME: 'WordOutput'
 _INDEX_IN_PARENT: '1'
-_SYMBOLIC_NAME: 'hw_cascade_delay_off_minutes'
+_SYMBOLIC_NAME: 'hw_cascade_delay_off_hours'
 _COMMENT: ''
 _CHANNEL_MODE: 'Q'
-_IECADR: %QB8.13.0
+_IECADR: %QW8.13.0
 
 _PARAMETER
 _PARAM 1: 0, 'Enter name'
 _END_PARAMETER
-_BIT 0: %QX8.13.0.0 '' 'Bit 0'
-_BIT 1: %QX8.13.0.1 '' 'Bit 1'
-_BIT 2: %QX8.13.0.2 '' 'Bit 2'
-_BIT 3: %QX8.13.0.3 '' 'Bit 3'
-_BIT 4: %QX8.13.0.4 '' 'Bit 4'
-_BIT 5: %QX8.13.0.5 '' 'Bit 5'
-_BIT 6: %QX8.13.0.6 '' 'Bit 6'
-_BIT 7: %QX8.13.0.7 '' 'Bit 7'
 _END_CHANNEL
 _END_MODULE
 
 _MODULE: '3S'
-_SECTION_NAME: '8Bit'
+_SECTION_NAME: 'Register'
 _INDEX_IN_PARENT: '3'
-_MODULE_NAME: '8 bits'
+_MODULE_NAME: '2 byte'
 _NODE_ID: 14
 _IECIN: %IB8.14
 _IECOUT: %QB8.14
 _IECDIAG: %MB8.14
 _DOWNLOAD: 1
 _EXCLUDEFROMAUTOADR: 0
-_COMMENT: 'hw cascade delay off seconds'
+_COMMENT: 'hw cascade delay off minutes'
 
 _PARAMETER
-_PARAM 1: 0, '8 bit'
+_PARAM 1: 0, '2 byte'
 _END_PARAMETER
 
 _CHANNEL
-_SECTION_NAME: 'ByteOutput'
+_SECTION_NAME: 'WordOutput'
 _INDEX_IN_PARENT: '1'
-_SYMBOLIC_NAME: 'hw_cascade_delay_off_seconds'
+_SYMBOLIC_NAME: 'hw_cascade_delay_off_minutes'
 _COMMENT: ''
 _CHANNEL_MODE: 'Q'
-_IECADR: %QB8.14.0
+_IECADR: %QW8.14.0
 
 _PARAMETER
 _PARAM 1: 0, 'Enter name'
 _END_PARAMETER
-_BIT 0: %QX8.14.0.0 '' 'Bit 0'
-_BIT 1: %QX8.14.0.1 '' 'Bit 1'
-_BIT 2: %QX8.14.0.2 '' 'Bit 2'
-_BIT 3: %QX8.14.0.3 '' 'Bit 3'
-_BIT 4: %QX8.14.0.4 '' 'Bit 4'
-_BIT 5: %QX8.14.0.5 '' 'Bit 5'
-_BIT 6: %QX8.14.0.6 '' 'Bit 6'
-_BIT 7: %QX8.14.0.7 '' 'Bit 7'
 _END_CHANNEL
 _END_MODULE
 
@@ -9110,7 +10119,7 @@ _IECOUT: %QB8.15
 _IECDIAG: %MB8.15
 _DOWNLOAD: 1
 _EXCLUDEFROMAUTOADR: 0
-_COMMENT: 'ws pivot single mode'
+_COMMENT: 'hw cascade delay off seconds'
 
 _PARAMETER
 _PARAM 1: 0, '2 byte'
@@ -9119,7 +10128,7 @@ _END_PARAMETER
 _CHANNEL
 _SECTION_NAME: 'WordOutput'
 _INDEX_IN_PARENT: '1'
-_SYMBOLIC_NAME: 'ws_pivot_single'
+_SYMBOLIC_NAME: 'hw_cascade_delay_off_seconds'
 _COMMENT: ''
 _CHANNEL_MODE: 'Q'
 _IECADR: %QW8.15.0
@@ -9140,6 +10149,36 @@ _IECOUT: %QB8.16
 _IECDIAG: %MB8.16
 _DOWNLOAD: 1
 _EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'ws pivot single mode'
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'ws_pivot_single'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.16.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 17
+_IECIN: %IB8.17
+_IECOUT: %QB8.17
+_IECDIAG: %MB8.17
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
 _COMMENT: 'ws pivot cascade mode'
 
 _PARAMETER
@@ -9152,7 +10191,7 @@ _INDEX_IN_PARENT: '1'
 _SYMBOLIC_NAME: 'ws_pivot_cascade'
 _COMMENT: ''
 _CHANNEL_MODE: 'Q'
-_IECADR: %QW8.16.0
+_IECADR: %QW8.17.0
 
 _PARAMETER
 _PARAM 1: 0, 'Enter name'
@@ -9161,370 +10200,268 @@ _END_CHANNEL
 _END_MODULE
 
 _MODULE: '3S'
-_SECTION_NAME: '8Bit'
+_SECTION_NAME: 'Register'
 _INDEX_IN_PARENT: '3'
-_MODULE_NAME: '8 bits'
-_NODE_ID: 17
-_IECIN: %IB8.17
-_IECOUT: %QB8.17
-_IECDIAG: %MB8.17
-_DOWNLOAD: 1
-_EXCLUDEFROMAUTOADR: 0
-_COMMENT: 'ws cycle set hours'
-
-_PARAMETER
-_PARAM 1: 0, '8 bit'
-_END_PARAMETER
-
-_CHANNEL
-_SECTION_NAME: 'ByteOutput'
-_INDEX_IN_PARENT: '1'
-_SYMBOLIC_NAME: 'ws_cycle_set_hours'
-_COMMENT: ''
-_CHANNEL_MODE: 'Q'
-_IECADR: %QB8.17.0
-
-_PARAMETER
-_PARAM 1: 0, 'Enter name'
-_END_PARAMETER
-_BIT 0: %QX8.17.0.0 '' 'Bit 0'
-_BIT 1: %QX8.17.0.1 '' 'Bit 1'
-_BIT 2: %QX8.17.0.2 '' 'Bit 2'
-_BIT 3: %QX8.17.0.3 '' 'Bit 3'
-_BIT 4: %QX8.17.0.4 '' 'Bit 4'
-_BIT 5: %QX8.17.0.5 '' 'Bit 5'
-_BIT 6: %QX8.17.0.6 '' 'Bit 6'
-_BIT 7: %QX8.17.0.7 '' 'Bit 7'
-_END_CHANNEL
-_END_MODULE
-
-_MODULE: '3S'
-_SECTION_NAME: '8Bit'
-_INDEX_IN_PARENT: '3'
-_MODULE_NAME: '8 bits'
+_MODULE_NAME: '2 byte'
 _NODE_ID: 18
 _IECIN: %IB8.18
 _IECOUT: %QB8.18
 _IECDIAG: %MB8.18
 _DOWNLOAD: 1
 _EXCLUDEFROMAUTOADR: 0
-_COMMENT: 'ws cycle set minutes'
+_COMMENT: 'ws cycle set hours'
 
 _PARAMETER
-_PARAM 1: 0, '8 bit'
+_PARAM 1: 0, '2 byte'
 _END_PARAMETER
 
 _CHANNEL
-_SECTION_NAME: 'ByteOutput'
+_SECTION_NAME: 'WordOutput'
 _INDEX_IN_PARENT: '1'
-_SYMBOLIC_NAME: 'ws_cycle_set_minutes'
+_SYMBOLIC_NAME: 'ws_cycle_set_hours'
 _COMMENT: ''
 _CHANNEL_MODE: 'Q'
-_IECADR: %QB8.18.0
+_IECADR: %QW8.18.0
 
 _PARAMETER
 _PARAM 1: 0, 'Enter name'
 _END_PARAMETER
-_BIT 0: %QX8.18.0.0 '' 'Bit 0'
-_BIT 1: %QX8.18.0.1 '' 'Bit 1'
-_BIT 2: %QX8.18.0.2 '' 'Bit 2'
-_BIT 3: %QX8.18.0.3 '' 'Bit 3'
-_BIT 4: %QX8.18.0.4 '' 'Bit 4'
-_BIT 5: %QX8.18.0.5 '' 'Bit 5'
-_BIT 6: %QX8.18.0.6 '' 'Bit 6'
-_BIT 7: %QX8.18.0.7 '' 'Bit 7'
 _END_CHANNEL
 _END_MODULE
 
 _MODULE: '3S'
-_SECTION_NAME: '8Bit'
+_SECTION_NAME: 'Register'
 _INDEX_IN_PARENT: '3'
-_MODULE_NAME: '8 bits'
+_MODULE_NAME: '2 byte'
 _NODE_ID: 19
 _IECIN: %IB8.19
 _IECOUT: %QB8.19
 _IECDIAG: %MB8.19
 _DOWNLOAD: 1
 _EXCLUDEFROMAUTOADR: 0
-_COMMENT: 'ws cycle set seconds'
+_COMMENT: 'ws cycle set minutes'
 
 _PARAMETER
-_PARAM 1: 0, '8 bit'
+_PARAM 1: 0, '2 byte'
 _END_PARAMETER
 
 _CHANNEL
-_SECTION_NAME: 'ByteOutput'
+_SECTION_NAME: 'WordOutput'
 _INDEX_IN_PARENT: '1'
-_SYMBOLIC_NAME: 'ws_cycle_set_seconds'
+_SYMBOLIC_NAME: 'ws_cycle_set_minutes'
 _COMMENT: ''
 _CHANNEL_MODE: 'Q'
-_IECADR: %QB8.19.0
+_IECADR: %QW8.19.0
 
 _PARAMETER
 _PARAM 1: 0, 'Enter name'
 _END_PARAMETER
-_BIT 0: %QX8.19.0.0 '' 'Bit 0'
-_BIT 1: %QX8.19.0.1 '' 'Bit 1'
-_BIT 2: %QX8.19.0.2 '' 'Bit 2'
-_BIT 3: %QX8.19.0.3 '' 'Bit 3'
-_BIT 4: %QX8.19.0.4 '' 'Bit 4'
-_BIT 5: %QX8.19.0.5 '' 'Bit 5'
-_BIT 6: %QX8.19.0.6 '' 'Bit 6'
-_BIT 7: %QX8.19.0.7 '' 'Bit 7'
 _END_CHANNEL
 _END_MODULE
 
 _MODULE: '3S'
-_SECTION_NAME: '8Bit'
+_SECTION_NAME: 'Register'
 _INDEX_IN_PARENT: '3'
-_MODULE_NAME: '8 bits'
+_MODULE_NAME: '2 byte'
 _NODE_ID: 20
 _IECIN: %IB8.20
 _IECOUT: %QB8.20
 _IECDIAG: %MB8.20
 _DOWNLOAD: 1
 _EXCLUDEFROMAUTOADR: 0
-_COMMENT: 'ws cascade delay on hours'
+_COMMENT: 'ws cycle set seconds'
 
 _PARAMETER
-_PARAM 1: 0, '8 bit'
+_PARAM 1: 0, '2 byte'
 _END_PARAMETER
 
 _CHANNEL
-_SECTION_NAME: 'ByteOutput'
+_SECTION_NAME: 'WordOutput'
 _INDEX_IN_PARENT: '1'
-_SYMBOLIC_NAME: 'ws_cascade_delay_on_hours'
+_SYMBOLIC_NAME: 'ws_cycle_set_seconds'
 _COMMENT: ''
 _CHANNEL_MODE: 'Q'
-_IECADR: %QB8.20.0
+_IECADR: %QW8.20.0
 
 _PARAMETER
 _PARAM 1: 0, 'Enter name'
 _END_PARAMETER
-_BIT 0: %QX8.20.0.0 '' 'Bit 0'
-_BIT 1: %QX8.20.0.1 '' 'Bit 1'
-_BIT 2: %QX8.20.0.2 '' 'Bit 2'
-_BIT 3: %QX8.20.0.3 '' 'Bit 3'
-_BIT 4: %QX8.20.0.4 '' 'Bit 4'
-_BIT 5: %QX8.20.0.5 '' 'Bit 5'
-_BIT 6: %QX8.20.0.6 '' 'Bit 6'
-_BIT 7: %QX8.20.0.7 '' 'Bit 7'
 _END_CHANNEL
 _END_MODULE
 
 _MODULE: '3S'
-_SECTION_NAME: '8Bit'
+_SECTION_NAME: 'Register'
 _INDEX_IN_PARENT: '3'
-_MODULE_NAME: '8 bits'
+_MODULE_NAME: '2 byte'
 _NODE_ID: 21
 _IECIN: %IB8.21
 _IECOUT: %QB8.21
 _IECDIAG: %MB8.21
 _DOWNLOAD: 1
 _EXCLUDEFROMAUTOADR: 0
-_COMMENT: 'ws cascade delay on minutes'
+_COMMENT: 'ws cascade delay on hours'
 
 _PARAMETER
-_PARAM 1: 0, '8 bit'
+_PARAM 1: 0, '2 byte'
 _END_PARAMETER
 
 _CHANNEL
-_SECTION_NAME: 'ByteOutput'
+_SECTION_NAME: 'WordOutput'
 _INDEX_IN_PARENT: '1'
-_SYMBOLIC_NAME: 'ws_cascade_delay_on_minutes'
+_SYMBOLIC_NAME: 'ws_cascade_delay_on_hours'
 _COMMENT: ''
 _CHANNEL_MODE: 'Q'
-_IECADR: %QB8.21.0
+_IECADR: %QW8.21.0
 
 _PARAMETER
 _PARAM 1: 0, 'Enter name'
 _END_PARAMETER
-_BIT 0: %QX8.21.0.0 '' 'Bit 0'
-_BIT 1: %QX8.21.0.1 '' 'Bit 1'
-_BIT 2: %QX8.21.0.2 '' 'Bit 2'
-_BIT 3: %QX8.21.0.3 '' 'Bit 3'
-_BIT 4: %QX8.21.0.4 '' 'Bit 4'
-_BIT 5: %QX8.21.0.5 '' 'Bit 5'
-_BIT 6: %QX8.21.0.6 '' 'Bit 6'
-_BIT 7: %QX8.21.0.7 '' 'Bit 7'
 _END_CHANNEL
 _END_MODULE
 
 _MODULE: '3S'
-_SECTION_NAME: '8Bit'
+_SECTION_NAME: 'Register'
 _INDEX_IN_PARENT: '3'
-_MODULE_NAME: '8 bits'
+_MODULE_NAME: '2 byte'
 _NODE_ID: 22
 _IECIN: %IB8.22
 _IECOUT: %QB8.22
 _IECDIAG: %MB8.22
 _DOWNLOAD: 1
 _EXCLUDEFROMAUTOADR: 0
-_COMMENT: 'ws cascade delay on seconds'
+_COMMENT: 'ws cascade delay on minutes'
 
 _PARAMETER
-_PARAM 1: 0, '8 bit'
+_PARAM 1: 0, '2 byte'
 _END_PARAMETER
 
 _CHANNEL
-_SECTION_NAME: 'ByteOutput'
+_SECTION_NAME: 'WordOutput'
 _INDEX_IN_PARENT: '1'
-_SYMBOLIC_NAME: 'ws_cascade_delay_on_seconds'
+_SYMBOLIC_NAME: 'ws_cascade_delay_on_minutes'
 _COMMENT: ''
 _CHANNEL_MODE: 'Q'
-_IECADR: %QB8.22.0
+_IECADR: %QW8.22.0
 
 _PARAMETER
 _PARAM 1: 0, 'Enter name'
 _END_PARAMETER
-_BIT 0: %QX8.22.0.0 '' 'Bit 0'
-_BIT 1: %QX8.22.0.1 '' 'Bit 1'
-_BIT 2: %QX8.22.0.2 '' 'Bit 2'
-_BIT 3: %QX8.22.0.3 '' 'Bit 3'
-_BIT 4: %QX8.22.0.4 '' 'Bit 4'
-_BIT 5: %QX8.22.0.5 '' 'Bit 5'
-_BIT 6: %QX8.22.0.6 '' 'Bit 6'
-_BIT 7: %QX8.22.0.7 '' 'Bit 7'
 _END_CHANNEL
 _END_MODULE
 
 _MODULE: '3S'
-_SECTION_NAME: '8Bit'
+_SECTION_NAME: 'Register'
 _INDEX_IN_PARENT: '3'
-_MODULE_NAME: '8 bits'
+_MODULE_NAME: '2 byte'
 _NODE_ID: 23
 _IECIN: %IB8.23
 _IECOUT: %QB8.23
 _IECDIAG: %MB8.23
 _DOWNLOAD: 1
 _EXCLUDEFROMAUTOADR: 0
-_COMMENT: 'ws cascade delay off hours'
+_COMMENT: 'ws cascade delay on seconds'
 
 _PARAMETER
-_PARAM 1: 0, '8 bit'
+_PARAM 1: 0, '2 byte'
 _END_PARAMETER
 
 _CHANNEL
-_SECTION_NAME: 'ByteOutput'
+_SECTION_NAME: 'WordOutput'
 _INDEX_IN_PARENT: '1'
-_SYMBOLIC_NAME: 'ws_cascade_delay_off_hours'
+_SYMBOLIC_NAME: 'ws_cascade_delay_on_seconds'
 _COMMENT: ''
 _CHANNEL_MODE: 'Q'
-_IECADR: %QB8.23.0
+_IECADR: %QW8.23.0
 
 _PARAMETER
 _PARAM 1: 0, 'Enter name'
 _END_PARAMETER
-_BIT 0: %QX8.23.0.0 '' 'Bit 0'
-_BIT 1: %QX8.23.0.1 '' 'Bit 1'
-_BIT 2: %QX8.23.0.2 '' 'Bit 2'
-_BIT 3: %QX8.23.0.3 '' 'Bit 3'
-_BIT 4: %QX8.23.0.4 '' 'Bit 4'
-_BIT 5: %QX8.23.0.5 '' 'Bit 5'
-_BIT 6: %QX8.23.0.6 '' 'Bit 6'
-_BIT 7: %QX8.23.0.7 '' 'Bit 7'
 _END_CHANNEL
 _END_MODULE
 
 _MODULE: '3S'
-_SECTION_NAME: '8Bit'
+_SECTION_NAME: 'Register'
 _INDEX_IN_PARENT: '3'
-_MODULE_NAME: '8 bits'
+_MODULE_NAME: '2 byte'
 _NODE_ID: 24
 _IECIN: %IB8.24
 _IECOUT: %QB8.24
 _IECDIAG: %MB8.24
 _DOWNLOAD: 1
 _EXCLUDEFROMAUTOADR: 0
-_COMMENT: 'ws cascade delay off minutes'
+_COMMENT: 'ws cascade delay off hours'
 
 _PARAMETER
-_PARAM 1: 0, '8 bit'
+_PARAM 1: 0, '2 byte'
 _END_PARAMETER
 
 _CHANNEL
-_SECTION_NAME: 'ByteOutput'
+_SECTION_NAME: 'WordOutput'
 _INDEX_IN_PARENT: '1'
-_SYMBOLIC_NAME: 'ws_cascade_delay_off_minutes'
+_SYMBOLIC_NAME: 'ws_cascade_delay_off_hours'
 _COMMENT: ''
 _CHANNEL_MODE: 'Q'
-_IECADR: %QB8.24.0
+_IECADR: %QW8.24.0
 
 _PARAMETER
 _PARAM 1: 0, 'Enter name'
 _END_PARAMETER
-_BIT 0: %QX8.24.0.0 '' 'Bit 0'
-_BIT 1: %QX8.24.0.1 '' 'Bit 1'
-_BIT 2: %QX8.24.0.2 '' 'Bit 2'
-_BIT 3: %QX8.24.0.3 '' 'Bit 3'
-_BIT 4: %QX8.24.0.4 '' 'Bit 4'
-_BIT 5: %QX8.24.0.5 '' 'Bit 5'
-_BIT 6: %QX8.24.0.6 '' 'Bit 6'
-_BIT 7: %QX8.24.0.7 '' 'Bit 7'
 _END_CHANNEL
 _END_MODULE
 
 _MODULE: '3S'
-_SECTION_NAME: '8Bit'
+_SECTION_NAME: 'Register'
 _INDEX_IN_PARENT: '3'
-_MODULE_NAME: '8 bits'
+_MODULE_NAME: '2 byte'
 _NODE_ID: 25
 _IECIN: %IB8.25
 _IECOUT: %QB8.25
 _IECDIAG: %MB8.25
 _DOWNLOAD: 1
 _EXCLUDEFROMAUTOADR: 0
-_COMMENT: 'ws cascade delay off seconds'
+_COMMENT: 'ws cascade delay off minutes'
 
 _PARAMETER
-_PARAM 1: 0, '8 bit'
+_PARAM 1: 0, '2 byte'
 _END_PARAMETER
 
 _CHANNEL
-_SECTION_NAME: 'ByteOutput'
+_SECTION_NAME: 'WordOutput'
 _INDEX_IN_PARENT: '1'
-_SYMBOLIC_NAME: 'ws_cascade_delay_off_seconds'
+_SYMBOLIC_NAME: 'ws_cascade_delay_off_minutes'
 _COMMENT: ''
 _CHANNEL_MODE: 'Q'
-_IECADR: %QB8.25.0
+_IECADR: %QW8.25.0
 
 _PARAMETER
 _PARAM 1: 0, 'Enter name'
 _END_PARAMETER
-_BIT 0: %QX8.25.0.0 '' 'Bit 0'
-_BIT 1: %QX8.25.0.1 '' 'Bit 1'
-_BIT 2: %QX8.25.0.2 '' 'Bit 2'
-_BIT 3: %QX8.25.0.3 '' 'Bit 3'
-_BIT 4: %QX8.25.0.4 '' 'Bit 4'
-_BIT 5: %QX8.25.0.5 '' 'Bit 5'
-_BIT 6: %QX8.25.0.6 '' 'Bit 6'
-_BIT 7: %QX8.25.0.7 '' 'Bit 7'
 _END_CHANNEL
 _END_MODULE
 
 _MODULE: '3S'
-_SECTION_NAME: 'Float'
+_SECTION_NAME: 'Register'
 _INDEX_IN_PARENT: '3'
-_MODULE_NAME: 'Float'
+_MODULE_NAME: '2 byte'
 _NODE_ID: 26
 _IECIN: %IB8.26
 _IECOUT: %QB8.26
 _IECDIAG: %MB8.26
 _DOWNLOAD: 1
 _EXCLUDEFROMAUTOADR: 0
-_COMMENT: 'hw set point pressure'
+_COMMENT: 'ws cascade delay off seconds'
 
 _PARAMETER
-_PARAM 1: 0, 'float'
+_PARAM 1: 0, '2 byte'
 _END_PARAMETER
 
 _CHANNEL
-_SECTION_NAME: 'FloatOutput'
+_SECTION_NAME: 'WordOutput'
 _INDEX_IN_PARENT: '1'
-_SYMBOLIC_NAME: 'hw_set_point_pressure'
+_SYMBOLIC_NAME: 'ws_cascade_delay_off_seconds'
 _COMMENT: ''
 _CHANNEL_MODE: 'Q'
-_IECADR: %QD8.26.0
+_IECADR: %QW8.26.0
 
 _PARAMETER
 _PARAM 1: 0, 'Enter name'
@@ -9542,7 +10479,7 @@ _IECOUT: %QB8.27
 _IECDIAG: %MB8.27
 _DOWNLOAD: 1
 _EXCLUDEFROMAUTOADR: 0
-_COMMENT: 'ws set point pressure'
+_COMMENT: 'hw set point pressure'
 
 _PARAMETER
 _PARAM 1: 0, 'float'
@@ -9551,7 +10488,7 @@ _END_PARAMETER
 _CHANNEL
 _SECTION_NAME: 'FloatOutput'
 _INDEX_IN_PARENT: '1'
-_SYMBOLIC_NAME: 'ws_set_point_pressure'
+_SYMBOLIC_NAME: 'hw_set_point_pressure'
 _COMMENT: ''
 _CHANNEL_MODE: 'Q'
 _IECADR: %QD8.27.0
@@ -9572,7 +10509,7 @@ _IECOUT: %QB8.28
 _IECDIAG: %MB8.28
 _DOWNLOAD: 1
 _EXCLUDEFROMAUTOADR: 0
-_COMMENT: 'hw set input pressure sensor'
+_COMMENT: 'ws set point pressure'
 
 _PARAMETER
 _PARAM 1: 0, 'float'
@@ -9581,7 +10518,7 @@ _END_PARAMETER
 _CHANNEL
 _SECTION_NAME: 'FloatOutput'
 _INDEX_IN_PARENT: '1'
-_SYMBOLIC_NAME: 'hw_min_measure_range_input'
+_SYMBOLIC_NAME: 'ws_set_point_pressure'
 _COMMENT: ''
 _CHANNEL_MODE: 'Q'
 _IECADR: %QD8.28.0
@@ -9611,7 +10548,7 @@ _END_PARAMETER
 _CHANNEL
 _SECTION_NAME: 'FloatOutput'
 _INDEX_IN_PARENT: '1'
-_SYMBOLIC_NAME: 'hw_max_measure_range_input'
+_SYMBOLIC_NAME: 'hw_min_measure_range_input'
 _COMMENT: ''
 _CHANNEL_MODE: 'Q'
 _IECADR: %QD8.29.0
@@ -9632,7 +10569,7 @@ _IECOUT: %QB8.30
 _IECDIAG: %MB8.30
 _DOWNLOAD: 1
 _EXCLUDEFROMAUTOADR: 0
-_COMMENT: 'hw set output pressure sensor'
+_COMMENT: 'hw set input pressure sensor'
 
 _PARAMETER
 _PARAM 1: 0, 'float'
@@ -9641,7 +10578,7 @@ _END_PARAMETER
 _CHANNEL
 _SECTION_NAME: 'FloatOutput'
 _INDEX_IN_PARENT: '1'
-_SYMBOLIC_NAME: 'hw_min_measure_range_output'
+_SYMBOLIC_NAME: 'hw_max_measure_range_input'
 _COMMENT: ''
 _CHANNEL_MODE: 'Q'
 _IECADR: %QD8.30.0
@@ -9671,7 +10608,7 @@ _END_PARAMETER
 _CHANNEL
 _SECTION_NAME: 'FloatOutput'
 _INDEX_IN_PARENT: '1'
-_SYMBOLIC_NAME: 'hw_max_measure_range_output'
+_SYMBOLIC_NAME: 'hw_min_measure_range_output'
 _COMMENT: ''
 _CHANNEL_MODE: 'Q'
 _IECADR: %QD8.31.0
@@ -9692,7 +10629,7 @@ _IECOUT: %QB8.32
 _IECDIAG: %MB8.32
 _DOWNLOAD: 1
 _EXCLUDEFROMAUTOADR: 0
-_COMMENT: 'ws set input pressure sensor'
+_COMMENT: 'hw set output pressure sensor'
 
 _PARAMETER
 _PARAM 1: 0, 'float'
@@ -9701,7 +10638,7 @@ _END_PARAMETER
 _CHANNEL
 _SECTION_NAME: 'FloatOutput'
 _INDEX_IN_PARENT: '1'
-_SYMBOLIC_NAME: 'ws_min_measure_range_input'
+_SYMBOLIC_NAME: 'hw_max_measure_range_output'
 _COMMENT: ''
 _CHANNEL_MODE: 'Q'
 _IECADR: %QD8.32.0
@@ -9731,7 +10668,7 @@ _END_PARAMETER
 _CHANNEL
 _SECTION_NAME: 'FloatOutput'
 _INDEX_IN_PARENT: '1'
-_SYMBOLIC_NAME: 'ws_max_measure_range_input'
+_SYMBOLIC_NAME: 'ws_min_measure_range_input'
 _COMMENT: ''
 _CHANNEL_MODE: 'Q'
 _IECADR: %QD8.33.0
@@ -9752,7 +10689,7 @@ _IECOUT: %QB8.34
 _IECDIAG: %MB8.34
 _DOWNLOAD: 1
 _EXCLUDEFROMAUTOADR: 0
-_COMMENT: 'ws set output pressure sensor'
+_COMMENT: 'ws set input pressure sensor'
 
 _PARAMETER
 _PARAM 1: 0, 'float'
@@ -9761,7 +10698,7 @@ _END_PARAMETER
 _CHANNEL
 _SECTION_NAME: 'FloatOutput'
 _INDEX_IN_PARENT: '1'
-_SYMBOLIC_NAME: 'ws_min_measure_range_output'
+_SYMBOLIC_NAME: 'ws_max_measure_range_input'
 _COMMENT: ''
 _CHANNEL_MODE: 'Q'
 _IECADR: %QD8.34.0
@@ -9791,10 +10728,2890 @@ _END_PARAMETER
 _CHANNEL
 _SECTION_NAME: 'FloatOutput'
 _INDEX_IN_PARENT: '1'
-_SYMBOLIC_NAME: 'ws_max_measure_range_output'
+_SYMBOLIC_NAME: 'ws_min_measure_range_output'
 _COMMENT: ''
 _CHANNEL_MODE: 'Q'
 _IECADR: %QD8.35.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Float'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: 'Float'
+_NODE_ID: 36
+_IECIN: %IB8.36
+_IECOUT: %QB8.36
+_IECDIAG: %MB8.36
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'ws set output pressure sensor'
+
+_PARAMETER
+_PARAM 1: 0, 'float'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'ws_max_measure_range_output'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD8.36.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Float'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: 'Float'
+_NODE_ID: 37
+_IECIN: %IB8.37
+_IECOUT: %QB8.37
+_IECDIAG: %MB8.37
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'hw input pressure bar'
+
+_PARAMETER
+_PARAM 1: 0, 'float'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'hw_input_pressure_bar'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD8.37.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Float'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: 'Float'
+_NODE_ID: 38
+_IECIN: %IB8.38
+_IECOUT: %QB8.38
+_IECDIAG: %MB8.38
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'hw output pressure bar'
+
+_PARAMETER
+_PARAM 1: 0, 'float'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'hw_output_pressure_bar'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD8.38.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Float'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: 'Float'
+_NODE_ID: 39
+_IECIN: %IB8.39
+_IECOUT: %QB8.39
+_IECDIAG: %MB8.39
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'ws input pressure bar'
+
+_PARAMETER
+_PARAM 1: 0, 'float'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'ws_input_pressure_bar'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD8.39.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Float'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: 'Float'
+_NODE_ID: 40
+_IECIN: %IB8.40
+_IECOUT: %QB8.40
+_IECDIAG: %MB8.40
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'ws output pressure bar'
+
+_PARAMETER
+_PARAM 1: 0, 'float'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'ws_output_pressure_bar'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD8.40.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Float'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: 'Float'
+_NODE_ID: 41
+_IECIN: %IB8.41
+_IECOUT: %QB8.41
+_IECDIAG: %MB8.41
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'hw frequency id1'
+
+_PARAMETER
+_PARAM 1: 0, 'float'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'hw_frequency_id1'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD8.41.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Float'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: 'Float'
+_NODE_ID: 42
+_IECIN: %IB8.42
+_IECOUT: %QB8.42
+_IECDIAG: %MB8.42
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'hw frequency id2'
+
+_PARAMETER
+_PARAM 1: 0, 'float'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'hw_frequency_id2'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD8.42.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Float'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: 'Float'
+_NODE_ID: 43
+_IECIN: %IB8.43
+_IECOUT: %QB8.43
+_IECDIAG: %MB8.43
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'ws frequency id1'
+
+_PARAMETER
+_PARAM 1: 0, 'float'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'ws_frequency_id1'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD8.43.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Float'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: 'Float'
+_NODE_ID: 44
+_IECIN: %IB8.44
+_IECOUT: %QB8.44
+_IECDIAG: %MB8.44
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'ws frequency id2'
+
+_PARAMETER
+_PARAM 1: 0, 'float'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'ws_frequency_id2'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD8.44.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 45
+_IECIN: %IB8.45
+_IECOUT: %QB8.45
+_IECDIAG: %MB8.45
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'hot water alarm error code'
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'hw_alarm_error_code'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.45.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 46
+_IECIN: %IB8.46
+_IECOUT: %QB8.46
+_IECDIAG: %MB8.46
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'water supply alarm error code'
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'ws_alarm_error_code'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.46.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Float'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: 'Float'
+_NODE_ID: 47
+_IECIN: %IB8.47
+_IECOUT: %QB8.47
+_IECDIAG: %MB8.47
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'hw value manual frequency id1'
+
+_PARAMETER
+_PARAM 1: 0, 'float'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'hw_manual_set_frequency_id1'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD8.47.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Float'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: 'Float'
+_NODE_ID: 48
+_IECIN: %IB8.48
+_IECOUT: %QB8.48
+_IECDIAG: %MB8.48
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'hw value manual frequency id1'
+
+_PARAMETER
+_PARAM 1: 0, 'float'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'hw_manual_set_frequency_id2'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD8.48.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Float'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: 'Float'
+_NODE_ID: 49
+_IECIN: %IB8.49
+_IECOUT: %QB8.49
+_IECDIAG: %MB8.49
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'hw value manual frequency id1'
+
+_PARAMETER
+_PARAM 1: 0, 'float'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'ws_manual_set_frequency_id1'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD8.49.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Float'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: 'Float'
+_NODE_ID: 50
+_IECIN: %IB8.50
+_IECOUT: %QB8.50
+_IECDIAG: %MB8.50
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'hw value manual frequency id1'
+
+_PARAMETER
+_PARAM 1: 0, 'float'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'FloatOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: 'ws_manual_set_frequency_id2'
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QD8.50.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 51
+_IECIN: %IB8.51
+_IECOUT: %QB8.51
+_IECDIAG: %MB8.51
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'head error_message (str79)'
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.51.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 52
+_IECIN: %IB8.52
+_IECOUT: %QB8.52
+_IECDIAG: %MB8.52
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.52.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 53
+_IECIN: %IB8.53
+_IECOUT: %QB8.53
+_IECDIAG: %MB8.53
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.53.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 54
+_IECIN: %IB8.54
+_IECOUT: %QB8.54
+_IECDIAG: %MB8.54
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.54.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 55
+_IECIN: %IB8.55
+_IECOUT: %QB8.55
+_IECDIAG: %MB8.55
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.55.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 56
+_IECIN: %IB8.56
+_IECOUT: %QB8.56
+_IECDIAG: %MB8.56
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.56.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 57
+_IECIN: %IB8.57
+_IECOUT: %QB8.57
+_IECDIAG: %MB8.57
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.57.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 58
+_IECIN: %IB8.58
+_IECOUT: %QB8.58
+_IECDIAG: %MB8.58
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.58.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 59
+_IECIN: %IB8.59
+_IECOUT: %QB8.59
+_IECDIAG: %MB8.59
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.59.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 60
+_IECIN: %IB8.60
+_IECOUT: %QB8.60
+_IECDIAG: %MB8.60
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.60.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 61
+_IECIN: %IB8.61
+_IECOUT: %QB8.61
+_IECDIAG: %MB8.61
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.61.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 62
+_IECIN: %IB8.62
+_IECOUT: %QB8.62
+_IECDIAG: %MB8.62
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.62.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 63
+_IECIN: %IB8.63
+_IECOUT: %QB8.63
+_IECDIAG: %MB8.63
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.63.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 64
+_IECIN: %IB8.64
+_IECOUT: %QB8.64
+_IECDIAG: %MB8.64
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.64.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 65
+_IECIN: %IB8.65
+_IECOUT: %QB8.65
+_IECDIAG: %MB8.65
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.65.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 66
+_IECIN: %IB8.66
+_IECOUT: %QB8.66
+_IECDIAG: %MB8.66
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.66.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 67
+_IECIN: %IB8.67
+_IECOUT: %QB8.67
+_IECDIAG: %MB8.67
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.67.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 68
+_IECIN: %IB8.68
+_IECOUT: %QB8.68
+_IECDIAG: %MB8.68
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.68.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 69
+_IECIN: %IB8.69
+_IECOUT: %QB8.69
+_IECDIAG: %MB8.69
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.69.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 70
+_IECIN: %IB8.70
+_IECOUT: %QB8.70
+_IECDIAG: %MB8.70
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.70.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 71
+_IECIN: %IB8.71
+_IECOUT: %QB8.71
+_IECDIAG: %MB8.71
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.71.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 72
+_IECIN: %IB8.72
+_IECOUT: %QB8.72
+_IECDIAG: %MB8.72
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.72.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 73
+_IECIN: %IB8.73
+_IECOUT: %QB8.73
+_IECDIAG: %MB8.73
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.73.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 74
+_IECIN: %IB8.74
+_IECOUT: %QB8.74
+_IECDIAG: %MB8.74
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.74.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 75
+_IECIN: %IB8.75
+_IECOUT: %QB8.75
+_IECDIAG: %MB8.75
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.75.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 76
+_IECIN: %IB8.76
+_IECOUT: %QB8.76
+_IECDIAG: %MB8.76
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.76.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 77
+_IECIN: %IB8.77
+_IECOUT: %QB8.77
+_IECDIAG: %MB8.77
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.77.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 78
+_IECIN: %IB8.78
+_IECOUT: %QB8.78
+_IECDIAG: %MB8.78
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.78.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 79
+_IECIN: %IB8.79
+_IECOUT: %QB8.79
+_IECDIAG: %MB8.79
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.79.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 80
+_IECIN: %IB8.80
+_IECOUT: %QB8.80
+_IECDIAG: %MB8.80
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.80.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 81
+_IECIN: %IB8.81
+_IECOUT: %QB8.81
+_IECDIAG: %MB8.81
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.81.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 82
+_IECIN: %IB8.82
+_IECOUT: %QB8.82
+_IECDIAG: %MB8.82
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.82.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 83
+_IECIN: %IB8.83
+_IECOUT: %QB8.83
+_IECDIAG: %MB8.83
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.83.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 84
+_IECIN: %IB8.84
+_IECOUT: %QB8.84
+_IECDIAG: %MB8.84
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.84.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 85
+_IECIN: %IB8.85
+_IECOUT: %QB8.85
+_IECDIAG: %MB8.85
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.85.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 86
+_IECIN: %IB8.86
+_IECOUT: %QB8.86
+_IECDIAG: %MB8.86
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.86.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 87
+_IECIN: %IB8.87
+_IECOUT: %QB8.87
+_IECDIAG: %MB8.87
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.87.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 88
+_IECIN: %IB8.88
+_IECOUT: %QB8.88
+_IECDIAG: %MB8.88
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.88.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 89
+_IECIN: %IB8.89
+_IECOUT: %QB8.89
+_IECDIAG: %MB8.89
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.89.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 90
+_IECIN: %IB8.90
+_IECOUT: %QB8.90
+_IECDIAG: %MB8.90
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'end error_message: str(79)'
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.90.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 91
+_IECIN: %IB8.91
+_IECOUT: %QB8.91
+_IECDIAG: %MB8.91
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'head'
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.91.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 92
+_IECIN: %IB8.92
+_IECOUT: %QB8.92
+_IECDIAG: %MB8.92
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.92.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 93
+_IECIN: %IB8.93
+_IECOUT: %QB8.93
+_IECDIAG: %MB8.93
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.93.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 94
+_IECIN: %IB8.94
+_IECOUT: %QB8.94
+_IECDIAG: %MB8.94
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.94.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 95
+_IECIN: %IB8.95
+_IECOUT: %QB8.95
+_IECDIAG: %MB8.95
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.95.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 96
+_IECIN: %IB8.96
+_IECOUT: %QB8.96
+_IECDIAG: %MB8.96
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.96.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 97
+_IECIN: %IB8.97
+_IECOUT: %QB8.97
+_IECDIAG: %MB8.97
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.97.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 98
+_IECIN: %IB8.98
+_IECOUT: %QB8.98
+_IECDIAG: %MB8.98
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.98.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 99
+_IECIN: %IB8.99
+_IECOUT: %QB8.99
+_IECDIAG: %MB8.99
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.99.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 100
+_IECIN: %IB8.100
+_IECOUT: %QB8.100
+_IECDIAG: %MB8.100
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.100.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 101
+_IECIN: %IB8.101
+_IECOUT: %QB8.101
+_IECDIAG: %MB8.101
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.101.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 102
+_IECIN: %IB8.102
+_IECOUT: %QB8.102
+_IECDIAG: %MB8.102
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.102.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 103
+_IECIN: %IB8.103
+_IECOUT: %QB8.103
+_IECDIAG: %MB8.103
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.103.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 104
+_IECIN: %IB8.104
+_IECOUT: %QB8.104
+_IECDIAG: %MB8.104
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.104.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 105
+_IECIN: %IB8.105
+_IECOUT: %QB8.105
+_IECDIAG: %MB8.105
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.105.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 106
+_IECIN: %IB8.106
+_IECOUT: %QB8.106
+_IECDIAG: %MB8.106
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.106.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 107
+_IECIN: %IB8.107
+_IECOUT: %QB8.107
+_IECDIAG: %MB8.107
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.107.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 108
+_IECIN: %IB8.108
+_IECOUT: %QB8.108
+_IECDIAG: %MB8.108
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.108.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 109
+_IECIN: %IB8.109
+_IECOUT: %QB8.109
+_IECDIAG: %MB8.109
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.109.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 110
+_IECIN: %IB8.110
+_IECOUT: %QB8.110
+_IECDIAG: %MB8.110
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.110.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 111
+_IECIN: %IB8.111
+_IECOUT: %QB8.111
+_IECDIAG: %MB8.111
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.111.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 112
+_IECIN: %IB8.112
+_IECOUT: %QB8.112
+_IECDIAG: %MB8.112
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.112.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 113
+_IECIN: %IB8.113
+_IECOUT: %QB8.113
+_IECDIAG: %MB8.113
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.113.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 114
+_IECIN: %IB8.114
+_IECOUT: %QB8.114
+_IECDIAG: %MB8.114
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.114.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 115
+_IECIN: %IB8.115
+_IECOUT: %QB8.115
+_IECDIAG: %MB8.115
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.115.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 116
+_IECIN: %IB8.116
+_IECOUT: %QB8.116
+_IECDIAG: %MB8.116
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.116.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 117
+_IECIN: %IB8.117
+_IECOUT: %QB8.117
+_IECDIAG: %MB8.117
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.117.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 118
+_IECIN: %IB8.118
+_IECOUT: %QB8.118
+_IECDIAG: %MB8.118
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.118.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 119
+_IECIN: %IB8.119
+_IECOUT: %QB8.119
+_IECDIAG: %MB8.119
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.119.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 120
+_IECIN: %IB8.120
+_IECOUT: %QB8.120
+_IECDIAG: %MB8.120
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.120.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 121
+_IECIN: %IB8.121
+_IECOUT: %QB8.121
+_IECDIAG: %MB8.121
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.121.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 122
+_IECIN: %IB8.122
+_IECOUT: %QB8.122
+_IECDIAG: %MB8.122
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.122.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 123
+_IECIN: %IB8.123
+_IECOUT: %QB8.123
+_IECDIAG: %MB8.123
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.123.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 124
+_IECIN: %IB8.124
+_IECOUT: %QB8.124
+_IECDIAG: %MB8.124
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.124.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 125
+_IECIN: %IB8.125
+_IECOUT: %QB8.125
+_IECDIAG: %MB8.125
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.125.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 126
+_IECIN: %IB8.126
+_IECOUT: %QB8.126
+_IECDIAG: %MB8.126
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.126.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 127
+_IECIN: %IB8.127
+_IECOUT: %QB8.127
+_IECDIAG: %MB8.127
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.127.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 128
+_IECIN: %IB8.128
+_IECOUT: %QB8.128
+_IECDIAG: %MB8.128
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.128.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 129
+_IECIN: %IB8.129
+_IECOUT: %QB8.129
+_IECDIAG: %MB8.129
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.129.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 130
+_IECIN: %IB8.130
+_IECOUT: %QB8.130
+_IECDIAG: %MB8.130
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: 'end'
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.130.0
+
+_PARAMETER
+_PARAM 1: 0, 'Enter name'
+_END_PARAMETER
+_END_CHANNEL
+_END_MODULE
+
+_MODULE: '3S'
+_SECTION_NAME: 'Register'
+_INDEX_IN_PARENT: '3'
+_MODULE_NAME: '2 byte'
+_NODE_ID: 131
+_IECIN: %IB8.131
+_IECOUT: %QB8.131
+_IECDIAG: %MB8.131
+_DOWNLOAD: 1
+_EXCLUDEFROMAUTOADR: 0
+_COMMENT: ''
+
+_PARAMETER
+_PARAM 1: 0, '2 byte'
+_END_PARAMETER
+
+_CHANNEL
+_SECTION_NAME: 'WordOutput'
+_INDEX_IN_PARENT: '1'
+_SYMBOLIC_NAME: ''
+_COMMENT: ''
+_CHANNEL_MODE: 'Q'
+_IECADR: %QW8.131.0
 
 _PARAMETER
 _PARAM 1: 0, 'Enter name'
