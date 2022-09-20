@@ -11,3 +11,12 @@
  - <a href="https://owen.ru/license-file?f=https://ftp.owen.ru/CoDeSys23/02_Targets/targets_v3.3_for_plc1xx_m02.zip">Таргет-файл для ПЛК 110-32м2</a>
  - <a href="https://ftp.owen.ru/CoDeSys23/05_Library/cds23_libraries.zip">Установщик библиотек</a>
  - Подключить к проекту библиотеку  Util.lib
+
+ # Содержимое:
+ - **pumps_station/** содержит в обьекты для работы, в формате *.exp .
+ - **PUMP_STATION.EXP** пример реализации проекта на фреймворке.
+ - **sp307/sp310** содержит файл для визуализации на серсорной панели ОВЕН СП310, для PUMP_STATION.EXP
+
+ # Дополнительная документация:
+ *в разработке....*
+ 
