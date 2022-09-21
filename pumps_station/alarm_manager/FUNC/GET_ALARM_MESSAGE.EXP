@@ -1,4 +1,4 @@
-FUNCTION get_alarm_message : STRING*(20)
+FUNCTION get_alarm_message : STRING(79)
 (* Function return message alarm of error_code *)
 
 VAR_INPUT
@@ -25,6 +25,22 @@ ELSIF code_error = 6
     THEN error_message := 'Single mode select pump is not active!'; (* Опорный насос в одиночном режиме на активен *)
 ELSIF code_error = 7
     THEN error_message := 'Select any one working mode!'; (* Выберите только один режим работы станции. *)
+ELSIF code_error = 8
+    THEN error_message := 'External alarm invertor drive 1'; (* Внешняя авария на частотном преобразователе 1. *)
+ELSIF code_error = 9
+    THEN error_message := 'External alarm invertor drive 2'; (* Внешняя авария на частотном преобразователе 2. *)
+ELSIF code_error = 10
+    THEN error_message := 'External alarm invertor drive 3'; (* Внешняя авария на частотном преобразователе 3. *)
+ELSIF code_error = 11
+    THEN error_message := 'External alarm invertor drive 4'; (* Внешняя авария на частотном преобразователе 4. *)
+ELSIF code_error = 12
+    THEN error_message := 'External alarm invertor drive 5'; (* Внешняя авария на частотном преобразователе 5. *)
+ELSIF code_error = 13
+    THEN error_message := 'External alarm invertor drive 6'; (* Внешняя авария на частотном преобразователе 6. *)
+ELSIF code_error = 14
+    THEN error_message := 'External alarm invertor drive 7'; (* Внешняя авария на частотном преобразователе 7. *)
+ELSIF code_error = 15
+    THEN error_message := 'External alarm invertor drive 8'; (* Внешняя авария на частотном преобразователе 8. *)
 ELSIF code_error = 61440
 	THEN error_message := 'Value bad!'; (* Значение заведомо неверно. *)
 ELSIF code_error = 61446

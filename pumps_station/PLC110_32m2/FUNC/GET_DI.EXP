@@ -26,12 +26,12 @@ di_list[8] := in_f.Bit8;
 
 di_list[9] := in_s.Bit1;
 di_list[10] := in_s.Bit2;
-di_list[12] := in_s.Bit3;
-di_list[13] := in_s.Bit4;
-di_list[14] := in_s.Bit5;
-di_list[15] := in_s.Bit6;
-di_list[16] := in_s.Bit7;
-di_list[17] := in_s.Bit8;
+di_list[11] := in_s.Bit3;
+di_list[12] := in_s.Bit4;
+di_list[13] := in_s.Bit5;
+di_list[14] := in_s.Bit6;
+di_list[15] := in_s.Bit7;
+di_list[16] := in_s.Bit8;
 
 get_di := di_list[input_number];
 

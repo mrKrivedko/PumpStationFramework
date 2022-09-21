@@ -1,0 +1,56 @@
+FUNCTION_BLOCK external_alarm_invertor_drive
+(* Function block return code error external alarm of invertor drives in PLC110-32m2 *)
+
+VAR_INPUT
+    status_inputs: classPLC32m2StatusInputs;
+    number_di_alarm_id1: INT := 0;
+    number_di_alarm_id2: INT := 0;
+    number_di_alarm_id3: INT := 0;
+    number_di_alarm_id4: INT := 0;
+    number_di_alarm_id5: INT := 0;
+    number_di_alarm_id6: INT := 0;
+    number_di_alarm_id7: INT := 0;
+    number_di_alarm_id8: INT := 0;
+END_VAR
+
+VAR_OUTPUT
+    error_code_alarm: WORD;
+END_VAR
+
+VAR
+    check_alarm: INT;
+    error_code: WORD;
+    i: INT;
+    number_di_alarm: ARRAY [1..8] OF INT;
+    pump_alarm: ARRAY [1..8] OF BOOL;
+    index_alarm: ARRAY [1..8] OF INT;
+END_VAR
+
+number_di_alarm[1] := number_di_alarm_id1;
+number_di_alarm[2] := number_di_alarm_id2;
+number_di_alarm[3] := number_di_alarm_id3;
+number_di_alarm[4] := number_di_alarm_id4;
+number_di_alarm[5] := number_di_alarm_id5;
+number_di_alarm[6] := number_di_alarm_id6;
+number_di_alarm[7] := number_di_alarm_id7;
+number_di_alarm[8] := number_di_alarm_id8;
+
+FOR i := 1 TO 8 DO
+    IF number_di_alarm[i] > 0 THEN
+        pump_alarm[i] := get_di(number_di_alarm[i], status_inputs);
+    ELSE
+        pump_alarm[i] := FALSE;
+    END_IF;
+END_FOR;
+
+check_alarm := len_bool_array(pump_alarm);
+IF check_alarm > 0  THEN
+    index_alarm := index_bool_array(pump_alarm);
+    error_code := 7 + index_alarm[1];
+ELSE
+    error_code := check_alarm;
+END_IF;
+
+error_code_alarm := error_code;
+
+END_FUNCTION_BLOCK

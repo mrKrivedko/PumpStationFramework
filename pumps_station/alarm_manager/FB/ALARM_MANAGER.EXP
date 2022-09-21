@@ -4,6 +4,7 @@ FUNCTION_BLOCK ALARM_MANAGER
 VAR_INPUT
     low_pressure_input: BOOL;
     high_pressure_out: BOOL;
+    external_alarm_invertor_drive_code: WORD;
     input_pressure_error_code: WORD;
     out_pressure_error_code: WORD;
     mode_selector_error: WORD;
@@ -15,10 +16,12 @@ VAR_OUTPUT
     error_message: STRING(79);
 END_VAR
 
-IF low_pressure_in THEN
+IF low_pressure_input THEN
     error_code_alarm := 1;
 ELSIF high_pressure_out THEN
     error_code_alarm := 2;
+ELSIF external_alarm_invertor_drive_code > 0 THEN
+    error_code_alarm := external_alarm_invertor_drive_code;
 ELSIF input_pressure_error_code > 0 THEN
     error_code_alarm := input_pressure_error_code;
 ELSIF out_pressure_error_code > 0 THEN
