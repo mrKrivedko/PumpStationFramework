@@ -10,6 +10,7 @@ FUNCTION_BLOCK ALARM_MANAGER
 VAR_INPUT
     low_pressure_input: BOOL;
     high_pressure_out: BOOL;
+    external_alarm_invertor_drive_code: WORD;
     input_pressure_error_code: WORD;
     out_pressure_error_code: WORD;
     mode_selector_error: WORD;
@@ -26,6 +27,8 @@ IF low_pressure_input THEN
     error_code_alarm := 1;
 ELSIF high_pressure_out THEN
     error_code_alarm := 2;
+ELSIF external_alarm_invertor_drive_code > 0 THEN
+    error_code_alarm := external_alarm_invertor_drive_code;
 ELSIF input_pressure_error_code > 0 THEN
     error_code_alarm := input_pressure_error_code;
 ELSIF out_pressure_error_code > 0 THEN
@@ -49,7 +52,69 @@ END_FUNCTION_BLOCK
 (* @PATH := '\/Alarm_manager_error' *)
 (* @OBJECTFLAGS := '0, 8' *)
 (* @SYMFILEFLAGS := '2048' *)
-FUNCTION get_alarm_message : STRING(20)
+FUNCTION_BLOCK external_alarm_invertor_drive
+(* Function block return code error external alarm of invertor drives in PLC110-32m2 *)
+
+VAR_INPUT
+    status_inputs: classPLC32m2StatusInputs;
+    number_di_alarm_id1: INT := 0;
+    number_di_alarm_id2: INT := 0;
+    number_di_alarm_id3: INT := 0;
+    number_di_alarm_id4: INT := 0;
+    number_di_alarm_id5: INT := 0;
+    number_di_alarm_id6: INT := 0;
+    number_di_alarm_id7: INT := 0;
+    number_di_alarm_id8: INT := 0;
+END_VAR
+
+VAR_OUTPUT
+    error_code_alarm: WORD;
+END_VAR
+
+VAR
+    check_alarm: INT;
+    error_code: WORD;
+    i: INT;
+    number_di_alarm: ARRAY [1..8] OF INT;
+    pump_alarm: ARRAY [1..8] OF BOOL;
+    index_alarm: ARRAY [1..8] OF INT;
+END_VAR
+
+(* @END_DECLARATION := '0' *)
+number_di_alarm[1] := number_di_alarm_id1;
+number_di_alarm[2] := number_di_alarm_id2;
+number_di_alarm[3] := number_di_alarm_id3;
+number_di_alarm[4] := number_di_alarm_id4;
+number_di_alarm[5] := number_di_alarm_id5;
+number_di_alarm[6] := number_di_alarm_id6;
+number_di_alarm[7] := number_di_alarm_id7;
+number_di_alarm[8] := number_di_alarm_id8;
+
+FOR i := 1 TO 8 DO
+    IF number_di_alarm[i] > 0 THEN
+        pump_alarm[i] := get_di(number_di_alarm[i], status_inputs);
+    ELSE
+        pump_alarm[i] := FALSE;
+    END_IF;
+END_FOR;
+
+check_alarm := len_bool_array(pump_alarm);
+IF check_alarm > 0  THEN
+    index_alarm := index_bool_array(pump_alarm);
+    error_code := 7 + index_alarm[1];
+ELSE
+    error_code := check_alarm;
+END_IF;
+
+error_code_alarm := error_code;
+END_FUNCTION_BLOCK
+
+
+(* @NESTEDCOMMENTS := 'Yes' *)
+(* @PATH := '\/Alarm_manager_error' *)
+(* @OBJECTFLAGS := '0, 8' *)
+(* @SYMFILEFLAGS := '2048' *)
+FUNCTION get_alarm_message : STRING(79)
 (* Function return message alarm of error_code *)
 
 VAR_INPUT
@@ -77,6 +142,22 @@ ELSIF code_error = 6
     THEN error_message := 'Single mode select pump is not active!'; (* Опорный насос в одиночном режиме на активен *)
 ELSIF code_error = 7
     THEN error_message := 'Select any one working mode!'; (* Выберите только один режим работы станции. *)
+ELSIF code_error = 8
+    THEN error_message := 'External alarm invertor drive 1'; (* Внешняя авария на частотном преобразователе 1. *)
+ELSIF code_error = 9
+    THEN error_message := 'External alarm invertor drive 2'; (* Внешняя авария на частотном преобразователе 2. *)
+ELSIF code_error = 10
+    THEN error_message := 'External alarm invertor drive 3'; (* Внешняя авария на частотном преобразователе 3. *)
+ELSIF code_error = 11
+    THEN error_message := 'External alarm invertor drive 4'; (* Внешняя авария на частотном преобразователе 4. *)
+ELSIF code_error = 12
+    THEN error_message := 'External alarm invertor drive 5'; (* Внешняя авария на частотном преобразователе 5. *)
+ELSIF code_error = 13
+    THEN error_message := 'External alarm invertor drive 6'; (* Внешняя авария на частотном преобразователе 6. *)
+ELSIF code_error = 14
+    THEN error_message := 'External alarm invertor drive 7'; (* Внешняя авария на частотном преобразователе 7. *)
+ELSIF code_error = 15
+    THEN error_message := 'External alarm invertor drive 8'; (* Внешняя авария на частотном преобразователе 8. *)
 ELSIF code_error = 61440
 	THEN error_message := 'Value bad!'; (* Значение заведомо неверно. *)
 ELSIF code_error = 61446
@@ -1549,12 +1630,12 @@ di_list[8]:=in_f.Bit8;
 
 di_list[9]:=in_s.Bit1;
 di_list[10]:=in_s.Bit2;
-di_list[12]:=in_s.Bit3;
-di_list[13]:=in_s.Bit4;
-di_list[14]:=in_s.Bit5;
-di_list[15]:=in_s.Bit6;
-di_list[16]:=in_s.Bit7;
-di_list[17]:=in_s.Bit8;
+di_list[11]:=in_s.Bit3;
+di_list[12]:=in_s.Bit4;
+di_list[13]:=in_s.Bit5;
+di_list[14]:=in_s.Bit6;
+di_list[15]:=in_s.Bit7;
+di_list[16]:=in_s.Bit8;
 
 get_di:=di_list[input_number];
 END_FUNCTION
@@ -2058,6 +2139,8 @@ VAR
        hw_alarm_message AT %QW8.51.0: STRING(79);
        ws_alarm_message AT %QW8.91.0: STRING(79);
 
+	hw_external_alarm: external_alarm_invertor_drive;
+	ws_external_alarm: external_alarm_invertor_drive;
 END_VAR
 
 VAR RETAIN
@@ -7667,13 +7750,13 @@ _END
 _ELEMENT
 _ID: 298
 _MACROID: -1
-_POS: 39, 218
+_POS: 65, 218
 _TYPE: _BOX
 _INSTANCE: 1
 _INSTANCENAME: hw_alarm_manager
 _TYPENAME: ALARM_MANAGER
 _ENENO: 0
-_INPUTS: 5
+_INPUTS: 6
 _IN
 _INPUTID: 300
 _INPUTIDX: 0
@@ -7681,6 +7764,11 @@ _NEGATE: 0
 _END
 _IN
 _INPUTID: 301
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 374
 _INPUTIDX: 0
 _NEGATE: 0
 _END
@@ -7717,7 +7805,7 @@ _END
 _ELEMENT
 _ID: 308
 _MACROID: -1
-_POS: 61, 220
+_POS: 92, 220
 _TYPE: _OUTPUT
 _TEXT: hw_alarm_on
 _INPUTID: 298
@@ -7728,7 +7816,7 @@ _END
 _ELEMENT
 _ID: 307
 _MACROID: -1
-_POS: 61, 221
+_POS: 92, 221
 _TYPE: _OUTPUT
 _TEXT: hw_alarm_error_code
 _INPUTID: 298
@@ -7737,9 +7825,18 @@ _NEGATE: 0
 _SETRESET: _NONE
 _END
 _ELEMENT
+_ID: 375
+_MACROID: -1
+_POS: 20, 223
+_TYPE: _INPUT
+_TEXT: 5
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
 _ID: 303
 _MACROID: -1
-_POS: 39, 222
+_POS: 63, 223
 _TYPE: _INPUT
 _TEXT: hw_error_input_pressure
 _NEGATE: 0
@@ -7748,7 +7845,7 @@ _END
 _ELEMENT
 _ID: 347
 _MACROID: -1
-_POS: 61, 222
+_POS: 92, 222
 _TYPE: _OUTPUT
 _TEXT: hw_alarm_message
 _INPUTID: 298
@@ -7757,9 +7854,18 @@ _NEGATE: 0
 _SETRESET: _NONE
 _END
 _ELEMENT
+_ID: 376
+_MACROID: -1
+_POS: 20, 224
+_TYPE: _INPUT
+_TEXT: 6
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
 _ID: 304
 _MACROID: -1
-_POS: 39, 223
+_POS: 63, 224
 _TYPE: _INPUT
 _TEXT: hw_error_output_pressure
 _NEGATE: 0
@@ -7768,7 +7874,7 @@ _END
 _ELEMENT
 _ID: 306
 _MACROID: -1
-_POS: 39, 224
+_POS: 60, 225
 _TYPE: _INPUT
 _TEXT: hw_mode_error
 _NEGATE: 0
@@ -7777,7 +7883,7 @@ _END
 _ELEMENT
 _ID: 333
 _MACROID: -1
-_POS: 20, 230
+_POS: 19, 239
 _TYPE: _INPUT
 _TEXT: 3
 _NEGATE: 0
@@ -7786,7 +7892,7 @@ _END
 _ELEMENT
 _ID: 334
 _MACROID: -1
-_POS: 20, 228
+_POS: 19, 237
 _TYPE: _BOX
 _INSTANCE: 0
 _INSTANCENAME: 
@@ -7813,7 +7919,7 @@ _END
 _ELEMENT
 _ID: 335
 _MACROID: -1
-_POS: 20, 234
+_POS: 19, 243
 _TYPE: _INPUT
 _TEXT: 4
 _NEGATE: 0
@@ -7822,7 +7928,7 @@ _END
 _ELEMENT
 _ID: 336
 _MACROID: -1
-_POS: 20, 232
+_POS: 19, 241
 _TYPE: _BOX
 _INSTANCE: 0
 _INSTANCENAME: 
@@ -7849,13 +7955,13 @@ _END
 _ELEMENT
 _ID: 337
 _MACROID: -1
-_POS: 39, 234
+_POS: 65, 234
 _TYPE: _BOX
 _INSTANCE: 1
 _INSTANCENAME: hw_alarm_manager
 _TYPENAME: ALARM_MANAGER
 _ENENO: 0
-_INPUTS: 5
+_INPUTS: 6
 _IN
 _INPUTID: 334
 _INPUTIDX: 0
@@ -7863,6 +7969,11 @@ _NEGATE: 0
 _END
 _IN
 _INPUTID: 336
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 377
 _INPUTIDX: 0
 _NEGATE: 0
 _END
@@ -7899,7 +8010,7 @@ _END
 _ELEMENT
 _ID: 338
 _MACROID: -1
-_POS: 61, 236
+_POS: 92, 236
 _TYPE: _OUTPUT
 _TEXT: ws_alarm_on
 _INPUTID: 337
@@ -7910,7 +8021,7 @@ _END
 _ELEMENT
 _ID: 339
 _MACROID: -1
-_POS: 61, 237
+_POS: 92, 237
 _TYPE: _OUTPUT
 _TEXT: ws_alarm_error_code
 _INPUTID: 337
@@ -7921,7 +8032,7 @@ _END
 _ELEMENT
 _ID: 340
 _MACROID: -1
-_POS: 39, 238
+_POS: 63, 239
 _TYPE: _INPUT
 _TEXT: ws_error_input_pressure
 _NEGATE: 0
@@ -7930,7 +8041,7 @@ _END
 _ELEMENT
 _ID: 373
 _MACROID: -1
-_POS: 61, 238
+_POS: 92, 238
 _TYPE: _OUTPUT
 _TEXT: ws_alarm_message
 _INPUTID: 337
@@ -7941,7 +8052,7 @@ _END
 _ELEMENT
 _ID: 341
 _MACROID: -1
-_POS: 39, 239
+_POS: 63, 240
 _TYPE: _INPUT
 _TEXT: ws_error_output_pressure
 _NEGATE: 0
@@ -7950,9 +8061,151 @@ _END
 _ELEMENT
 _ID: 342
 _MACROID: -1
-_POS: 39, 240
+_POS: 63, 241
 _TYPE: _INPUT
 _TEXT: ws_mode_error
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 374
+_MACROID: -1
+_POS: 20, 220
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: hw_external_alarm
+_TYPENAME: external_alarm_invertor_drive
+_ENENO: 0
+_INPUTS: 9
+_IN
+_INPUTID: 299
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 375
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 376
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 377
+_MACROID: -1
+_POS: 19, 245
+_TYPE: _BOX
+_INSTANCE: 1
+_INSTANCENAME: ws_external_alarm
+_TYPENAME: external_alarm_invertor_drive
+_ENENO: 0
+_INPUTS: 9
+_IN
+_INPUTID: 299
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 378
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 379
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_IN
+_INPUTID: 0
+_INPUTIDX: 0
+_NEGATE: 0
+_END
+_OUTPUTS: 1
+_OUT
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_PARAMETERS: 0
+_END
+_ELEMENT
+_ID: 378
+_MACROID: -1
+_POS: 19, 248
+_TYPE: _INPUT
+_TEXT: 7
+_NEGATE: 0
+_CONNECTOR: 
+_END
+_ELEMENT
+_ID: 379
+_MACROID: -1
+_POS: 19, 249
+_TYPE: _INPUT
+_TEXT: 8
 _NEGATE: 0
 _CONNECTOR: 
 _END
