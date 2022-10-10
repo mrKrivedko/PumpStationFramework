@@ -54,7 +54,7 @@ IF enable THEN
 ELSE
     info_single.pivot_pump := -8;
     info_single.start_pump := FALSE;
-    info_single.error_code := 8;
+    info_single.error_code := 0;  (* нужна ли эта авария? *)
     info_single.message := 'Single mode is not activate'; (* Режим работы одного насоса не активен. *)
 END_IF;
 
